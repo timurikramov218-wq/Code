@@ -143,6 +143,109 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
 .credits { grid-column: 1 / -1; }
 .tip { margin: 0; color: var(--muted); font-size: 14px; }
 .airports span:last-child { font-family: var(--font-mono); color: var(--muted); font-size: 13px; }
+/* ===== Cockpit-hardware controls: bezel keys with indicator lights, FCU readouts, levers ===== */
+:root {
+  --key-top: #222c36; --key-bot: #141a21; --key-edge: #33414f; --key-text: #c9d6e1;
+  --led-off: #2a3540; --led-on: #5dffa8; --led-amber: #ffb43d; --stripe: #1a1d21;
+}
+.topbar {
+  left: 0; right: 0; top: 0; padding: calc(6px + env(safe-area-inset-top, 0px)) max(8px, env(safe-area-inset-right, 0px)) 8px max(8px, env(safe-area-inset-left, 0px));
+  gap: 8px; align-items: center;
+  background: linear-gradient(180deg, rgba(10,14,19,0.92), rgba(10,14,19,0.55) 70%, rgba(10,14,19,0));
+}
+.chip, .apb, .tbtn {
+  position: relative; font: 700 11px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--key-text);
+  background: linear-gradient(180deg, var(--key-top), var(--key-bot)); border: 1px solid var(--key-edge); border-radius: 5px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -2px 0 rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.45);
+  padding: 9px 10px 8px 22px; cursor: pointer; white-space: nowrap; transition: transform 0.06s, box-shadow 0.06s, color 0.15s;
+}
+.chip::before, .tbtn::before {
+  content: ""; position: absolute; left: 8px; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%;
+  background: var(--led-off); box-shadow: inset 0 1px 1px rgba(0,0,0,0.6);
+}
+.chip[aria-pressed="true"], .chip[aria-pressed="true"]:hover { background: linear-gradient(180deg, #1d2a33, #121a20); color: #eafff4; border-color: color-mix(in srgb, var(--led-on) 45%, var(--key-edge)); }
+.chip[aria-pressed="true"]::before { background: var(--led-on); box-shadow: 0 0 6px var(--led-on), 0 0 12px color-mix(in srgb, var(--led-on) 60%, transparent); }
+.chip:hover, .apb:hover, .tbtn:hover { color: #ffffff; border-color: #4a5c6e; }
+.chip:active, .apb:active, .tbtn:active, .btn:active { transform: translateY(1px); box-shadow: inset 0 1px 3px rgba(0,0,0,0.6); }
+.chip kbd { font: 700 10px var(--font-mono); color: var(--led-amber); opacity: 1; margin-right: 6px; border: 0; padding: 0; background: none; }
+.cams { gap: 0; padding: 3px; border-radius: 7px; background: #0a0e12; border: 1px solid #1e2832; box-shadow: inset 0 1px 3px rgba(0,0,0,0.7); }
+.cams .chip { border-radius: 0; border-right-width: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); padding-left: 21px; }
+.cams .chip:first-child { border-radius: 4px 0 0 4px; }
+.cams .chip:last-child { border-radius: 0 4px 4px 0; border-right-width: 1px; }
+.cams .chip[aria-pressed="true"] { background: linear-gradient(180deg, #13392a, #0d281e); }
+
+/* autopilot: flight control unit */
+.ap {
+  top: calc(58px + env(safe-area-inset-top, 0px)); gap: 8px; padding: 8px 10px; border-radius: 6px;
+  background: linear-gradient(180deg, #2a323b, #1b2229); border: 1px solid #3a4652;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 8px 20px rgba(0,0,0,0.5);
+}
+.ap::before { content: "AUTOFLIGHT"; position: absolute; top: -8px; left: 12px; font: 700 9px var(--font-mono); letter-spacing: 0.2em; color: #8fa2b4; background: #1b2229; padding: 0 6px; }
+.apb { padding: 14px 12px 7px; min-width: 52px; }
+.apb::after { content: ""; position: absolute; left: 9px; right: 9px; top: 5px; height: 3px; border-radius: 2px; background: var(--led-off); }
+.apb[aria-pressed="true"], .apb[aria-pressed="true"]:hover { color: #eafff4; background: linear-gradient(180deg, var(--key-top), var(--key-bot)); border-color: var(--key-edge); }
+.apb[aria-pressed="true"]::after { background: var(--led-on); box-shadow: 0 0 6px var(--led-on); }
+.apv { gap: 0; padding: 0; background: #0a0d10; border: 1px solid #3a4652; border-radius: 5px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); overflow: hidden; }
+.apv span { font: 700 9px var(--font-mono); letter-spacing: 0.12em; color: #8fa2b4; padding: 0 6px; align-self: stretch; display: grid; place-items: center; background: #161c22; border-right: 1px solid #2a3540; }
+.apv output { min-width: 3.6em; padding: 0 4px; font: 700 15px var(--font-mono); color: var(--led-amber); text-shadow: 0 0 6px color-mix(in srgb, var(--led-amber) 60%, transparent); }
+.apv button { width: 28px; height: 32px; border-radius: 0; color: #c9d6e1; background: linear-gradient(180deg, #232c35, #161c22); }
+.apv button:hover { background: linear-gradient(180deg, #2c3742, #1b232b); color: #fff; }
+
+/* ground crew pushback */
+.pushbtn {
+  font: 700 14px var(--font-mono); letter-spacing: 0.14em; text-transform: uppercase; color: #111;
+  background: repeating-linear-gradient(-45deg, var(--amber) 0 14px, #ffd27a 14px 28px); border: 2px solid var(--stripe); border-radius: 6px;
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.5), 0 6px 16px rgba(0,0,0,0.45); padding: 12px 26px; text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+}
+
+/* touch: sidestick, thrust lever, system keys */
+.stick {
+  border: 0; background: radial-gradient(circle at 50% 50%, #1b232b 0 52%, #0e1317 53% 62%, #26313b 63% 66%, rgba(14,19,23,0.7) 67%);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5), inset 0 0 0 1px #33414f;
+}
+.stick::before, .stick::after { content: ""; position: absolute; background: #2f3c48; }
+.stick::before { left: 50%; top: 10px; bottom: 10px; width: 1px; } .stick::after { top: 50%; left: 10px; right: 10px; height: 1px; }
+.knob {
+  z-index: 1; border: 0; width: 58px; height: 58px; margin: -29px 0 0 -29px;
+  background: radial-gradient(circle at 38% 32%, #4b5a69, #222b34 60%, #151a20); box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.knob::after { content: ""; position: absolute; left: 50%; top: 9px; width: 14px; height: 6px; margin-left: -7px; border-radius: 3px; background: #c4372b; box-shadow: 0 0 4px #c4372b; }
+.throttle {
+  width: 62px; border: 1px solid #33414f; border-radius: 8px; cursor: ns-resize;
+  background:
+    linear-gradient(90deg, transparent 27px, #05080b 27px 35px, transparent 35px),
+    repeating-linear-gradient(180deg, transparent 0 15px, #2a3540 15px 16px),
+    linear-gradient(180deg, #1f2730, #121820);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.throttle .fill { left: 27px; right: 27px; border-radius: 3px; background: linear-gradient(180deg, var(--led-amber), #b86f12); box-shadow: 0 0 8px color-mix(in srgb, var(--led-amber) 60%, transparent); }
+.throttle .lbl { top: -22px; font: 700 11px var(--font-mono); color: var(--led-amber); text-shadow: 0 0 6px rgba(0,0,0,0.8); }
+.throttle::after { content: "TOGA\A\A\A CLB\A\A\A\A\A IDLE"; white-space: pre; position: absolute; left: 4px; top: 6px; font: 700 8px/12px var(--font-mono); color: #8fa2b4; pointer-events: none; }
+.tbtns { right: 88px; gap: 8px; }
+.tbtn { min-width: 76px; padding: 12px 10px 11px 24px; text-align: left; }
+
+/* briefing */
+.panel { background: linear-gradient(180deg, color-mix(in srgb, #1d262f 96%, transparent), color-mix(in srgb, #141b22 96%, transparent)); border-color: #33414f; box-shadow: 0 20px 50px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06); }
+.plane-card { background: linear-gradient(180deg, #19212a, #11171d); border-color: #2b3744; border-radius: 6px; padding-left: 24px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
+.plane-card::before { content: ""; position: absolute; left: 10px; top: 16px; width: 6px; height: 6px; border-radius: 50%; background: var(--led-off); }
+.plane-card:has(input:checked) { background: linear-gradient(180deg, #16302a, #0f1f1b); border-color: color-mix(in srgb, var(--led-on) 60%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-on) 40%, transparent), 0 0 18px color-mix(in srgb, var(--led-on) 12%, transparent); }
+.plane-card:has(input:checked)::before { background: var(--led-on); box-shadow: 0 0 6px var(--led-on); }
+.plane-card:hover { border-color: #46586a; }
+select { font: 600 14px var(--font-body); background: linear-gradient(180deg, #19212a, #11171d); border: 1px solid #33414f; border-radius: 5px; padding: 9px 10px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
+.btn {
+  position: relative; font: 700 15px var(--font-mono); letter-spacing: 0.14em; text-transform: uppercase; border-radius: 6px; padding: 14px 28px 14px 46px;
+  color: #062014; background: linear-gradient(180deg, #7dffbd, #3fd98a); border: 1px solid #2aa868;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -3px 0 rgba(0,0,0,0.2), 0 6px 16px color-mix(in srgb, var(--led-on) 25%, transparent);
+}
+.btn::before { content: ""; position: absolute; left: 18px; top: 50%; margin-top: -7px; border-left: 12px solid currentColor; border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
+.btn.alt { color: var(--key-text); background: linear-gradient(180deg, var(--key-top), var(--key-bot)); border-color: var(--key-edge); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -2px 0 rgba(0,0,0,0.45); }
+.btn.alt::before { border-left: 4px solid currentColor; border-right: 4px solid currentColor; border-top: 0; border-bottom: 0; width: 4px; height: 14px; margin-top: -7px; box-sizing: content-box; }
+form.name .btn::before { display: none; }
+@media (max-width: 680px) {
+  .chip { padding: 8px 8px 7px 19px; font-size: 10px; } .chip::before { left: 6px; width: 6px; height: 6px; margin-top: -3px; }
+  .cams .chip { padding-left: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .chip, .apb, .tbtn, .btn { transition: none; } }
 </style>
 
 <div class="wrap">
