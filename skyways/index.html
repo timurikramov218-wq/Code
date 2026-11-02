@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;700&family=Saira:wght@400;600&family=B612+Mono&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
 /* Layout: a flight-deck page. The 3D view is the hero; the briefing (aircraft + route) overlays it, the pilot's manual sits below. One deliberate dark avionics look. */
 :root {
@@ -143,115 +143,156 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
 .credits { grid-column: 1 / -1; }
 .tip { margin: 0; color: var(--muted); font-size: 14px; }
 .airports span:last-child { font-family: var(--font-mono); color: var(--muted); font-size: 13px; }
-/* ===== Cockpit-hardware controls: bezel keys with indicator lights, FCU readouts, levers ===== */
+/* ===== Terminal wayfinding: black-and-yellow signage, navy concourse, split-flap departures board ===== */
 :root {
-  --key-top: #222c36; --key-bot: #141a21; --key-edge: #33414f; --key-text: #c9d6e1;
-  --led-off: #2a3540; --led-on: #5dffa8; --led-amber: #ffb43d; --stripe: #1a1d21;
+  --deck: #0a1428; --glass: #0f1d38; --edge: #22355c; --text: #eef3fb; --muted: #9aabc6;
+  --sign: #ffd200; --sign-ink: #111214; --tile: #121417; --tile-2: #1b1e23; --concourse: #0d1a33;
+  --sky: #6fb3ff; --amber: #ffd200;
+  --font-display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Barlow", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Courier New", monospace;
+  color-scheme: dark;
 }
-.topbar {
-  left: 0; right: 0; top: 0; padding: calc(6px + env(safe-area-inset-top, 0px)) max(8px, env(safe-area-inset-right, 0px)) 8px max(8px, env(safe-area-inset-left, 0px));
-  gap: 8px; align-items: center;
-  background: linear-gradient(180deg, rgba(10,14,19,0.92), rgba(10,14,19,0.55) 70%, rgba(10,14,19,0));
-}
-.chip, .apb, .tbtn {
-  position: relative; font: 700 11px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--key-text);
-  background: linear-gradient(180deg, var(--key-top), var(--key-bot)); border: 1px solid var(--key-edge); border-radius: 5px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -2px 0 rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.45);
-  padding: 9px 10px 8px 22px; cursor: pointer; white-space: nowrap; transition: transform 0.06s, box-shadow 0.06s, color 0.15s;
-}
-.chip::before, .tbtn::before {
-  content: ""; position: absolute; left: 8px; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%;
-  background: var(--led-off); box-shadow: inset 0 1px 1px rgba(0,0,0,0.6);
-}
-.chip[aria-pressed="true"], .chip[aria-pressed="true"]:hover { background: linear-gradient(180deg, #1d2a33, #121a20); color: #eafff4; border-color: color-mix(in srgb, var(--led-on) 45%, var(--key-edge)); }
-.chip[aria-pressed="true"]::before { background: var(--led-on); box-shadow: 0 0 6px var(--led-on), 0 0 12px color-mix(in srgb, var(--led-on) 60%, transparent); }
-.chip:hover, .apb:hover, .tbtn:hover { color: #ffffff; border-color: #4a5c6e; }
-.chip:active, .apb:active, .tbtn:active, .btn:active { transform: translateY(1px); box-shadow: inset 0 1px 3px rgba(0,0,0,0.6); }
-.chip kbd { font: 700 10px var(--font-mono); color: var(--led-amber); opacity: 1; margin-right: 6px; border: 0; padding: 0; background: none; }
-.cams { gap: 0; padding: 3px; border-radius: 7px; background: #0a0e12; border: 1px solid #1e2832; box-shadow: inset 0 1px 3px rgba(0,0,0,0.7); }
-.cams .chip { border-radius: 0; border-right-width: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); padding-left: 21px; }
-.cams .chip:first-child { border-radius: 4px 0 0 4px; }
-.cams .chip:last-child { border-radius: 0 4px 4px 0; border-right-width: 1px; }
-.cams .chip[aria-pressed="true"] { background: linear-gradient(180deg, #13392a, #0d281e); }
+html, body { background: var(--deck); }
+body { padding-block: 10px 40px; }
+.wrap { max-width: 1480px; gap: 12px; }
+.masthead { display: flex; align-items: center; justify-content: space-between; gap: 6px 20px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 4px; background: var(--sign); color: var(--sign-ink); }
+.masthead h1 { font: 800 clamp(24px, 4vw, 32px)/1 var(--font-display); letter-spacing: 0.02em; text-transform: uppercase; margin: 0; }
+.masthead h1 span { color: var(--sign); }
+.masthead .tagline { font: 600 13px var(--font-display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); max-width: none; }
 
-/* autopilot: flight control unit */
-.ap {
-  top: calc(58px + env(safe-area-inset-top, 0px)); gap: 8px; padding: 8px 10px; border-radius: 6px;
-  background: linear-gradient(180deg, #2a323b, #1b2229); border: 1px solid #3a4652;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 8px 20px rgba(0,0,0,0.5);
-}
-.ap::before { content: "AUTOFLIGHT"; position: absolute; top: -8px; left: 12px; font: 700 9px var(--font-mono); letter-spacing: 0.2em; color: #8fa2b4; background: #1b2229; padding: 0 6px; }
-.apb { padding: 14px 12px 7px; min-width: 52px; }
-.apb::after { content: ""; position: absolute; left: 9px; right: 9px; top: 5px; height: 3px; border-radius: 2px; background: var(--led-off); }
-.apb[aria-pressed="true"], .apb[aria-pressed="true"]:hover { color: #eafff4; background: linear-gradient(180deg, var(--key-top), var(--key-bot)); border-color: var(--key-edge); }
-.apb[aria-pressed="true"]::after { background: var(--led-on); box-shadow: 0 0 6px var(--led-on); }
-.apv { gap: 0; padding: 0; background: #0a0d10; border: 1px solid #3a4652; border-radius: 5px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); overflow: hidden; }
-.apv span { font: 700 9px var(--font-mono); letter-spacing: 0.12em; color: #8fa2b4; padding: 0 6px; align-self: stretch; display: grid; place-items: center; background: #161c22; border-right: 1px solid #2a3540; }
-.apv output { min-width: 3.6em; padding: 0 4px; font: 700 15px var(--font-mono); color: var(--led-amber); text-shadow: 0 0 6px color-mix(in srgb, var(--led-amber) 60%, transparent); }
-.apv button { width: 28px; height: 32px; border-radius: 0; color: #c9d6e1; background: linear-gradient(180deg, #232c35, #161c22); }
-.apv button:hover { background: linear-gradient(180deg, #2c3742, #1b232b); color: #fff; }
+.stage { aspect-ratio: auto; height: min(calc(100vh - 84px), 980px); min-height: 440px; max-height: none; border: 0; border-radius: 6px; box-shadow: 0 0 0 1px var(--edge), 0 20px 50px rgba(0,0,0,0.45); }
+@media (max-width: 680px) { .stage { height: calc(100svh - 110px); min-height: 520px; } }
 
-/* ground crew pushback */
-.pushbtn {
-  font: 700 14px var(--font-mono); letter-spacing: 0.14em; text-transform: uppercase; color: #111;
-  background: repeating-linear-gradient(-45deg, var(--amber) 0 14px, #ffd27a 14px 28px); border: 2px solid var(--stripe); border-radius: 6px;
-  box-shadow: 0 0 0 3px rgba(0,0,0,0.5), 0 6px 16px rgba(0,0,0,0.45); padding: 12px 26px; text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+/* sign-style keys */
+.topbar { left: 0; right: 0; top: 0; gap: 6px; align-items: center; padding: calc(8px + env(safe-area-inset-top, 0px)) max(8px, env(safe-area-inset-right, 0px)) 10px max(8px, env(safe-area-inset-left, 0px)); background: linear-gradient(180deg, rgba(5,10,20,0.85), rgba(5,10,20,0)); }
+.chip, .tbtn, .apb {
+  position: relative; font: 700 13px/1 var(--font-display); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--sign); background: var(--tile); border: 0; border-radius: 3px; padding: 9px 11px; cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 2px 6px rgba(0,0,0,0.4); transition: background 0.12s, color 0.12s, transform 0.06s;
 }
+.chip::before, .tbtn::before, .apb::after, .plane-card::before { display: none; }
+.chip:hover, .tbtn:hover, .apb:hover { background: var(--tile-2); color: #fff4b0; border: 0; }
+.chip[aria-pressed="true"], .chip[aria-pressed="true"]:hover, .tbtn[aria-pressed="true"], .apb[aria-pressed="true"], .apb[aria-pressed="true"]:hover { background: var(--sign); color: var(--sign-ink); }
+.chip:active, .tbtn:active, .apb:active, .btn:active, .seg-btn:active, .bbtn:active { transform: translateY(1px); }
+.chip kbd { font: 700 10px var(--font-mono); color: inherit; opacity: 0.6; margin-right: 6px; border: 1px solid currentColor; border-radius: 2px; padding: 0 3px; background: none; }
+.cams { gap: 2px; padding: 0; background: none; border: 0; box-shadow: none; }
+.cams .chip, .cams .chip:first-child, .cams .chip:last-child { border-radius: 3px; border: 0; padding-left: 11px; }
+.cams .chip[aria-pressed="true"] { background: var(--sign); }
+.chip:focus-visible, .tbtn:focus-visible, .apb:focus-visible, .btn:focus-visible, .seg-btn:focus-visible, .bbtn:focus-visible, .plane-card:focus-within { outline: 3px solid #fff; outline-offset: 2px; }
 
-/* touch: sidestick, thrust lever, system keys */
-.stick {
-  border: 0; background: radial-gradient(circle at 50% 50%, #1b232b 0 52%, #0e1317 53% 62%, #26313b 63% 66%, rgba(14,19,23,0.7) 67%);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.5), inset 0 0 0 1px #33414f;
-}
-.stick::before, .stick::after { content: ""; position: absolute; background: #2f3c48; }
-.stick::before { left: 50%; top: 10px; bottom: 10px; width: 1px; } .stick::after { top: 50%; left: 10px; right: 10px; height: 1px; }
-.knob {
-  z-index: 1; border: 0; width: 58px; height: 58px; margin: -29px 0 0 -29px;
-  background: radial-gradient(circle at 38% 32%, #4b5a69, #222b34 60%, #151a20); box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
-}
-.knob::after { content: ""; position: absolute; left: 50%; top: 9px; width: 14px; height: 6px; margin-left: -7px; border-radius: 3px; background: #c4372b; box-shadow: 0 0 4px #c4372b; }
-.throttle {
-  width: 62px; border: 1px solid #33414f; border-radius: 8px; cursor: ns-resize;
-  background:
-    linear-gradient(90deg, transparent 27px, #05080b 27px 35px, transparent 35px),
-    repeating-linear-gradient(180deg, transparent 0 15px, #2a3540 15px 16px),
-    linear-gradient(180deg, #1f2730, #121820);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
-}
-.throttle .fill { left: 27px; right: 27px; border-radius: 3px; background: linear-gradient(180deg, var(--led-amber), #b86f12); box-shadow: 0 0 8px color-mix(in srgb, var(--led-amber) 60%, transparent); }
-.throttle .lbl { top: -22px; font: 700 11px var(--font-mono); color: var(--led-amber); text-shadow: 0 0 6px rgba(0,0,0,0.8); }
-.throttle::after { content: "TOGA\A\A\A CLB\A\A\A\A\A IDLE"; white-space: pre; position: absolute; left: 4px; top: 6px; font: 700 8px/12px var(--font-mono); color: #8fa2b4; pointer-events: none; }
-.tbtns { right: 88px; gap: 8px; }
-.tbtn { min-width: 76px; padding: 12px 10px 11px 24px; text-align: left; }
+/* autopilot */
+.ap { top: calc(56px + env(safe-area-inset-top, 0px)); background: rgba(10,14,22,0.92); border: 1px solid #2b3446; border-radius: 4px; padding: 8px; gap: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.ap::before { content: "AUTOPILOT"; position: absolute; top: -9px; left: 10px; padding: 1px 6px; font: 800 10px var(--font-display); letter-spacing: 0.2em; color: var(--sign-ink); background: var(--sign); border-radius: 2px; }
+.apb { padding: 9px 12px; min-width: 50px; }
+.apv { background: #05070b; border: 1px solid #2b3446; border-radius: 3px; overflow: hidden; gap: 0; padding: 0; box-shadow: none; }
+.apv span { font: 800 10px var(--font-display); letter-spacing: 0.14em; color: var(--muted); padding: 0 7px; align-self: stretch; display: grid; place-items: center; background: #10141c; border-right: 1px solid #2b3446; }
+.apv output { min-width: 3.6em; font: 700 15px var(--font-mono); color: var(--sign); text-shadow: 0 0 8px rgba(255,210,0,0.45); }
+.apv button { width: 28px; height: 32px; border-radius: 0; color: #fff; background: #151a23; }
+.apv button:hover { background: #222a37; }
 
-/* briefing */
-.panel { background: linear-gradient(180deg, color-mix(in srgb, #1d262f 96%, transparent), color-mix(in srgb, #141b22 96%, transparent)); border-color: #33414f; box-shadow: 0 20px 50px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06); }
-.plane-card { background: linear-gradient(180deg, #19212a, #11171d); border-color: #2b3744; border-radius: 6px; padding-left: 24px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
-.plane-card::before { content: ""; position: absolute; left: 10px; top: 16px; width: 6px; height: 6px; border-radius: 50%; background: var(--led-off); }
-.plane-card:has(input:checked) { background: linear-gradient(180deg, #16302a, #0f1f1b); border-color: color-mix(in srgb, var(--led-on) 60%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--led-on) 40%, transparent), 0 0 18px color-mix(in srgb, var(--led-on) 12%, transparent); }
-.plane-card:has(input:checked)::before { background: var(--led-on); box-shadow: 0 0 6px var(--led-on); }
-.plane-card:hover { border-color: #46586a; }
-select { font: 600 14px var(--font-body); background: linear-gradient(180deg, #19212a, #11171d); border: 1px solid #33414f; border-radius: 5px; padding: 9px 10px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
-.btn {
-  position: relative; font: 700 15px var(--font-mono); letter-spacing: 0.14em; text-transform: uppercase; border-radius: 6px; padding: 14px 28px 14px 46px;
-  color: #062014; background: linear-gradient(180deg, #7dffbd, #3fd98a); border: 1px solid #2aa868;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -3px 0 rgba(0,0,0,0.2), 0 6px 16px color-mix(in srgb, var(--led-on) 25%, transparent);
-}
-.btn::before { content: ""; position: absolute; left: 18px; top: 50%; margin-top: -7px; border-left: 12px solid currentColor; border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
-.btn.alt { color: var(--key-text); background: linear-gradient(180deg, var(--key-top), var(--key-bot)); border-color: var(--key-edge); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -2px 0 rgba(0,0,0,0.45); }
-.btn.alt::before { border-left: 4px solid currentColor; border-right: 4px solid currentColor; border-top: 0; border-bottom: 0; width: 4px; height: 14px; margin-top: -7px; box-sizing: content-box; }
-form.name .btn::before { display: none; }
+.pushbtn { font: 800 16px var(--font-display); letter-spacing: 0.16em; text-transform: uppercase; color: var(--sign-ink); background: repeating-linear-gradient(-45deg, var(--sign) 0 14px, #111 14px 28px); border: 0; border-radius: 3px; padding: 4px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); text-shadow: none; }
+.pushbtn span { display: block; background: var(--sign); padding: 10px 24px; border-radius: 2px; }
+
+/* touch */
+.stick { background: radial-gradient(circle, rgba(18,20,23,0.75) 0 60%, rgba(18,20,23,0.4) 61%); border: 2px solid var(--sign); box-shadow: 0 6px 18px rgba(0,0,0,0.45); }
+.stick::before, .stick::after { background: rgba(255,210,0,0.35); }
+.knob { background: radial-gradient(circle at 38% 32%, #3a3d43, #16181c 70%); box-shadow: 0 0 0 2px var(--sign), 0 4px 10px rgba(0,0,0,0.6); }
+.knob::after { background: var(--sign); box-shadow: none; }
+.throttle { border: 2px solid var(--sign); border-radius: 4px; background: linear-gradient(90deg, transparent 27px, #000 27px 35px, transparent 35px), repeating-linear-gradient(180deg, transparent 0 15px, rgba(255,210,0,0.15) 15px 16px), rgba(18,20,23,0.85); }
+.throttle .fill { background: var(--sign); box-shadow: 0 0 10px rgba(255,210,0,0.5); }
+.throttle .lbl, .throttle::after { color: var(--sign); }
+.tbtns { grid-template-columns: repeat(2, auto); right: 90px; gap: 6px; }
+.tbtn { min-width: 0; padding: 11px 10px; font-size: 12px; }
+
+/* briefing: terminal concourse */
+.dialog { background: rgba(4,9,18,0.72); align-items: start; padding: 64px 16px 16px; }
+.panel { width: min(1180px, 100%); background: var(--concourse); border: 1px solid var(--edge); border-radius: 6px; padding: 0; gap: 0; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.55); }
+.brief-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px 20px; flex-wrap: wrap; padding: 18px 20px 16px; background: var(--tile); border-bottom: 4px solid var(--sign); }
+.brief-head h2 { font: 800 clamp(24px, 3.4vw, 34px)/1.05 var(--font-display); text-transform: uppercase; letter-spacing: 0.02em; margin: 2px 0 0; }
+.eyebrow { font: 800 12px var(--font-display); letter-spacing: 0.22em; color: var(--sign); }
+.summary { margin: 0; font: 500 13px var(--font-mono); color: var(--sign); background: #000; padding: 7px 10px; border-radius: 3px; white-space: pre-wrap; }
+#briefResult { padding: 14px 20px 0; }
+.step { padding: 16px 20px 6px; display: grid; gap: 12px; }
+.step h3 { display: flex; align-items: center; gap: 10px; margin: 0; font: 800 20px var(--font-display); text-transform: uppercase; letter-spacing: 0.08em; }
+.step h3 .num { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 3px; background: var(--sign); color: var(--sign-ink); font-size: 17px; }
+.filters, .seg { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.seg-btn, .bbtn { font: 700 14px var(--font-display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text); background: var(--tile); border: 0; border-radius: 3px; padding: 8px 12px; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.07); }
+.seg-btn:hover, .bbtn:hover:not(:disabled) { background: var(--tile-2); }
+.seg-btn[aria-pressed="true"], .bbtn[aria-pressed="true"] { background: var(--sign); color: var(--sign-ink); }
+.bbtn:disabled { opacity: 0.25; cursor: default; }
+.conds { display: flex; gap: 10px 22px; flex-wrap: wrap; }
+.seg > span { font: 800 12px var(--font-display); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
+
+.planes { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.plane-card { padding: 0; gap: 0; border: 0; border-radius: 4px; overflow: hidden; background: var(--tile); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06); transition: transform 0.12s, box-shadow 0.12s; }
+.plane-card:hover { transform: translateY(-2px); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14), 0 8px 18px rgba(0,0,0,0.35); }
+.plane-card:has(input:checked) { background: var(--tile); box-shadow: 0 0 0 3px var(--sign), 0 10px 24px rgba(0,0,0,0.4); }
+.photo { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: linear-gradient(180deg, #2a4466, #4b5966 55%, #383e45 56%); overflow: hidden; }
+.photo img { display: block; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.4s; }
+.has-photo .photo img { opacity: 1; }
+.photo .tag { position: absolute; left: 8px; top: 8px; font: 800 10px var(--font-display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--sign-ink); background: var(--sign); padding: 3px 6px; border-radius: 2px; }
+.plane-card:has(input:checked) .photo::after { content: "SELECTED"; position: absolute; right: 8px; top: 8px; font: 800 10px var(--font-display); letter-spacing: 0.14em; color: var(--sign); background: #000; padding: 3px 6px; border-radius: 2px; }
+.card-body { display: grid; gap: 4px; padding: 10px 12px 12px; }
+.card-body b { font: 800 20px/1 var(--font-display); text-transform: uppercase; letter-spacing: 0.03em; }
+.card-body .type { font-size: 13px; color: var(--muted); }
+.specs { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; font: 500 11px var(--font-mono); color: var(--muted); }
+.specs strong { color: var(--sign); font-weight: 700; }
+.plane-card.wait .photo { animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { filter: brightness(1.25); } }
+
+.board-wrap { overflow-x: auto; border-radius: 4px; background: #000; padding: 6px; }
+.board { display: grid; gap: 3px; min-width: 640px; }
+.brow { display: grid; grid-template-columns: 92px minmax(0, 1.6fr) minmax(0, 1fr) 90px 200px; gap: 12px; align-items: center; padding: 5px 8px; background: #0b0c0e; border-radius: 2px; }
+.brow.bhead { background: none; font: 800 11px var(--font-display); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); padding-block: 4px; }
+.brow.is-dep { box-shadow: inset 4px 0 0 var(--sign); }
+.brow.is-arr { box-shadow: inset 4px 0 0 #6fb3ff; }
+.flap { display: inline-flex; gap: 2px; font: 700 18px var(--font-mono); color: var(--sign); }
+.bcode .flap { letter-spacing: 0; }
+.bcode { display: flex; }
+.bcode .flap { background: repeating-linear-gradient(90deg, #1b1d21 0 22px, transparent 22px 24px); padding: 2px 0 2px 5px; letter-spacing: 9.6px; border-radius: 2px; position: relative; }
+.bcode .flap::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: #000; }
+.bname { font: 600 16px var(--font-body); color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bmeta { font: 500 13px var(--font-mono); color: var(--muted); }
+.bacts { display: flex; gap: 4px; justify-content: flex-end; }
+.bbtn { padding: 6px 10px; font-size: 13px; }
+.brow .bacts .bbtn:nth-child(2)[aria-pressed="true"] { background: #6fb3ff; color: #04101f; }
+
+.brief-foot { position: sticky; bottom: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px 20px; flex-wrap: wrap; padding: 14px 20px; margin-top: 10px; background: var(--tile); border-top: 1px solid var(--edge); }
+#briefTip { margin: 0; color: var(--muted); font-size: 14px; max-width: 70ch; }
+.btn { position: relative; font: 800 18px var(--font-display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--sign-ink); background: var(--sign); border: 0; border-radius: 3px; padding: 13px 48px 13px 22px; box-shadow: 0 6px 18px rgba(255,210,0,0.2); cursor: pointer; }
+.btn::before { display: none; }
+.btn::after { content: "→"; position: absolute; right: 18px; top: 50%; transform: translateY(-52%); font-family: var(--font-body); font-weight: 700; }
+.btn:hover { background: #ffe14d; }
+.btn.alt { color: var(--sign); background: #000; box-shadow: inset 0 0 0 2px var(--sign); }
+.btn.alt::after { content: "↺"; }
+.btn.alt::before { display: none; }
+form.name .btn::after { content: none; }
+.result { font: 600 16px var(--font-mono); color: var(--sign); }
+.stars { color: var(--sign); }
+
+/* manual below the game */
+.card { background: var(--concourse); border-color: var(--edge); border-radius: 4px; }
+.card h2 { font: 800 22px var(--font-display); text-transform: uppercase; letter-spacing: 0.05em; }
+kbd { font: 700 12px var(--font-mono); color: var(--sign-ink); background: var(--sign); border: 0; border-radius: 2px; padding: 0 5px; }
+.airports code { color: var(--sign); }
+.help { background: rgba(10,14,22,0.95); border-color: #2b3446; border-radius: 4px; }
+.help h3 { font: 800 22px var(--font-display); text-transform: uppercase; }
 @media (max-width: 680px) {
-  .chip { padding: 8px 8px 7px 19px; font-size: 10px; } .chip::before { left: 6px; width: 6px; height: 6px; margin-top: -3px; }
-  .cams .chip { padding-left: 18px; }
+  .chip { padding: 8px 8px; font-size: 12px; }
+  .brief-head, .step, .brief-foot { padding-left: 14px; padding-right: 14px; }
+  .dialog { padding-top: 92px; }
 }
-@media (prefers-reduced-motion: reduce) { .chip, .apb, .tbtn, .btn { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .plane-card, .photo img, .chip, .btn { transition: none; } .plane-card.wait .photo { animation: none; } }
 </style>
 
 <div class="wrap">
-  <header>
-    <h1><small>FLIGHT SIM · 9 AIRCRAFT · 12 AIRPORTS · 32 KM MAP</small>Skyways Flight Sim</h1>
-    <p class="tagline">Nine aircraft, twelve airports and a 32 km world. Start at the gate, push back, fly by hand or with the autopilot, and land by day, at sunset or at night, in sun or rain.</p>
+  <header class="masthead">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="currentColor"/></svg></span>
+      <h1>Skyways <span>Flight Sim</span></h1></div>
+    <p class="tagline">13 aircraft · 12 airports · 32 km world · autopilot · day, sunset and night</p>
   </header>
 
   <div class="stage" id="stage">
@@ -274,6 +315,9 @@ form.name .btn::before { display: none; }
         <button class="tbtn" id="tGear" type="button">GEAR</button>
         <button class="tbtn" id="tFlaps" type="button">FLAPS</button>
         <button class="tbtn" id="tBrake" type="button">BRAKE</button>
+        <button class="tbtn" id="tSpoil" type="button" aria-pressed="false">SPOILER</button>
+        <button class="tbtn" id="tRev" type="button" aria-pressed="false">REVERSE</button>
+        <button class="tbtn" id="tLights" type="button" aria-pressed="false">LIGHTS</button>
       </div>
       <div class="throttle" id="throttle"><div class="lbl" id="thrLbl">THR 0%</div><div class="fill" id="thrFill"></div></div>
     </div>
@@ -288,7 +332,7 @@ form.name .btn::before { display: none; }
       <button class="apb" id="apNav" type="button" aria-pressed="false">NAV</button>
       <button class="apb" id="apApp" type="button" aria-pressed="false">APP</button>
     </div>
-    <button class="pushbtn" id="pushBtn" type="button" hidden>Push back</button>
+    <button class="pushbtn" id="pushBtn" type="button" hidden><span>Push back</span></button>
 
     <div class="help" id="help" hidden>
       <h3>Controls</h3>
@@ -300,6 +344,8 @@ form.name .btn::before { display: none; }
         <dt><kbd>Space</kbd></dt><dd>Wheel brakes</dd>
         <dt><kbd>V</kbd> · <kbd>G</kbd></dt><dd>Flaps (0, 1, 2) · landing gear</dd>
         <dt><kbd>1</kbd>–<kbd>6</kbd> or <kbd>C</kbd></dt><dd>Camera views (drag to look around in Orbit)</dd>
+        <dt><kbd>X</kbd> · <kbd>T</kbd></dt><dd>Spoilers (speed brakes) · reverse thrust on the ground</dd>
+        <dt><kbd>[</kbd> <kbd>]</kbd> · <kbd>L</kbd> · <kbd>N</kbd></dt><dd>Pitch trim · landing lights · parking brake</dd>
         <dt><kbd>M</kbd> · <kbd>P</kbd></dt><dd>Map: local, whole world, off · pause</dd>
         <dt><kbd>U</kbd> · <kbd>K</kbd></dt><dd>Autopilot on/off · push back from the gate</dd>
       </dl>
@@ -307,21 +353,45 @@ form.name .btn::before { display: none; }
 
     <div class="dialog" id="brief">
       <div class="panel">
-        <div class="eyebrow" id="briefEyebrow">FLIGHT BRIEFING</div>
-        <h2 id="briefTitle">Choose your aircraft and route</h2>
-        <div id="briefResult" hidden></div>
-        <div class="planes" id="planes" role="radiogroup" aria-label="Aircraft"></div>
-        <div class="route">
-          <label for="fromSel">Depart from<select id="fromSel"></select></label>
-          <label for="toSel">Fly to<select id="toSel"></select></label>
-          <label for="startSel">Start at<select id="startSel"><option value="runway">Runway, ready for takeoff</option><option value="gate">Gate (push back and taxi)</option></select></label>
-          <label for="timeSel">Time of day<select id="timeSel"><option value="day">Day</option><option value="sunset">Sunset</option><option value="night">Night</option></select></label>
-          <label for="wxSel">Weather<select id="wxSel"><option value="clear">Clear</option><option value="cloudy">Cloudy</option><option value="rain">Rain and low cloud</option></select></label>
+        <div class="brief-head">
+          <div><div class="eyebrow" id="briefEyebrow">FLIGHT BRIEFING</div><h2 id="briefTitle">Choose your aircraft and route</h2></div>
+          <p class="summary" id="briefSummary"></p>
         </div>
-        <p id="briefTip">Throttle up to full, roll down the runway, and gently pull back once you pass the rotate speed shown on the airspeed box.</p>
-        <div class="btns">
-          <button class="btn" id="goBtn" type="button">Take off</button>
-          <button class="btn alt" id="resumeBtn" type="button" hidden>Resume flight</button>
+        <div id="briefResult" hidden></div>
+        <section class="step" aria-labelledby="stepHangar">
+          <h3 id="stepHangar"><span class="num">1</span>Hangar</h3>
+          <div class="filters" id="planeFilter" role="group" aria-label="Aircraft type">
+            <button type="button" class="seg-btn" data-cat="all" aria-pressed="true">All</button>
+            <button type="button" class="seg-btn" data-cat="airliner" aria-pressed="false">Airliners</button>
+            <button type="button" class="seg-btn" data-cat="light" aria-pressed="false">Light &amp; business</button>
+            <button type="button" class="seg-btn" data-cat="special" aria-pressed="false">Cargo &amp; fast jets</button>
+          </div>
+          <div class="planes" id="planes" role="radiogroup" aria-label="Aircraft"></div>
+        </section>
+        <section class="step" aria-labelledby="stepRoute">
+          <h3 id="stepRoute"><span class="num">2</span>Departures</h3>
+          <div class="board-wrap"><div class="board" id="routeBoard"></div></div>
+        </section>
+        <section class="step" aria-labelledby="stepCond">
+          <h3 id="stepCond"><span class="num">3</span>Conditions</h3>
+          <div class="conds">
+            <div class="seg" data-for="startSel" role="group" aria-label="Start position"><span>Start</span><button type="button" class="seg-btn" data-v="runway">Runway</button><button type="button" class="seg-btn" data-v="gate">Gate</button></div>
+            <div class="seg" data-for="timeSel" role="group" aria-label="Time of day"><span>Time</span><button type="button" class="seg-btn" data-v="day">Day</button><button type="button" class="seg-btn" data-v="sunset">Sunset</button><button type="button" class="seg-btn" data-v="night">Night</button></div>
+            <div class="seg" data-for="wxSel" role="group" aria-label="Weather"><span>Weather</span><button type="button" class="seg-btn" data-v="clear">Clear</button><button type="button" class="seg-btn" data-v="cloudy">Cloudy</button><button type="button" class="seg-btn" data-v="rain">Rain</button></div>
+          </div>
+          <div hidden>
+            <select id="fromSel" aria-label="Depart from"></select><select id="toSel" aria-label="Fly to"></select>
+            <select id="startSel" aria-label="Start at"><option value="runway">Runway</option><option value="gate">Gate</option></select>
+            <select id="timeSel" aria-label="Time of day"><option value="day">Day</option><option value="sunset">Sunset</option><option value="night">Night</option></select>
+            <select id="wxSel" aria-label="Weather"><option value="clear">Clear</option><option value="cloudy">Cloudy</option><option value="rain">Rain</option></select>
+          </div>
+        </section>
+        <div class="brief-foot">
+          <p id="briefTip">Throttle up to full, roll down the runway, and gently pull back once you pass the rotate speed shown on the airspeed box.</p>
+          <div class="btns">
+            <button class="btn alt" id="resumeBtn" type="button" hidden>Resume flight</button>
+            <button class="btn" id="goBtn" type="button">Take off</button>
+          </div>
         </div>
       </div>
     </div>
@@ -339,6 +409,10 @@ form.name .btn::before { display: none; }
         <dt><kbd>V</kbd></dt><dd>Flaps: more lift at low speed for takeoff and landing</dd>
         <dt><kbd>G</kbd></dt><dd>Raise or lower the landing gear (every plane except the Skylark)</dd>
         <dt><kbd>1</kbd> Chase · <kbd>2</kbd> Cockpit · <kbd>3</kbd> Wing</dt><dd><kbd>4</kbd> Tower · <kbd>5</kbd> Orbit (drag + scroll) · <kbd>6</kbd> Fly-by</dd>
+        <dt><kbd>X</kbd> Spoilers</dt><dd>Panels on top of the wing that kill lift and add drag. Use them to slow down or descend faster; airliners raise them by themselves on touchdown</dd>
+        <dt><kbd>T</kbd> Reverse thrust</dt><dd>On the ground after landing, press T and add throttle to slow down hard</dd>
+        <dt><kbd>[</kbd> <kbd>]</kbd> Trim</dt><dd>Holds the nose up or down a little so you don't have to keep pressing</dd>
+        <dt><kbd>L</kbd> · <kbd>N</kbd></dt><dd>Landing lights (light up the runway at night) · parking brake</dd>
         <dt><kbd>U</kbd> Autopilot</dt><dd>Open the panel with the Autopilot button. Set SPD, HDG, ALT and V/S, then press AP. NAV flies to your destination, APP lines up with the runway and lands by itself.</dd>
         <dt><kbd>K</kbd> Push back</dt><dd>When you start at the gate, push back, then taxi to the runway with gentle throttle and Q/E to steer</dd>
         <dt>Game controller</dt><dd>Left stick flies, triggers set throttle, A brakes, X flaps, B gear, Y camera</dd>
@@ -385,7 +459,7 @@ form.name .btn::before { display: none; }
   // ================= WORLD DATA =================
   const AIRPORTS = [
     { code: "HBP", name: "Harbor Point Intl", x: -200, z: -1250, hdg: 20, elev: 12, kind: "intl",
-      rwys: [{ off: 0, len: 2400, w: 50, sfx: "R" }, { off: -380, len: 2000, w: 45, sfx: "L" }], stands: ["b777", "b777", "a321", "a321", "a321", "islander", "a321", "breeze", "atlas"] },
+      rwys: [{ off: 0, len: 2400, w: 50, sfx: "R" }, { off: -380, len: 2000, w: 45, sfx: "L" }], stands: ["jumbo", "b777", "skyliner", "a321", "regio", "a321", "islander", "b777", "breeze", "atlas"] },
     { code: "SPT", name: "Southport", x: 3100, z: 1300, hdg: 120, elev: 20, kind: "intl",
       rwys: [{ off: 0, len: 1900, w: 45, sfx: "" }], stands: ["a321", "b777", "a321", "islander", "swift"] },
     { code: "WFD", name: "Westfield Regional", x: -2900, z: 2350, hdg: 160, elev: 148, kind: "regional",
@@ -395,22 +469,22 @@ form.name .btn::before { display: none; }
     { code: "CRK", name: "Coral Key", x: -2300, z: -3050, hdg: 300, elev: 6, kind: "ga",
       rwys: [{ off: 0, len: 1250, w: 35, sfx: "" }], stands: ["aero", "trainer"] },
     { code: "EGT", name: "Eastgate Intl", x: 6500, z: -6750, hdg: 140, elev: 88, kind: "intl",
-      rwys: [{ off: 0, len: 2600, w: 50, sfx: "" }], stands: ["b777", "a321", "a321", "b777", "islander", "atlas", "breeze"] },
+      rwys: [{ off: 0, len: 2600, w: 50, sfx: "" }], stands: ["skyliner", "a321", "regio", "b777", "islander", "atlas", "breeze"] },
     { code: "SNV", name: "Sunvale Intl", x: 2000, z: 10750, hdg: 90, elev: 126, kind: "intl",
-      rwys: [{ off: 0, len: 2400, w: 50, sfx: "" }], stands: ["a321", "b777", "a321", "islander"] },
+      rwys: [{ off: 0, len: 2400, w: 50, sfx: "" }], stands: ["jumbo", "a321", "regio", "b777", "islander"] },
     { code: "HMR", name: "Highmoor", x: 12500, z: 2500, hdg: 30, elev: 185, kind: "regional",
       rwys: [{ off: 0, len: 1800, w: 45, sfx: "" }], stands: ["a321", "islander", "trainer"] },
     { code: "BYF", name: "Bayford", x: -4250, z: 11500, hdg: 170, elev: 50, kind: "regional",
-      rwys: [{ off: 0, len: 1700, w: 45, sfx: "" }], stands: ["islander", "a321", "aero", "breeze"] },
+      rwys: [{ off: 0, len: 1700, w: 45, sfx: "" }], stands: ["islander", "a321", "commuter", "breeze"] },
     { code: "NCP", name: "Northcape", x: 2500, z: -12750, hdg: 70, elev: 27, kind: "regional",
       rwys: [{ off: 0, len: 1700, w: 45, sfx: "" }], stands: ["a321", "islander"] },
     { code: "PMW", name: "Port Merrow", x: -6000, z: -7250, hdg: 250, elev: 13, kind: "ga",
       rwys: [{ off: 0, len: 1300, w: 35, sfx: "" }], stands: ["trainer", "aero", "trainer"] },
     { code: "FRC", name: "Far Reach", x: -12250, z: 5250, hdg: 10, elev: 33, kind: "ga",
-      rwys: [{ off: 0, len: 1250, w: 35, sfx: "" }], stands: ["aero", "trainer"] },
+      rwys: [{ off: 0, len: 1250, w: 35, sfx: "" }], stands: ["aero", "commuter", "trainer"] },
   ];
   const WORLD = 16000;
-  const DIMS = { trainer: [11, 7.2], aero: [9, 6.4], islander: [33, 30], a321: [35.8, 44.5], b777: [64.8, 73.9], breeze: [27.5, 27], swift: [17.5, 20], atlas: [43, 42], arrow: [10.6, 15.4] };
+  const DIMS = { trainer: [11, 7.2], aero: [9, 6.4], islander: [33, 30], a321: [35.8, 44.5], b777: [64.8, 73.9], breeze: [27.5, 27], swift: [17.5, 20], atlas: [43, 42], arrow: [10.6, 15.4], regio: [28.6, 36], skyliner: [60.2, 66], jumbo: [62, 70], commuter: [16.7, 17] };
   const swapLR = (s) => (s === "L" ? "R" : s === "R" ? "L" : "");
   for (const a of AIRPORTS) {
     const t = a.hdg * Math.PI / 180; a.s = Math.sin(t); a.c = Math.cos(t);
@@ -1104,6 +1178,71 @@ form.name .btn::before { display: none; }
     return finishModel(root, { prop: null, gear, ail: [wr.pivot, wl.pivot], elev: [dummy], rud: fin.pivot, strobes, fans: [], glow });
   }
 
+  // ---------- parametric passenger airliners (original designs) ----------
+  function buildAirliner(o) {
+    const root = new THREE.Group(), L = o.len, R = o.r;
+    const base = std(o.base, { roughness: 0.38, metalness: 0.15 }), accent = std(o.accent, { roughness: 0.4 }), wingMat = std(0xc9d0d8, { roughness: 0.45, metalness: 0.3 });
+    const tex = livery({ base: o.baseCss, belly: o.bellyCss, stripe: o.accentCss, stripe2: o.stripe2Css, windows: [0.24, 0.78, o.windows], cockpit: [0.87, 0.91], reg: o.reg, regV: 0.55, regColor: o.accentCss, top: o.accentCss, topV0: 0, topV1: 0.1 });
+    root.add(latheBody([[0.08 * R, -L / 2], [0.35 * R, -L / 2 + 0.04 * L], [0.78 * R, -L / 2 + 0.14 * L], [R, -L / 2 + 0.26 * L], [R, L / 2 - 0.27 * L], [0.96 * R, L / 2 - 0.17 * L], [0.78 * R, L / 2 - 0.09 * L], [0.42 * R, L / 2 - 0.035 * L], [0.1 * R, L / 2]], 28, tex));
+    if (o.hump) {
+      const hl = L * o.hump, hump = latheBody([[0.1, -hl / 2], [0.55 * R, -hl / 2 + hl * 0.15], [0.7 * R, -hl / 2 + hl * 0.35], [0.7 * R, hl / 2 - hl * 0.25], [0.5 * R, hl / 2 - hl * 0.08], [0.12 * R, hl / 2]], 20, null, base);
+      hump.scale.set(1, 0.8, 1); hump.position.set(0, R * 0.55, -L / 2 + hl / 2 + L * 0.06); root.add(hump);
+      const hw = livery({ base: o.baseCss, windows: [0.18, 0.8, Math.round(o.windows * 0.35)] });
+      hump.material = std(0xffffff, { map: hw, roughness: 0.38 });
+    }
+    const wy = -R * 0.55, wz = o.wingZ ?? L * 0.04;
+    const wing = { root: o.wRoot, tip: o.wTip, span: o.span, sweep: o.sweep, thick: o.wRoot * 0.12, dih: o.span * 0.07, c0: 0.62, c1: 0.95, cf: 0.25 };
+    const wr = surface(wing, wingMat, base), wl = surface(wing, wingMat, base);
+    wr.g.position.set(R * 0.7, wy, wz); wl.g.position.set(-R * 0.7, wy, wz); wl.g.scale.x = -1; root.add(wr.g, wl.g);
+    root.add(at(new THREE.Mesh(new THREE.BoxGeometry(R * 1.4, o.wRoot * 0.12, o.wRoot), wingMat), 0, wy, wz));
+    if (!o.props) for (const sx of [1, -1]) {
+      const wlt = new THREE.Mesh(panelGeo(o.wTip * 1.1, o.wTip * 0.45, o.span * 0.09, o.wTip * 0.7, 0.12, 0), accent);
+      wlt.rotation.z = sx * Math.PI / 2 * 0.92; wlt.position.set(sx * (R * 0.7 + o.span), wy + o.span * 0.07, wz + o.sweep + 0.1); root.add(wlt);
+    }
+    const fans = [], props = [];
+    for (const ex of o.engines) for (const sx of [1, -1]) {
+      const x = sx * ex, k = (ex - R * 0.7) / o.span, ez = wz - o.wRoot * 0.5 + k * o.sweep - (o.props ? 0.6 : o.engLen * 0.25), ey = wy + k * o.span * 0.07 - (o.props ? -0.2 : o.engR * 1.15);
+      const nac = latheBody([[o.engR * 0.92, -o.engLen / 2], [o.engR, -o.engLen * 0.3], [o.engR * 0.96, o.engLen * 0.25], [o.engR * 0.55, o.engLen / 2]], 18, null, o.props ? base : std(0xeef1f4, { roughness: 0.35 }));
+      nac.position.set(x, ey, ez); root.add(nac);
+      if (o.props) { const pr = propeller(4, o.engR * 2.6, o.engR * 0.5, M.dark, accent, o.engR * 0.55); pr.position.set(x, ey, ez - o.engLen / 2 - 0.2); root.add(pr); props.push(pr); }
+      else {
+        const lip = new THREE.Mesh(new THREE.TorusGeometry(o.engR * 0.93, o.engR * 0.09, 8, 24), M.metal); lip.position.set(x, ey, ez - o.engLen / 2); root.add(lip);
+        const fan = new THREE.Group(); fan.position.set(x, ey, ez - o.engLen / 2 + 0.25);
+        const disc = new THREE.Mesh(new THREE.CircleGeometry(o.engR * 0.9, 24), M.dark); disc.rotation.y = Math.PI; disc.position.z = 0.1; fan.add(disc);
+        for (let i = 0; i < 14; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(o.engR * 0.12, o.engR * 0.85, 0.04), M.metal); b.position.y = o.engR * 0.45; const h = new THREE.Group(); h.rotation.z = i / 14 * Math.PI * 2; b.rotation.y = 0.5; h.add(b); fan.add(h); }
+        const cone = new THREE.Mesh(new THREE.ConeGeometry(o.engR * 0.28, o.engR * 0.7, 12), M.metal); cone.geometry.rotateX(-Math.PI / 2); cone.position.z = -0.25; fan.add(cone);
+        root.add(fan); fans.push(fan);
+        const py = new THREE.Mesh(new THREE.BoxGeometry(o.engR * 0.3, o.engR * 1.1, o.engLen * 0.8), base); py.position.set(x, ey + o.engR * 0.9, ez + o.engLen * 0.1); root.add(py);
+      }
+    }
+    const st = { root: o.wRoot * 0.5, tip: o.wRoot * 0.2, span: o.span * 0.36, sweep: o.sweep * 0.45, thick: 0.3, dih: o.span * 0.03, c0: 0.05, c1: 0.95, cf: 0.3 };
+    const sr = surface(st, base, wingMat), sl = surface(st, base, wingMat);
+    sr.g.position.set(R * 0.25, R * 0.15, L / 2 - L * 0.13); sl.g.position.set(-R * 0.25, R * 0.15, L / 2 - L * 0.13); sl.g.scale.x = -1; root.add(sr.g, sl.g);
+    const fin = surface({ root: o.wRoot * 0.75, tip: o.wRoot * 0.28, span: R * 2.6, sweep: o.wRoot * 0.6, thick: 0.3, c0: 0.08, c1: 0.95, cf: 0.3 }, accent, base);
+    fin.g.rotation.z = Math.PI / 2; fin.g.position.set(0, R * 0.8, L / 2 - L * 0.16); root.add(fin.g);
+    const gear = new THREE.Group(); root.add(gear);
+    const gb = -o.gearH, wr2 = Math.max(0.35, o.gearH * 0.11);
+    for (const sx of [1, -1]) for (const dz of (o.bogie ? [-0.6, 0.6] : [0])) {
+      gear.add(strut(sx * o.gearX, wy, wz + o.wRoot * 0.3, sx * o.gearX, gb + wr2, wz + o.wRoot * 0.3, 0.12));
+      for (const dx of (o.bogie ? [-0.36, 0.36] : [0])) { const w = wheel(wr2, wr2 * 0.6); w.position.set(sx * o.gearX + dx * wr2 * 2, gb + wr2, wz + o.wRoot * 0.3 + dz * wr2 * 2); gear.add(w); }
+    }
+    const nz = -L / 2 + L * 0.12;
+    gear.add(strut(0, -R * 0.8, nz, 0, gb + wr2 * 0.85, nz, 0.09));
+    for (const dx of [-0.22, 0.22]) { const w = wheel(wr2 * 0.85, wr2 * 0.5); w.position.set(dx * wr2 * 2, gb + wr2 * 0.85, nz); gear.add(w); }
+    const tip = new THREE.Vector3(R * 0.7 + o.span, wy + o.span * 0.07, wz + o.sweep);
+    const strobes = addLights(root, tip, new THREE.Vector3(-tip.x, tip.y, tip.z), new THREE.Vector3(0, R * 0.3, L / 2));
+    const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 6), M.red); beacon.position.set(0, R + 0.1, 0); root.add(beacon);
+    return finishModel(root, { prop: null, props, gear, ail: [wr.pivot, wl.pivot], elev: [sr.pivot, sl.pivot], rud: fin.pivot, strobes, fans, beacon });
+  }
+  const buildRegio = () => buildAirliner({ len: 36, r: 1.55, span: 13.2, wRoot: 4.8, wTip: 1.4, sweep: 4.6, engines: [4.6], engR: 0.85, engLen: 3.4, gearH: 3.4, gearX: 2.6,
+    base: 0xf6f7f9, accent: 0xe8641e, baseCss: "#f6f7f9", bellyCss: "#e9ecef", accentCss: "#e8641e", stripe2Css: "#1e3a5f", windows: 24, reg: "REGIO" });
+  const buildSkyliner = () => buildAirliner({ len: 66, r: 3.0, span: 29, wRoot: 10, wTip: 2.4, sweep: 13, engines: [10.5], engR: 1.75, engLen: 6, gearH: 5.4, gearX: 5.2, bogie: true,
+    base: 0xf6f7f9, accent: 0x5b2a86, baseCss: "#f6f7f9", bellyCss: "#ebe6f1", accentCss: "#5b2a86", stripe2Css: "#d9a441", windows: 44, reg: "SKYLINER" });
+  const buildJumbo = () => buildAirliner({ len: 70, r: 3.2, hump: 0.36, span: 30, wRoot: 11, wTip: 3, sweep: 14.5, engines: [11, 19.5], engR: 1.45, engLen: 5.4, gearH: 5.7, gearX: 4.8, bogie: true,
+    base: 0xf6f7f9, accent: 0xc8102e, baseCss: "#f6f7f9", bellyCss: "#e7e9ec", accentCss: "#c8102e", stripe2Css: "#f2b134", windows: 46, reg: "JUMBO 4X" });
+  const buildCommuter = () => buildAirliner({ len: 17, r: 0.95, span: 7.4, wRoot: 2.1, wTip: 1.1, sweep: 0.3, engines: [3.0], engR: 0.48, engLen: 3, gearH: 1.95, gearX: 3.0, props: true,
+    base: 0xf6f7f9, accent: 0x0a7d4f, baseCss: "#f6f7f9", bellyCss: "#dfe7e2", accentCss: "#0a7d4f", stripe2Css: "#f2c230", windows: 9, reg: "COMMUTER" });
+
   const PLANES = {
     trainer: { name: "Skylark 140", type: "High-wing trainer · fixed gear", build: buildTrainer, thrust: 7.5, vmax: 64, stall: 21, roll: 1.5, pitch: 1.0, yaw: 0.5, turn: 0.85, gearH: 1.82, retract: false, cam: [17, 5], cock: [0.5, -0.4], wingX: 5.2, brake: 6, shadow: 6, stats: [0.35, 0.45, 0.95] },
     aero: { name: "Falcon X7", type: "Aerobatic · retractable gear", build: buildAero, thrust: 13, vmax: 98, stall: 25, roll: 3.3, pitch: 1.6, yaw: 0.8, turn: 0.95, gearH: 1.75, retract: true, cam: [14, 4], cock: [0.62, -0.15], wingX: 4.0, brake: 6, shadow: 5, stats: [0.55, 1, 0.65] },
@@ -1113,9 +1252,16 @@ form.name .btn::before { display: none; }
     swift: { name: "Swift 600", type: "Business jet · 9 seats", build: buildBizjet, thrust: 9.5, vmax: 165, stall: 40, roll: 1.6, pitch: 0.85, yaw: 0.35, turn: 0.85, gearH: 1.98, retract: true, cam: [30, 7], cock: [0.55, -8.3], wingX: 8.6, brake: 5.5, shadow: 9, jetSound: true, stats: [0.9, 0.6, 0.5] },
     atlas: { name: "Atlas 400", type: "Four-prop cargo lifter", build: buildCargo, thrust: 5.4, vmax: 122, stall: 40, roll: 0.55, pitch: 0.4, yaw: 0.18, turn: 0.65, gearH: 3.95, retract: true, cam: [95, 22], cock: [1.5, -19.4], wingX: 21, brake: 4, shadow: 30, big: true, stats: [0.6, 0.2, 0.4] },
     arrow: { name: "Arrow F2", type: "Delta-wing jet · afterburner", build: buildFighter, thrust: 24, vmax: 270, stall: 52, roll: 4.6, pitch: 2.0, yaw: 0.6, turn: 1.0, gearH: 1.77, retract: true, cam: [22, 5], cock: [0.85, -4.4], wingX: 5.3, brake: 6, shadow: 7, jetSound: true, stats: [1, 1, 0.3] },
+    commuter: { name: "Commuter 19", type: "Twin turboprop · 19 seats", build: buildCommuter, thrust: 7.6, vmax: 105, stall: 32, roll: 1.3, pitch: 0.8, yaw: 0.4, turn: 0.85, gearH: 1.95, retract: true, cam: [26, 6], cock: [0.5, -7], wingX: 8, brake: 5.5, shadow: 8, stats: [0.45, 0.6, 0.75] },
+    regio: { name: "Regio 190", type: "Regional jet · 100 seats", build: buildRegio, thrust: 6.9, vmax: 132, stall: 45, roll: 0.85, pitch: 0.52, yaw: 0.24, turn: 0.74, gearH: 3.4, retract: true, cam: [60, 13], cock: [0.9, -14.8], wingX: 14.3, brake: 4.5, shadow: 16, big: true, stats: [0.8, 0.35, 0.4] },
+    skyliner: { name: "Skyliner 350", type: "Wide-body twin · 330 seats", build: buildSkyliner, thrust: 6.3, vmax: 146, stall: 53, roll: 0.62, pitch: 0.42, yaw: 0.2, turn: 0.68, gearH: 5.4, retract: true, cam: [110, 22], cock: [1.6, -27.1], wingX: 31, brake: 4, shadow: 32, big: true, stats: [1, 0.22, 0.28] },
+    jumbo: { name: "Jumbo 4X", type: "Four-engine double-deck · 410 seats", build: buildJumbo, thrust: 5.9, vmax: 148, stall: 55, roll: 0.58, pitch: 0.4, yaw: 0.18, turn: 0.66, gearH: 5.7, retract: true, cam: [118, 25], cock: [2.6, -28.7], wingX: 32, brake: 4, shadow: 34, big: true, stats: [1, 0.18, 0.25] },
     b777: { name: "Boeing 777", type: "Wide-body airliner · 3D model", glb: "models/b777.json", length: 73.9, thrust: 6.4, vmax: 142, stall: 52, roll: 0.62, pitch: 0.42, yaw: 0.2, turn: 0.68, gearH: 5.6, retract: true, cam: [112, 23], cock: [1.3, 0], wingX: 30, brake: 4.0, shadow: 34, big: true, stats: [1, 0.2, 0.25] },
   };
   for (const k of Object.keys(PLANES)) PLANES[k].kind = k;
+  const CAT = { trainer: "light", aero: "light", swift: "light", islander: "airliner", a321: "airliner", b777: "airliner", breeze: "airliner", regio: "airliner", skyliner: "airliner", jumbo: "airliner", commuter: "airliner", atlas: "special", arrow: "special" };
+  const SEATS = { trainer: 4, aero: 2, swift: 9, islander: 150, a321: 220, b777: 396, breeze: 70, regio: 100, skyliner: 330, jumbo: 410, commuter: 19, atlas: 4, arrow: 1 };
+  for (const k of Object.keys(PLANES)) { PLANES[k].cat = CAT[k] || "light"; PLANES[k].seats = SEATS[k] || 0; }
 
   // ================= DETAILED 3D MODELS (GLB) =================
   // Each model is normalised (nose to -Z, real length, wheels on the ground) and merged by material so it draws quickly.
@@ -1411,7 +1557,8 @@ form.name .btn::before { display: none; }
     const [x, z] = toWorld(at, along, 0);
     S.pos.set(x, at.elev + 0.05 + spec.gearH, z);
     S.q.setFromAxisAngle(AY, -at.hdg * Math.PI / 180);
-    Object.assign(S, { speed: 0, sink: 0, throttle: 0, grounded: true, crashed: false, flaps: 1, gearDown: true, gearPos: 1, flapPos: 1, flightT: 0, vs: 0, touchFpm: null, landedAt: null, boomT: 0, started: false, gate: null, push: null, taxiOut: false });
+    Object.assign(S, { speed: 0, sink: 0, throttle: 0, grounded: true, crashed: false, flaps: 1, gearDown: true, gearPos: 1, flapPos: 1, flightT: 0, vs: 0, touchFpm: null, landedAt: null, boomT: 0, started: false, gate: null, push: null, taxiOut: false, spoiler: 0, autoSpoiler: false, reverse: false, trim: 0, park: false, lights: typeof ENV !== "undefined" && ENV.time !== "day" });
+    if (typeof syncTouchKeys === "function") syncTouchKeys();
     if (typeof AP !== "undefined") { AP.on = false; AP.athr = false; AP.app = false; AP.lat = "HDG"; AP.flare = false; apSync(); pushBtn.hidden = true; }
     boom.visible = false; model.visible = true; flyby.set = false;
   }
@@ -1474,6 +1621,13 @@ form.name .btn::before { display: none; }
     if (k === "KeyG" && S.mode === "fly") toggleGear();
     if (k === "KeyV" && S.mode === "fly") cycleFlaps();
     if (k === "KeyU" && S.mode === "fly") apEngage(!AP.on);
+    if (S.mode === "fly") {
+      if (k === "KeyX") toggleSpoiler();
+      if (k === "KeyT") toggleReverse();
+      if (k === "KeyL") toggleLights();
+      if (k === "KeyN") { S.park = !S.park; flash(S.park ? "Parking brake set" : "Parking brake released", 1.4); chime(S.park ? 300 : 500, 0.15); }
+      if (k === "BracketLeft" || k === "BracketRight") { S.trim = clamp(S.trim + (k === "BracketRight" ? 0.05 : -0.05), -0.4, 0.4); flash(`Trim ${S.trim > 0 ? "nose up" : S.trim < 0 ? "nose down" : "neutral"} ${Math.round(Math.abs(S.trim) * 100)}%`, 1.2); }
+    }
     if (k === "KeyK" && S.mode === "fly") startPushback();
     if (k === "KeyM") showMap = (showMap + 1) % 3;
     if (k === "KeyH") toggleHelp();
@@ -1540,20 +1694,83 @@ form.name .btn::before { display: none; }
     return { roll: dz(p.axes[0] || 0), pitch: -dz(p.axes[1] || 0), yaw: dz(p.axes[2] || 0) * 0.6, thr: rt - lt, brake: pressed(0) };
   }
 
+  // ================= HANGAR PHOTOS =================
+  // Each aircraft is photographed in a small studio scene on a second renderer, and the picture is shown on its card.
+  const PHOTO = (function () {
+    let r = null, sc = null, cam = null, floor = null;
+    function ensure() {
+      if (r) return true;
+      try {
+        const cv = document.createElement("canvas"); cv.width = 480; cv.height = 270;
+        r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, preserveDrawingBuffer: true });
+        r.setSize(480, 270, false); r.outputEncoding = THREE.sRGBEncoding;
+      } catch { r = null; return false; }
+      sc = new THREE.Scene();
+      const bg = document.createElement("canvas"); bg.width = 4; bg.height = 256; const g = bg.getContext("2d");
+      const grd = g.createLinearGradient(0, 0, 0, 256); grd.addColorStop(0, "#5f8fc7"); grd.addColorStop(0.55, "#cfe1f1"); grd.addColorStop(0.56, "#9aa3ab"); grd.addColorStop(1, "#6b737b");
+      g.fillStyle = grd; g.fillRect(0, 0, 4, 256); const bt = new THREE.CanvasTexture(bg); bt.encoding = THREE.sRGBEncoding; sc.background = bt;
+      sc.add(new THREE.HemisphereLight(0xeaf4ff, 0x5b616a, 0.95));
+      const key = new THREE.DirectionalLight(0xfff3e0, 1.1); key.position.set(-1, 1.4, -0.8); sc.add(key);
+      const rim = new THREE.DirectionalLight(0xbfd6ff, 0.5); rim.position.set(1, 0.6, 1); sc.add(rim);
+      const fc = document.createElement("canvas"); fc.width = fc.height = 128; const fg = fc.getContext("2d");
+      const fr = fg.createRadialGradient(64, 64, 2, 64, 64, 64); fr.addColorStop(0, "rgba(20,24,28,0.55)"); fr.addColorStop(1, "rgba(20,24,28,0)");
+      fg.fillStyle = fr; fg.fillRect(0, 0, 128, 128);
+      floor = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(fc), transparent: true, depthWrite: false }));
+      floor.rotation.x = -Math.PI / 2; sc.add(floor);
+      cam = new THREE.PerspectiveCamera(28, 16 / 9, 0.1, 5000);
+      return true;
+    }
+    function shoot(kind) {
+      if (!ensure()) return null;
+      const m = buildPlane(kind); if (!m) return null;
+      if (m.userData.prop) m.userData.prop.userData.disc.visible = false;
+      (m.userData.props || []).forEach((p) => (p.userData.disc.visible = false));
+      if (m.userData.glow) m.userData.glow.visible = false;
+      m.userData.strobes.forEach((s) => (s.visible = false));
+      sc.add(m); m.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(m), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+      const d = Math.max(size.x, size.z) * 1.9;
+      floor.scale.set(size.x * 1.3, size.z * 1.3, 1); floor.position.set(c.x, box.min.y + 0.02, c.z);
+      cam.position.set(c.x - d * 0.62, c.y + d * 0.2, c.z - d * 0.78); cam.lookAt(c.x, c.y - size.y * 0.05, c.z);
+      r.render(sc, cam);
+      const url = r.domElement.toDataURL("image/jpeg", 0.86);
+      sc.remove(m);
+      return url;
+    }
+    return { shoot, done() { if (r) { r.dispose(); try { r.forceContextLoss(); } catch {} r = null; } } };
+  })();
+  const photoQueue = [];
+  function queuePhoto(kind, img) { photoQueue.push({ kind, img }); if (photoQueue.length === 1) setTimeout(nextPhoto, 50); }
+  function nextPhoto() {
+    const job = photoQueue[0]; if (!job) return;
+    const url = PHOTO.shoot(job.kind);
+    if (url) { job.img.src = url; job.img.closest(".plane-card")?.classList.add("has-photo"); }
+    photoQueue.shift();
+    if (photoQueue.length) setTimeout(nextPhoto, 30);
+    else if (Object.values(PLANES).every((p) => !p.glb || (GLB[p.kind] && GLB[p.kind].status !== "loading"))) setTimeout(() => PHOTO.done(), 500);
+  }
+
   // ================= BRIEFING UI =================
   const planesEl = $("planes"), fromSel = $("fromSel"), toSel = $("toSel");
   let chosen = load("sw-plane") || "trainer"; if (!PLANES[chosen]) chosen = "trainer";
+  const CAT_LABEL = { airliner: "Airliner", light: "Light & business", special: "Cargo & fast jet" };
   for (const [id, p] of Object.entries(PLANES)) {
-    const lab = document.createElement("label"); lab.className = "plane-card";
+    const lab = document.createElement("label"); lab.className = "plane-card"; lab.dataset.cat = p.cat;
     const inp = document.createElement("input"); inp.type = "radio"; inp.name = "plane"; inp.value = id; inp.checked = id === chosen;
+    const ph = document.createElement("div"); ph.className = "photo";
+    const img = document.createElement("img"); img.alt = `${p.name}, studio photo`; img.width = 480; img.height = 270;
+    const tag = document.createElement("span"); tag.className = "tag"; tag.textContent = CAT_LABEL[p.cat];
+    ph.append(img, tag);
+    const body = document.createElement("div"); body.className = "card-body";
     const b = document.createElement("b"); b.textContent = p.name;
     const ty = document.createElement("span"); ty.className = "type"; ty.textContent = p.type;
-    lab.append(inp, b, ty);
-    [["Speed", p.stats[0]], ["Agility", p.stats[1]], ["Easy", p.stats[2]]].forEach(([n, v]) => {
-      const row = document.createElement("div"); row.className = "stat"; const s = document.createElement("span"); s.textContent = n;
-      const bar = document.createElement("div"); bar.className = "bar"; const i = document.createElement("i"); i.style.width = `${Math.round(v * 100)}%`; bar.append(i);
-      row.append(s, bar); lab.append(row);
+    const specs = document.createElement("div"); specs.className = "specs";
+    const dims = DIMS[id] || [0, 0];
+    [[`${p.seats}`, p.seats === 1 ? "seat" : "seats"], [`${dims[1]} m`, "long"], [`${dims[0]} m`, "span"], [`${Math.round(p.vmax * 0.82 * MS2KT)}`, "kt cruise"]].forEach(([v, l]) => {
+      const d = document.createElement("span"); const strong = document.createElement("strong"); strong.textContent = v; d.append(strong, document.createTextNode(" " + l)); specs.append(d);
     });
+    body.append(b, ty, specs);
+    lab.append(inp, ph, body);
     const startLoad = () => {
       lab.classList.add("wait"); ty.textContent = "Loading 3D model… 0%";
       loadGLB(id, (f) => { ty.textContent = `Loading 3D model… ${Math.round(f * 100)}%`; if (pendingTakeoff === id) goBtn.textContent = `Loading ${p.name}… ${Math.round(f * 100)}%`; }).then((ok) => {
@@ -1563,7 +1780,7 @@ form.name .btn::before { display: none; }
           if (pendingTakeoff === id) { pendingTakeoff = null; goBtn.textContent = "Take off"; briefTip.textContent = `${p.name} didn't load. Click its card to try again, or pick another plane.`; }
           return;
         }
-        ty.textContent = p.type;
+        ty.textContent = p.type; queuePhoto(id, img);
         if (pendingTakeoff === id) { pendingTakeoff = null; startFlight(); return; }
         if (chosen === id && (!model || model.userData.kind !== id) && S.mode !== "fly" && S.mode !== "paused") { setPlane(id); spawn(S.from); }
       });
@@ -1574,12 +1791,16 @@ form.name .btn::before { display: none; }
         if (GLB[id] && GLB[id].status === "failed") startLoad();
         briefTip.textContent = `${p.name} is loading. Press Take off and you'll start as soon as it's ready.`; return;
       }
-      setPlane(id); spawn(S.from);
+      setPlane(id); spawn(S.from); updateSummary();
       briefTip.textContent = p.big ? `Airliner tips: hold R until the throttle shows 100%, set flaps 2 with V, and pull back at ${Math.round(p.stall * 0.72 * MS2KT)} knots.` : "Throttle up to full, roll down the runway, and gently pull back once you pass the rotate speed.";
     });
-    if (p.glb) startLoad();
+    if (p.glb) startLoad(); else queuePhoto(id, img);
     planesEl.append(lab);
   }
+  $("planeFilter").querySelectorAll("button").forEach((btn) => btn.addEventListener("click", () => {
+    $("planeFilter").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === btn)));
+    planesEl.querySelectorAll(".plane-card").forEach((c) => (c.hidden = btn.dataset.cat !== "all" && c.dataset.cat !== btn.dataset.cat));
+  }));
   AIRPORTS.forEach((a, i) => {
     for (const sel of [fromSel, toSel]) { const o = document.createElement("option"); o.value = String(i); o.textContent = `${a.code} · ${a.name}`; sel.append(o); }
   });
@@ -1587,6 +1808,43 @@ form.name .btn::before { display: none; }
   fromSel.value = "0"; toSel.value = "1";
   fromSel.addEventListener("change", () => { S.from = AIRPORTS[+fromSel.value]; if (toSel.value === fromSel.value) toSel.value = String((+fromSel.value + 1) % AIRPORTS.length); spawn(S.from); });
   toSel.addEventListener("change", () => { if (toSel.value === fromSel.value) fromSel.value = String((+toSel.value + 1) % AIRPORTS.length); S.from = AIRPORTS[+fromSel.value]; spawn(S.from); });
+  const boardEl = $("routeBoard");
+  function flapText(t, n) { const sp = document.createElement("span"); sp.className = "flap"; sp.textContent = t.padEnd(n, " ").slice(0, n); return sp; }
+  function renderBoard() {
+    boardEl.replaceChildren();
+    const head = document.createElement("div"); head.className = "brow bhead";
+    ["Code", "Airport", "Runway", "Elevation", "Choose"].forEach((t) => { const c = document.createElement("span"); c.textContent = t; head.append(c); });
+    boardEl.append(head);
+    const rows = AIRPORTS.map((a, i) => [String(i), a]).concat([["-1", null]]);
+    for (const [v, a] of rows) {
+      const row = document.createElement("div"); row.className = "brow";
+      const isFrom = fromSel.value === v, isTo = toSel.value === v;
+      if (isFrom) row.classList.add("is-dep"); if (isTo) row.classList.add("is-arr");
+      const code = document.createElement("span"); code.className = "bcode"; code.append(flapText(a ? a.code : "---", 3));
+      const name = document.createElement("span"); name.className = "bname"; name.textContent = a ? a.name : "Free flight, no destination";
+      const rw = document.createElement("span"); rw.className = "bmeta"; rw.textContent = a ? `${a.label} · ${a.len} m` : "";
+      const el = document.createElement("span"); el.className = "bmeta"; el.textContent = a ? `${Math.round(a.elev * M2FT)} ft` : "";
+      const acts = document.createElement("span"); acts.className = "bacts";
+      const mk = (lbl, on, fn, dis) => { const bt = document.createElement("button"); bt.type = "button"; bt.className = "bbtn"; bt.textContent = lbl; bt.setAttribute("aria-pressed", String(on)); bt.disabled = !!dis; bt.addEventListener("click", fn); return bt; };
+      acts.append(
+        mk("Depart", isFrom, () => { fromSel.value = v; fromSel.dispatchEvent(new Event("change")); renderBoard(); updateSummary(); }, !a),
+        mk("Arrive", isTo, () => { toSel.value = v; toSel.dispatchEvent(new Event("change")); renderBoard(); updateSummary(); }),
+      );
+      row.append(code, name, rw, el, acts); boardEl.append(row);
+    }
+  }
+  document.querySelectorAll(".seg[data-for]").forEach((grp) => {
+    const sel = $(grp.dataset.for);
+    const sync = () => grp.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.v === sel.value)));
+    grp.querySelectorAll("button").forEach((btn) => btn.addEventListener("click", () => { sel.value = btn.dataset.v; sel.dispatchEvent(new Event("change")); sync(); updateSummary(); }));
+    sync();
+  });
+  function updateSummary() {
+    const f = AIRPORTS[+fromSel.value], t = toSel.value === "-1" ? null : AIRPORTS[+toSel.value];
+    const opt = (id) => $(id).selectedOptions[0].textContent;
+    $("briefSummary").textContent = `${PLANES[chosen].name}  ·  ${f.code} → ${t ? t.code : "free flight"}  ·  ${opt("startSel")}  ·  ${opt("timeSel")}  ·  ${opt("wxSel")}`;
+  }
+  renderBoard(); updateSummary();
 
   const apList = $("apList");
   for (const a of AIRPORTS) {
@@ -1601,6 +1859,7 @@ form.name .btn::before { display: none; }
     briefEyebrow.textContent = eyebrow; briefTitle.textContent = title; briefTip.textContent = tip;
     briefResult.replaceChildren(); if (resultNode) briefResult.append(resultNode); briefResult.hidden = !resultNode;
     resumeBtn.hidden = !canResume; goBtn.textContent = canResume ? "Restart flight" : "Take off"; brief.hidden = false; keys.clear();
+    renderBoard(); updateSummary();
   }
   function pause() { S.mode = "paused"; showBrief("PAUSED", "Flight paused", null, "Resume where you left off, or change the aircraft or route and start again.", true); }
   function resume() { S.mode = "fly"; brief.hidden = true; }
@@ -1625,12 +1884,48 @@ form.name .btn::before { display: none; }
     }
     spawn(S.from);
     applyEnv($("timeSel").value, $("wxSel").value);
+    S.lights = ENV.time !== "day"; syncTouchKeys();
     if ($("startSel").value === "gate") spawnAtGate(S.from); else if (hiddenParked) { hiddenParked.visible = true; hiddenParked = null; }
     S.mode = "fly"; brief.hidden = true;
     const rot = Math.round(spec.stall * 1.05 * 0.9 * MS2KT);
     flash(S.to ? `Cleared for takeoff, runway ${S.from.label}. Destination ${S.to.code}.` : `Cleared for takeoff. Rotate at ${rot} knots.`, 4);
     if (soundOn) initAudio();
     RADIO.length = 0;
+  }
+
+  // ================= EXTRA CONTROLS =================
+  function syncTouchKeys() {
+    const set = (id, on) => { const el = $(id); if (el) el.setAttribute("aria-pressed", String(!!on)); };
+    set("tSpoil", S.spoiler > 0); set("tRev", S.reverse); set("tLights", S.lights);
+  }
+  function toggleSpoiler() { S.spoiler = S.spoiler >= 1 ? 0 : S.spoiler + 0.5; S.autoSpoiler = false; flash(S.spoiler ? `Spoilers ${S.spoiler === 1 ? "full" : "half"}` : "Spoilers retracted", 1.3); chime(420, 0.12); syncTouchKeys(); }
+  function toggleReverse() {
+    if (!S.grounded) { flash("Reverse thrust only works on the ground", 1.6); return; }
+    S.reverse = !S.reverse; flash(S.reverse ? "Reverse thrust: add throttle to slow down" : "Reverse thrust off", 1.6); chime(S.reverse ? 260 : 520, 0.15); syncTouchKeys();
+  }
+  function toggleLights() { S.lights = !S.lights; flash(S.lights ? "Landing lights on" : "Landing lights off", 1.2); syncTouchKeys(); }
+  $("tSpoil").addEventListener("click", () => S.mode === "fly" && toggleSpoiler());
+  $("tRev").addEventListener("click", () => S.mode === "fly" && toggleReverse());
+  $("tLights").addEventListener("click", () => S.mode === "fly" && toggleLights());
+  // light pool thrown on the ground ahead by the landing lights
+  const lightPool = (function () {
+    const c = document.createElement("canvas"); c.width = c.height = 128; const g = c.getContext("2d");
+    const grd = g.createRadialGradient(64, 64, 2, 64, 64, 64); grd.addColorStop(0, "rgba(255,246,220,0.9)"); grd.addColorStop(0.5, "rgba(255,240,205,0.35)"); grd.addColorStop(1, "rgba(255,240,205,0)");
+    g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+    m.rotation.x = -Math.PI / 2; m.visible = false; scene.add(m); return m;
+  })();
+  function updateLightPool() {
+    const on = S.lights && ENV.time !== "day" && !S.crashed && S.mode !== "brief";
+    const gy = Math.max(0, groundY(S.pos.x, S.pos.z)), agl = S.pos.y - gy;
+    lightPool.visible = on && agl < 260;
+    if (!lightPool.visible) return;
+    const f = V.fwd.set(0, 0, -1).applyQuaternion(S.q), hl = Math.hypot(f.x, f.z) || 1, ahead = 25 + Math.min(agl, 120) * 1.2 + spec.cam[0] * 0.3;
+    const x = S.pos.x + f.x / hl * ahead, z = S.pos.z + f.z / hl * ahead;
+    lightPool.position.set(x, Math.max(0, groundY(x, z)) + 0.35, z);
+    lightPool.rotation.z = Math.atan2(f.x, -f.z) * -1;
+    const sz = 30 + spec.shadow * 1.4; lightPool.scale.set(sz, sz * 2.2, 1);
+    lightPool.material.opacity = clamp(1 - agl / 260, 0, 1);
   }
 
   // ================= PHYSICS =================
@@ -1654,8 +1949,9 @@ form.name .btn::before { display: none; }
     const pad = readPad(); let brake = keys.has("Space") || keys.has("KeyB") || touchBrake;
     if (pad) { pitch += invert ? -pad.pitch : pad.pitch; roll += pad.roll; yaw += pad.yaw; if (pad.thr) S.throttle = clamp(S.throttle + pad.thr * dt * 0.8, 0, 1); brake = brake || pad.brake; }
     pitch = clamp(pitch, -1, 1); roll = clamp(roll, -1, 1); yaw = clamp(yaw, -1, 1);
+    if (!AP.on) pitch = clamp(pitch + (S.grounded ? 0 : S.trim), -1, 1);
     if (AP.on) {
-      if (Math.abs(pitch) > 0.4 || Math.abs(roll) > 0.4) apEngage(false);
+      if (Math.abs(pitch - S.trim) > 0.4 || Math.abs(roll) > 0.4) apEngage(false);
       else { const c = apControl(dt, fwd, right); if (c) { pitch = c.pitch; roll = c.roll; } }
     }
     S.inputs.pitch = lerp(S.inputs.pitch, pitch, Math.min(1, dt * 8)); S.inputs.roll = lerp(S.inputs.roll, roll, Math.min(1, dt * 8)); S.inputs.yaw = lerp(S.inputs.yaw, yaw, Math.min(1, dt * 8));
@@ -1668,10 +1964,13 @@ form.name .btn::before { display: none; }
 
     S.gearPos = clamp(S.gearPos + (S.gearDown ? 1 : -1) * dt * 0.5, 0, 1);
     S.flapPos = lerp(S.flapPos, S.flaps / 2, Math.min(1, dt * 1.2));
-    const stallV = spec.stall * (1 - 0.14 * S.flapPos * 2);
-    const k = spec.thrust / (spec.vmax * spec.vmax) * (1 + 0.35 * S.flapPos + (spec.retract ? 0.25 * S.gearPos : 0));
-    S.speed += (S.throttle * spec.thrust - k * S.speed * S.speed - 9.8 * fwd.y) * dt;
-    if (S.grounded) S.speed -= ((brake ? spec.brake : 0.35) + (S.throttle < 0.02 ? 0.3 : 0)) * dt;
+    const stallV = spec.stall * (1 - 0.14 * S.flapPos * 2) * (1 + 0.12 * S.spoiler);
+    const k = spec.thrust / (spec.vmax * spec.vmax) * (1 + 0.35 * S.flapPos + (spec.retract ? 0.25 * S.gearPos : 0) + 0.9 * S.spoiler);
+    if (S.reverse && (!S.grounded || S.speed < 2.5)) { S.reverse = false; syncTouchKeys(); if (S.grounded) flash("Reverse thrust off", 1.2); }
+    if (S.autoSpoiler && S.throttle > 0.5) { S.spoiler = 0; S.autoSpoiler = false; syncTouchKeys(); }
+    S.speed += ((S.reverse ? -0.5 : 1) * S.throttle * spec.thrust - k * S.speed * S.speed - 9.8 * fwd.y) * dt;
+    if (S.grounded) S.speed -= ((brake ? spec.brake : 0.35) + (S.throttle < 0.02 ? 0.3 : 0) + S.spoiler * 1.2) * dt;
+    if (S.grounded && S.park) S.speed = Math.max(0, S.speed - 12 * dt);
     S.speed = Math.max(0, S.speed);
     if (S.started) S.flightT += dt;
 
@@ -1717,6 +2016,7 @@ form.name .btn::before { display: none; }
         if (!rw && am < 0.97) { crash("That wasn't a runway. Land on one of the four airports."); return; }
         S.grounded = true; S.sink = 0; S.pos.y = gy + spec.gearH;
         S.touchFpm = Math.round(-S.vs * M2FT * 60); S.landedAt = rw || airportMask(S.pos.x, S.pos.z)[1];
+        if (spec.big && S.spoiler < 1) { S.spoiler = 1; S.autoSpoiler = true; syncTouchKeys(); }
         if (AP.on) { const auto = AP.lat === "LOC"; AP.on = false; AP.athr = false; AP.app = false; AP.lat = "HDG"; apSync(); if (auto) RADIO.push({ text: "Autoland complete. Hold Space to brake.", t: 8 }); }
         flash(`Touchdown at ${S.landedAt.code}: ${S.touchFpm} ft/min. Hold Space to brake.`, 3.5); chime(520);
       }
@@ -1912,6 +2212,11 @@ form.name .btn::before { display: none; }
     const gearTxt = spec.retract ? (S.gearPos > 0.98 ? "GEAR DN" : S.gearPos < 0.02 ? "GEAR UP" : "GEAR ···") : "GEAR FIXED";
     const items = [[`THR ${Math.round(S.throttle * 100)}%`, HC.hud], [`FLAPS ${S.flaps}`, HC.hud], [gearTxt, spec.retract && S.gearPos < 0.98 && agl < 1000 && !S.grounded && S.speed < spec.stall * 1.6 ? HC.warn : HC.hud]];
     if (S.brake && S.grounded) items.push(["BRAKE", HC.amber]);
+    if (S.spoiler) items.push([`SPLR ${S.spoiler === 1 ? "FULL" : "½"}`, HC.amber]);
+    if (S.reverse) items.push(["REV", HC.amber]);
+    if (S.trim) items.push([`TRIM ${S.trim > 0 ? "▲" : "▼"}${Math.round(Math.abs(S.trim) * 100)}`, HC.hud]);
+    if (S.lights) items.push(["LDG LT", HC.hud]);
+    if (S.park && S.grounded) items.push(["PARK BRK", HC.warn]);
     const stripY = h - dashH - (matchMedia("(pointer: coarse)").matches && !cock ? 30 : 20);
     const iw = 104 * Math.max(0.8, sc); const x0 = cx - (items.length - 1) * iw / 2;
     items.forEach(([t, c], i) => { hud.fillStyle = c; hud.fillText(t, x0 + i * iw, stripY); });
@@ -1946,8 +2251,8 @@ form.name .btn::before { display: none; }
       hud.font = `${Math.round(fs * 0.78)}px ${MONO}`; hud.textAlign = "left"; hud.textBaseline = "middle";
       for (const r of RADIO) {
         hud.globalAlpha = clamp(r.t, 0, 1); const tw = Math.min(hud.measureText(r.text).width, w - 40);
-        hud.fillStyle = "rgba(8,14,20,0.6)"; hud.fillRect(10, ry - lh / 2, tw + 44, lh);
-        hud.fillStyle = HC.hud; hud.fillText("ATC", 14, ry); hud.fillStyle = "#e3ebf1"; hud.fillText(r.text, 44, ry, w - 60); ry += lh;
+        hud.fillStyle = "rgba(8,14,20,0.6)"; hud.fillRect(10, ry - lh / 2, tw + hud.measureText("ATC ").width + 26, lh);
+        hud.fillStyle = HC.hud; hud.fillText("ATC", 14, ry); const atcW = hud.measureText("ATC ").width + 18; hud.fillStyle = "#e3ebf1"; hud.fillText(r.text, atcW, ry, w - atcW - 16); ry += lh;
       }
       hud.globalAlpha = 1;
     }
@@ -2026,7 +2331,7 @@ form.name .btn::before { display: none; }
   const TAN3 = Math.tan(3 * Math.PI / 180);
   const AI_FLEET = [["a321", "OCEANA 301"], ["b777", "OCEANA 88"], ["a321", "ISLA 214"], ["islander", "ISLANDER 52"], ["a321", "SOUTHWIND 640"], ["islander", "ISLANDER 17"], ["trainer", "SKYLARK 42"], ["aero", "FALCON 7"], ["b777", "PACIFICA 12"],
     ["a321", "EASTGATE 410"], ["b777", "SUNVALE 9"], ["a321", "NORTHCAPE 77"], ["islander", "ISLANDER 63"], ["a321", "OCEANA 515"], ["trainer", "SKYLARK 18"], ["aero", "FALCON 22"],
-    ["breeze", "BREEZE 301"], ["breeze", "BREEZE 88"], ["swift", "SWIFT 6"], ["atlas", "ATLAS 4"], ["arrow", "ARROW 1"]];
+    ["breeze", "BREEZE 301"], ["regio", "REGIO 190"], ["regio", "REGIO 44"], ["skyliner", "SKYLINER 35"], ["jumbo", "JUMBO 1"], ["commuter", "COMMUTER 9"], ["breeze", "BREEZE 88"], ["swift", "SWIFT 6"], ["atlas", "ATLAS 4"], ["arrow", "ARROW 1"]];
   const wrapA = (a) => { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; };
   function radio(text, where) { if (S.mode !== "fly" || where.distanceTo(S.pos) > 7000) return; RADIO.push({ text, t: 10 }); if (RADIO.length > 4) RADIO.shift(); }
   const aiPorts = (kind) => AIRPORTS.filter((a) => (PLANES[kind].big ? a.kind !== "ga" : true));
@@ -2378,7 +2683,7 @@ form.name .btn::before { display: none; }
     beacons.forEach((b) => (b.rotation.y += dt * 3));
     if (S.mode !== "paused") updateCamera(dt, now);
     scene.userData.sky.position.copy(camera.position);
-    updateTiles(camera.position); clouds.update(camera.quaternion); rain.update(dt, camera.position);
+    updateTiles(camera.position); clouds.update(camera.quaternion); rain.update(dt, camera.position); updateLightPool();
     waterNormal.offset.x += dt * 0.0025; waterNormal.offset.y += dt * 0.0012;
     if (engGain && ac) {
       engGain.gain.setTargetAtTime(soundOn && S.mode === "fly" && !S.crashed ? 0.02 + S.throttle * 0.05 : 0, ac.currentTime, 0.15);
