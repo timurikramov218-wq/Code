@@ -134,7 +134,7 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
 <div class="wrap">
   <header>
     <h1><small>FLIGHT SIM · 5 AIRCRAFT · 5 AIRPORTS</small>Skyways Flight Sim</h1>
-    <p class="tagline">Fly an A321, a 777 or three light aircraft between five airports, over mountains, forests, towns and coastline. Switch between six camera views while you fly.</p>
+    <p class="tagline">Fly an A321, a 777 or three light aircraft between five airports, over mountains, forests, towns and coastline. Share the sky with AI traffic and switch between six camera views.</p>
   </header>
 
   <div class="stage" id="stage">
@@ -217,6 +217,7 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
         <li><b>Navigate:</b> follow the amber arrow and the map to your destination.</li>
         <li><b>Approach:</b> line up with the runway, flaps 2, gear down, slow to the landing speed.</li>
         <li><b>Land:</b> touch down gently, then hold Space until you stop. Softer landings earn more stars.</li>
+        <li><b>Watch for traffic:</b> other airliners and light planes fly between the airports. They show as diamonds on screen and arrows on the map, and you'll hear their radio calls. Fly into one and it's over.</li>
       </ol>
       <ul class="airports" id="apList"></ul>
     </section>
@@ -422,15 +423,19 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
 
   // ---------- roads (ribbons that follow the ground) ----------
   const roadPts = [];  // collected quads
+  const roadRuns = [];
   function addRoad(points, width) {
+    let run = [];
+    const flushRun = () => { if (run.length >= 3 && width >= 9) roadRuns.push(run); run = []; };
     for (let i = 0; i < points.length - 1; i++) {
       const [x0, z0] = points[i], [x1, z1] = points[i + 1];
       const y0 = groundY(x0, z0), y1 = groundY(x1, z1);
-      if (y0 < 1.2 || y1 < 1.2) continue;
-      if (Math.abs(y1 - y0) > 18) continue;
+      if (y0 < 1.2 || y1 < 1.2 || Math.abs(y1 - y0) > 18) { flushRun(); continue; }
+      if (!run.length) run.push([x0, z0]); run.push([x1, z1]);
       const dx = x1 - x0, dz = z1 - z0, l = Math.hypot(dx, dz) || 1, nx = -dz / l * width / 2, nz = dx / l * width / 2;
       roadPts.push([x0 + nx, y0 + 0.45, z0 + nz], [x0 - nx, y0 + 0.45, z0 - nz], [x1 + nx, y1 + 0.45, z1 + nz], [x1 - nx, y1 + 0.45, z1 - nz]);
     }
+    flushRun();
   }
   function line(x0, z0, x1, z1, step = 20) {
     const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, z1 - z0) / step)), out = [];
@@ -786,9 +791,9 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
   const PLANES = {
     trainer: { name: "Skylark 140", type: "High-wing trainer · fixed gear", build: buildTrainer, thrust: 7.5, vmax: 64, stall: 21, roll: 1.5, pitch: 1.0, yaw: 0.5, turn: 0.85, gearH: 1.82, retract: false, cam: [17, 5], cock: [0.5, -0.4], wingX: 5.2, brake: 6, shadow: 6, stats: [0.35, 0.45, 0.95] },
     aero: { name: "Falcon X7", type: "Aerobatic · retractable gear", build: buildAero, thrust: 13, vmax: 98, stall: 25, roll: 3.3, pitch: 1.6, yaw: 0.8, turn: 0.95, gearH: 1.75, retract: true, cam: [14, 4], cock: [0.62, -0.15], wingX: 4.0, brake: 6, shadow: 5, stats: [0.55, 1, 0.65] },
-    islander: { name: "Islander 220", type: "Twin-jet regional · 150 seats", build: buildJet, thrust: 6.2, vmax: 128, stall: 50, roll: 0.8, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 5.0, retract: true, cam: [58, 13], cock: [1.0, -12.4], wingX: 15.2, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.3, 0.35] },
-    a321: { name: "Airbus A321", type: "Narrow-body airliner · 3D model", glb: "models/a321.json", length: 44.5, thrust: 5.8, vmax: 135, stall: 56, roll: 0.75, pitch: 0.48, yaw: 0.22, turn: 0.72, gearH: 3.9, retract: true, cam: [72, 15], cock: [1.0, 0], wingX: 16.5, brake: 4.2, shadow: 20, big: true, stats: [0.85, 0.28, 0.3] },
-    b777: { name: "Boeing 777", type: "Wide-body airliner · 3D model", glb: "models/b777.json", length: 73.9, thrust: 5.3, vmax: 142, stall: 61, roll: 0.62, pitch: 0.42, yaw: 0.2, turn: 0.68, gearH: 5.6, retract: true, cam: [112, 23], cock: [1.3, 0], wingX: 30, brake: 4.0, shadow: 34, big: true, stats: [1, 0.2, 0.25] },
+    islander: { name: "Islander 220", type: "Twin-jet regional · 150 seats", build: buildJet, thrust: 7.0, vmax: 128, stall: 46, roll: 0.8, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 5.0, retract: true, cam: [58, 13], cock: [1.0, -12.4], wingX: 15.2, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.3, 0.35] },
+    a321: { name: "Airbus A321", type: "Narrow-body airliner · 3D model", glb: "models/a321.json", length: 44.5, thrust: 6.8, vmax: 135, stall: 49, roll: 0.75, pitch: 0.48, yaw: 0.22, turn: 0.72, gearH: 3.9, retract: true, cam: [72, 15], cock: [1.0, 0], wingX: 16.5, brake: 4.2, shadow: 20, big: true, stats: [0.85, 0.28, 0.3] },
+    b777: { name: "Boeing 777", type: "Wide-body airliner · 3D model", glb: "models/b777.json", length: 73.9, thrust: 6.4, vmax: 142, stall: 52, roll: 0.62, pitch: 0.42, yaw: 0.2, turn: 0.68, gearH: 5.6, retract: true, cam: [112, 23], cock: [1.3, 0], wingX: 30, brake: 4.0, shadow: 34, big: true, stats: [1, 0.2, 0.25] },
   };
   for (const k of Object.keys(PLANES)) PLANES[k].kind = k;
 
@@ -850,7 +855,19 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
   function loadGLB(kind, onProgress) {
     const sp = PLANES[kind];
     GLB[kind] = { status: "loading" };
-    return fetch(sp.glb).then((r) => {
+    const attempt = (n) => fetchModel(sp.glb, onProgress).catch((e) => { if (n > 0) return new Promise((r) => setTimeout(r, 1500)).then(() => attempt(n - 1)); throw e; });
+    return attempt(1).then((buf) => new Promise((res, rej) => new THREE.GLTFLoader().parse(buf, "", res, rej)))
+      .then((gltf) => {
+        GLB[kind] = { status: "ready", make: bakeGLB(kind, gltf) };
+        for (let i = parkedQueue.length - 1; i >= 0; i--) if (parkedQueue[i].kind === kind) { parkedQueue[i].place(); parkedQueue.splice(i, 1); }
+        return true;
+      })
+      .catch((e) => { GLB[kind] = { status: "failed", error: e && e.name === "AbortError" ? "it took too long" : String(e && e.message || e) }; return false; });
+  }
+  function fetchModel(path, onProgress) {
+    const ctl = typeof AbortController === "function" ? new AbortController() : null;
+    const timer = ctl ? setTimeout(() => ctl.abort(), 90000) : 0;
+    return fetch(new URL(path, document.baseURI).href, ctl ? { signal: ctl.signal } : {}).then((r) => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const total = +r.headers.get("content-length") || 0;
       if (!r.body || !total) return r.arrayBuffer();
@@ -860,13 +877,7 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
         chunks.push(value); got += value.length; onProgress(got / total); return pump();
       });
       return pump();
-    }).then((buf) => new Promise((res, rej) => new THREE.GLTFLoader().parse(buf, "", res, rej)))
-      .then((gltf) => {
-        GLB[kind] = { status: "ready", make: bakeGLB(kind, gltf) };
-        for (let i = parkedQueue.length - 1; i >= 0; i--) if (parkedQueue[i].kind === kind) { parkedQueue[i].place(); parkedQueue.splice(i, 1); }
-        return true;
-      })
-      .catch((e) => { GLB[kind] = { status: "failed", error: String(e && e.message || e) }; return false; });
+    }).finally(() => clearTimeout(timer));
   }
   function buildPlane(kind) {
     const sp = PLANES[kind];
@@ -1217,19 +1228,30 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
       const bar = document.createElement("div"); bar.className = "bar"; const i = document.createElement("i"); i.style.width = `${Math.round(v * 100)}%`; bar.append(i);
       row.append(s, bar); lab.append(row);
     });
-    inp.addEventListener("change", () => {
-      if (p.glb && !(GLB[id] && GLB[id].status === "ready")) { briefTip.textContent = `${p.name} is still loading. It will appear as soon as it's ready.`; chosen = id; return; }
-      chosen = id; save("sw-plane", id); setPlane(id); spawn(S.from);
-    });
-    if (p.glb) {
+    const startLoad = () => {
       lab.classList.add("wait"); ty.textContent = "Loading 3D model… 0%";
-      loadGLB(id, (f) => { ty.textContent = `Loading 3D model… ${Math.round(f * 100)}%`; }).then((ok) => {
+      loadGLB(id, (f) => { ty.textContent = `Loading 3D model… ${Math.round(f * 100)}%`; if (pendingTakeoff === id) goBtn.textContent = `Loading ${p.name}… ${Math.round(f * 100)}%`; }).then((ok) => {
         lab.classList.remove("wait");
-        ty.textContent = ok ? p.type : "Couldn't load the 3D model. Reload the page to try again.";
-        if (!ok) { inp.disabled = true; return; }
+        if (!ok) {
+          ty.textContent = `Couldn't load (${GLB[id].error}). Click to try again.`;
+          if (pendingTakeoff === id) { pendingTakeoff = null; goBtn.textContent = "Take off"; briefTip.textContent = `${p.name} didn't load. Click its card to try again, or pick another plane.`; }
+          return;
+        }
+        ty.textContent = p.type;
+        if (pendingTakeoff === id) { pendingTakeoff = null; startFlight(); return; }
         if (chosen === id && (!model || model.userData.kind !== id) && S.mode !== "fly" && S.mode !== "paused") { setPlane(id); spawn(S.from); }
       });
-    }
+    };
+    inp.addEventListener("change", () => {
+      chosen = id; save("sw-plane", id);
+      if (p.glb && !(GLB[id] && GLB[id].status === "ready")) {
+        if (GLB[id] && GLB[id].status === "failed") startLoad();
+        briefTip.textContent = `${p.name} is loading. Press Take off and you'll start as soon as it's ready.`; return;
+      }
+      setPlane(id); spawn(S.from);
+      briefTip.textContent = p.big ? `Airliner tips: hold R until the throttle shows 100%, set flaps 2 with V, and pull back at ${Math.round(p.stall * 0.72 * MS2KT)} knots.` : "Throttle up to full, roll down the runway, and gently pull back once you pass the rotate speed.";
+    });
+    if (p.glb) startLoad();
     planesEl.append(lab);
   }
   AIRPORTS.forEach((a, i) => {
@@ -1257,16 +1279,30 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
   function pause() { S.mode = "paused"; showBrief("PAUSED", "Flight paused", null, "Resume where you left off, or change the aircraft or route and start again.", true); }
   function resume() { S.mode = "fly"; brief.hidden = true; }
   resumeBtn.addEventListener("click", resume);
+  let pendingTakeoff = null;
   goBtn.addEventListener("click", () => {
+    if (pendingTakeoff) return;
+    const p = PLANES[chosen];
+    if (p.glb && !(GLB[chosen] && GLB[chosen].status === "ready")) {
+      pendingTakeoff = chosen; goBtn.textContent = `Loading ${p.name}…`;
+      briefTip.textContent = `${p.name} is still loading. You'll take off automatically as soon as it's ready.`;
+      if (GLB[chosen] && GLB[chosen].status === "failed") planesEl.querySelector(`input[value="${chosen}"]`).dispatchEvent(new Event("change"));
+      return;
+    }
+    startFlight();
+  });
+  function startFlight() {
+    goBtn.textContent = "Take off";
     S.from = AIRPORTS[+fromSel.value]; S.to = toSel.value === "-1" ? null : AIRPORTS[+toSel.value];
     if (!model || model.userData.kind !== chosen) {
-      if (!setPlane(chosen)) { briefTip.textContent = `${PLANES[chosen].name} is still loading. Wait a moment, or pick another aircraft.`; return; }
+      if (!setPlane(chosen)) { briefTip.textContent = `${PLANES[chosen].name} isn't ready yet. Pick another aircraft or try again.`; return; }
     }
     spawn(S.from); S.mode = "fly"; brief.hidden = true;
     const rot = Math.round(spec.stall * 1.05 * 0.9 * MS2KT);
     flash(S.to ? `Cleared for takeoff, runway ${S.from.label}. Destination ${S.to.code}.` : `Cleared for takeoff. Rotate at ${rot} knots.`, 4);
     if (soundOn) initAudio();
-  });
+    RADIO.length = 0;
+  }
 
   // ================= PHYSICS =================
   function crash(reason) {
@@ -1290,8 +1326,8 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     if (pad) { pitch += invert ? -pad.pitch : pad.pitch; roll += pad.roll; yaw += pad.yaw; if (pad.thr) S.throttle = clamp(S.throttle + pad.thr * dt * 0.8, 0, 1); brake = brake || pad.brake; }
     pitch = clamp(pitch, -1, 1); roll = clamp(roll, -1, 1); yaw = clamp(yaw, -1, 1);
     S.inputs.pitch = lerp(S.inputs.pitch, pitch, Math.min(1, dt * 8)); S.inputs.roll = lerp(S.inputs.roll, roll, Math.min(1, dt * 8)); S.inputs.yaw = lerp(S.inputs.yaw, yaw, Math.min(1, dt * 8));
-    if (keys.has("KeyR") || keys.has("ShiftLeft") || keys.has("ShiftRight") || keys.has("Equal")) S.throttle = clamp(S.throttle + dt * 0.55, 0, 1);
-    if (keys.has("KeyF") || keys.has("KeyZ") || keys.has("Minus")) S.throttle = clamp(S.throttle - dt * 0.55, 0, 1);
+    if (keys.has("KeyR") || keys.has("ShiftLeft") || keys.has("ShiftRight") || keys.has("Equal")) S.throttle = clamp(S.throttle + dt * 0.9, 0, 1);
+    if (keys.has("KeyF") || keys.has("KeyZ") || keys.has("Minus")) S.throttle = clamp(S.throttle - dt * 0.9, 0, 1);
     S.brake = brake;
     if (S.throttle > 0.05) S.started = true;
 
@@ -1348,7 +1384,12 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
         flash(`Touchdown at ${S.landedAt.code}: ${S.touchFpm} ft/min. Hold Space to brake.`, 3.5); chime(520);
       }
     }
-    if (Math.hypot(S.pos.x, S.pos.z) > 3400 && !S.grounded && S.msgT <= 0) flash("You're leaving the islands. Turn back!", 2);
+    for (const ai of AI) {
+      if (!ai.model.visible) continue;
+      const reach = (DIMS[ai.kind][0] + DIMS[spec.kind][0]) * 0.3, d = ai.pos.distanceTo(S.pos);
+      if (d < reach && Math.abs(ai.pos.y - S.pos.y) < (spec.big || ai.sp.big ? 7 : 3.5)) { crash(`Collision with ${ai.cs}. Watch for traffic on the radar.`); return; }
+    }
+    if (Math.hypot(S.pos.x, S.pos.z) > 5600 && !S.grounded && S.msgT <= 0) flash("You're leaving the map. Turn back!", 2);
   }
 
   function completeLanding() {
@@ -1528,6 +1569,34 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     if (S.msgT > 0) { hud.font = `${Math.round(fs * 1.0)}px ${MONO}`; hud.fillStyle = HC.amber; hud.globalAlpha = clamp(S.msgT, 0, 1); hud.fillText(S.msg, cx, cy - 135 * sc); hud.globalAlpha = 1; }
     hud.shadowBlur = 0;
 
+    // traffic markers and TCAS-style alert
+    let threat = null;
+    for (const ai of AI) {
+      if (!ai.model.visible) continue;
+      const d = ai.pos.distanceTo(S.pos); if (d > 6500) continue;
+      const dy = Math.round((ai.pos.y - S.pos.y) * M2FT / 100);
+      if (!S.grounded && ai.phase !== "hold" && d < 1100 && Math.abs(ai.pos.y - S.pos.y) < 200) threat = ai;
+      proj.copy(ai.pos).project(camera); if (proj.z > 1 || Math.abs(proj.x) > 0.95 || Math.abs(proj.y) > 0.95) continue;
+      const sx = (proj.x + 1) / 2 * w, sy = (1 - proj.y) / 2 * h; if (sy > h - dashH) continue;
+      const col = d < 1100 && Math.abs(ai.pos.y - S.pos.y) < 200 ? HC.warn : "#cfe6ff";
+      hud.strokeStyle = col; hud.fillStyle = col; hud.lineWidth = 1.5;
+      hud.beginPath(); hud.moveTo(sx, sy - 8); hud.lineTo(sx + 8, sy); hud.lineTo(sx, sy + 8); hud.lineTo(sx - 8, sy); hud.closePath(); hud.stroke();
+      hud.font = `${Math.round(fs * 0.7)}px ${MONO}`; hud.textAlign = "left"; hud.textBaseline = "middle";
+      hud.fillText(`${ai.cs}`, sx + 12, sy - 6); hud.fillText(`${(d / 1000).toFixed(1)} km ${dy >= 0 ? "+" : ""}${dy}`, sx + 12, sy + 8);
+    }
+    if (threat && blink) { hud.font = `bold ${Math.round(fs * 1.25)}px ${MONO}`; hud.textAlign = "center"; hud.fillStyle = HC.warn; hud.fillText(`TRAFFIC · ${threat.cs}`, cx, cy + 135 * sc); }
+    if (RADIO.length) {
+      const coarse = matchMedia("(pointer: coarse)").matches, lh = Math.round(fs * 1.25);
+      let ry = h - dashH - (coarse && !cock ? 190 : 46) - (RADIO.length - 1) * lh;
+      hud.font = `${Math.round(fs * 0.78)}px ${MONO}`; hud.textAlign = "left"; hud.textBaseline = "middle";
+      for (const r of RADIO) {
+        hud.globalAlpha = clamp(r.t, 0, 1); const tw = Math.min(hud.measureText(r.text).width, w - 40);
+        hud.fillStyle = "rgba(8,14,20,0.6)"; hud.fillRect(10, ry - lh / 2, tw + 44, lh);
+        hud.fillStyle = HC.hud; hud.fillText("ATC", 14, ry); hud.fillStyle = "#e3ebf1"; hud.fillText(r.text, 44, ry, w - 60); ry += lh;
+      }
+      hud.globalAlpha = 1;
+    }
+
     // minimap
     if (showMap) {
       const ms = Math.round(clamp(Math.min(w, h) * 0.24, 96, 170)), mx = w - ms - 10, my = Math.max(48, h * 0.09) + (w < 700 ? 40 : 0);
@@ -1538,6 +1607,11 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
         const [x1, z1] = toWorld(a, -a.len / 2, 0), [x2, z2] = toWorld(a, a.len / 2, 0); const p1 = P(x1, z1), p2 = P(x2, z2);
         hud.strokeStyle = a === S.to ? HC.amber : "#ffffff"; hud.lineWidth = 3; hud.beginPath(); hud.moveTo(...p1); hud.lineTo(...p2); hud.stroke();
         hud.fillStyle = a === S.to ? HC.amber : "#ffffff"; hud.font = `${Math.max(9, Math.round(ms / 16))}px ${MONO}`; hud.textAlign = "center"; hud.fillText(a.code, (p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2 - 8);
+      }
+      for (const ai of AI) {
+        if (!ai.model.visible) continue; const [ax, az] = P(ai.pos.x, ai.pos.z);
+        hud.save(); hud.translate(ax, az); hud.rotate(ai.hdg); hud.fillStyle = ai.phase === "hold" || ai.phase === "taxi" ? "#9fb0c0" : "#ffffff";
+        hud.beginPath(); hud.moveTo(0, -4); hud.lineTo(3, 3); hud.lineTo(-3, 3); hud.closePath(); hud.fill(); hud.restore();
       }
       const [px, pz] = P(S.pos.x, S.pos.z); hud.save(); hud.translate(px, pz); hud.rotate(Math.atan2(fwd.x, -fwd.z));
       hud.fillStyle = HC.hud; hud.strokeStyle = HC.deck; hud.lineWidth = 1.5; hud.beginPath(); hud.moveTo(0, -7); hud.lineTo(5, 6); hud.lineTo(0, 3); hud.lineTo(-5, 6); hud.closePath(); hud.fill(); hud.stroke(); hud.restore();
@@ -1584,6 +1658,153 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     hud.fillText(`VS ${vs > 0 ? "+" : ""}${vs} FT/MIN`, w / 2, h - 10);
   }
 
+  // ================= AI TRAFFIC =================
+  // Other aircraft fly real circuits: hold at the runway, take off, climb, cruise to another airport, fly a 3° final, land, and go again.
+  const AI = [], RADIO = [];
+  const TAN3 = Math.tan(3 * Math.PI / 180);
+  const AI_FLEET = [["a321", "OCEANA 301"], ["b777", "OCEANA 88"], ["a321", "ISLA 214"], ["islander", "ISLANDER 52"], ["a321", "SOUTHWIND 640"], ["islander", "ISLANDER 17"], ["trainer", "SKYLARK 42"], ["aero", "FALCON 7"], ["b777", "PACIFICA 12"]];
+  const wrapA = (a) => { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; };
+  function radio(text, where) { if (S.mode !== "fly" || where.distanceTo(S.pos) > 7000) return; RADIO.push({ text, t: 10 }); if (RADIO.length > 4) RADIO.shift(); }
+  const aiPorts = (kind) => AIRPORTS.filter((a) => (PLANES[kind].big ? a.kind !== "ga" : true));
+  function pickDest(ai) { const list = aiPorts(ai.kind).filter((a) => a !== ai.at); return list[Math.floor(Math.random() * list.length)]; }
+  function finalFix(a) { const [x, z] = toWorld(a, -a.len / 2 - 4200, a.rwys[0].off); return new THREE.Vector3(x, a.elev + 4200 * TAN3 + 30, z); }
+  function placeAtHold(ai, onRunway) {
+    const a = ai.at, r = a.rwys[0], [x, z] = onRunway ? toWorld(a, -r.len / 2 + 50, r.off) : toWorld(a, -r.len * 0.46 + 40, a.tx);
+    ai.pos.set(x, a.elev + 0.05 + ai.sp.gearH, z); ai.hdg = a.hdg * Math.PI / 180; ai.pitch = 0; ai.bank = 0; ai.v = 0; ai.vs = 0; ai.gear = 1;
+  }
+  function makeAIModel(ai) {
+    const m = buildPlane(ai.kind) || buildPlane("islander");
+    ai.placeholder = !!PLANES[ai.kind].glb && !(GLB[ai.kind] && GLB[ai.kind].status === "ready");
+    if (ai.model) scene.remove(ai.model);
+    ai.model = m; scene.add(m);
+  }
+  AI_FLEET.forEach(([kind, cs], i) => {
+    const sp = PLANES[kind], ai = { kind, cs, sp, pos: new THREE.Vector3(), hdg: 0, pitch: 0, bank: 0, v: 0, vs: 0, gear: 1, phase: "hold", wait: 4 + i * 14, model: null };
+    const ports = aiPorts(kind); ai.at = ports[i % ports.length]; ai.to = pickDest(ai);
+    ai.cruiseAlt = sp.big ? 1350 + (i % 3) * 150 : 1050 + (i % 2) * 100;
+    ai.cruiseV = sp.big ? 110 : sp.kind === "aero" ? 60 : 45; ai.vr = sp.big ? 72 : 28; ai.vapp = sp.big ? 72 : 30;
+    if (i % 2 === 0) {
+      const fx = finalFix(ai.to), t = 0.25 + (i % 4) * 0.15;
+      ai.pos.set(lerp(ai.at.x, fx.x, t), ai.cruiseAlt, lerp(ai.at.z, fx.z, t));
+      ai.hdg = Math.atan2(fx.x - ai.pos.x, -(fx.z - ai.pos.z)); ai.v = ai.cruiseV; ai.gear = 0; ai.phase = "cruise";
+    } else placeAtHold(ai, false);
+    makeAIModel(ai); AI.push(ai);
+  });
+  const playerOnRunway = (a) => S.mode === "fly" && !S.crashed && S.grounded && runwayAt(S.pos.x, S.pos.z) === a;
+  function runwayBusy(a, me) {
+    if (playerOnRunway(a)) return true;
+    return AI.some((o) => o !== me && ((o.at === a && ["roll", "rollout", "taxi"].includes(o.phase)) || (o.to === a && o.phase === "final" && o.pos.distanceTo(me.pos) < 4500)));
+  }
+  function steer(ai, tx, tz, dt, maxRate) {
+    const want = Math.atan2(tx - ai.pos.x, -(tz - ai.pos.z)), d = wrapA(want - ai.hdg);
+    const rate = clamp(d * 0.6, -maxRate, maxRate); ai.hdg = wrapA(ai.hdg + rate * dt);
+    ai.bank = lerp(ai.bank, (rate / maxRate) * (ai.sp.big ? 0.42 : 0.55), Math.min(1, dt * 2));
+  }
+  function moveAI(ai, dt) {
+    const ch = Math.cos(ai.pitch);
+    ai.pos.x += Math.sin(ai.hdg) * ai.v * ch * dt; ai.pos.z += -Math.cos(ai.hdg) * ai.v * ch * dt; ai.pos.y += ai.vs * dt;
+  }
+  function updateAI(ai, dt, now) {
+    if (ai.placeholder && GLB[ai.kind] && GLB[ai.kind].status === "ready") makeAIModel(ai);
+    const a = ai.at, to = ai.to, sp = ai.sp, maxRate = sp.big ? 0.05 : 0.12;
+    switch (ai.phase) {
+      case "hold":
+        placeAtHold(ai, false); ai.wait -= dt;
+        ai.model.visible = !AI.some((o) => o !== ai && o.at === a && o.phase === "hold" && o.wait < ai.wait);
+        if (ai.wait <= 0 && !runwayBusy(a, ai)) { ai.phase = "roll"; placeAtHold(ai, true); ai.model.visible = true; radio(`${a.name} Tower: ${ai.cs}, runway ${a.label}, cleared for takeoff.`, ai.pos); }
+        break;
+      case "roll":
+        ai.v += (sp.big ? 2.6 : 3.2) * dt; moveAI(ai, dt); ai.pos.y = groundY(ai.pos.x, ai.pos.z) + sp.gearH;
+        if (ai.v >= ai.vr) { ai.phase = "climb"; ai.vs = 0; }
+        break;
+      case "climb":
+        ai.pitch = lerp(ai.pitch, 0.13, dt * 1.5); ai.vs = lerp(ai.vs, sp.big ? 10 : 5, dt); ai.v = Math.min(ai.cruiseV, ai.v + dt * 1.5); moveAI(ai, dt);
+        if (ai.pos.y - a.elev > 40) ai.gear = Math.max(0, ai.gear - dt * 0.4);
+        if (ai.pos.y - a.elev > 320) { ai.phase = "cruise"; radio(`${a.name} Departure: ${ai.cs}, radar contact, proceed to ${to.code}.`, ai.pos); }
+        break;
+      case "cruise": {
+        const fx = finalFix(to), dist = Math.hypot(fx.x - ai.pos.x, fx.z - ai.pos.z);
+        steer(ai, fx.x, fx.z, dt, maxRate);
+        let want = dist > 7000 ? ai.cruiseAlt : lerp(fx.y, ai.cruiseAlt, clamp((dist - 800) / 6200, 0, 1));
+        for (const k of [400, 1200, 2400]) want = Math.max(want, heightAt(ai.pos.x + Math.sin(ai.hdg) * k, ai.pos.z - Math.cos(ai.hdg) * k) + 220);
+        ai.vs = clamp((want - ai.pos.y) * 0.08, -9, 10); ai.pitch = lerp(ai.pitch, Math.atan2(ai.vs, ai.v) + 0.03, dt);
+        ai.v = lerp(ai.v, dist < 3000 ? ai.vapp * 1.25 : ai.cruiseV, dt * 0.2); moveAI(ai, dt);
+        if (dist < 500) { ai.phase = "final"; radio(`${to.name} Tower: ${ai.cs}, runway ${to.label}, cleared to land.`, ai.pos); }
+        break;
+      }
+      case "final": {
+        const r = to.rwys[0], [al, ac] = local(to, ai.pos.x, ai.pos.z);
+        const aimAlong = Math.min(al + 1400, r.len / 2), [tx, tz] = toWorld(to, aimAlong, r.off);
+        steer(ai, tx, tz, dt, maxRate * 1.4);
+        const toThr = Math.max(0, -r.len / 2 + 300 - al), glide = to.elev + toThr * TAN3 + sp.gearH;
+        ai.vs = clamp((glide - ai.pos.y) * 0.6 - ai.v * TAN3, -9, 3); ai.pitch = lerp(ai.pitch, 0.04, dt);
+        ai.v = lerp(ai.v, ai.vapp, dt * 0.3); ai.gear = Math.min(1, ai.gear + dt * 0.4); moveAI(ai, dt);
+        const gy = groundY(ai.pos.x, ai.pos.z) + sp.gearH;
+        if (ai.pos.y <= gy + 0.2 && al > -r.len / 2) { ai.pos.y = gy; ai.vs = 0; ai.phase = "rollout"; radio(`${ai.cs}: down at ${to.code}.`, ai.pos); }
+        else if (ai.pos.y < gy) ai.pos.y = gy;
+        if (al > r.len / 2 || (playerOnRunway(to) && al < -r.len / 2 && ai.pos.y - to.elev > 40)) { ai.phase = "goaround"; ai.wait = 40; radio(`${ai.cs}: going around.`, ai.pos); }
+        break;
+      }
+      case "goaround":
+        ai.pitch = lerp(ai.pitch, 0.12, dt); ai.vs = lerp(ai.vs, 8, dt); ai.v = Math.min(ai.cruiseV, ai.v + dt * 2); ai.gear = Math.max(0, ai.gear - dt * 0.4);
+        ai.bank = lerp(ai.bank, 0, dt * 2); moveAI(ai, dt); ai.wait -= dt;
+        if (ai.wait <= 0) ai.phase = "cruise";
+        break;
+      case "rollout":
+        ai.pitch = lerp(ai.pitch, 0, dt * 2); ai.bank = lerp(ai.bank, 0, dt * 3);
+        ai.v = Math.max(9, ai.v - 2.4 * dt); moveAI(ai, dt); ai.pos.y = groundY(ai.pos.x, ai.pos.z) + sp.gearH;
+        if (ai.v <= 9.5) { ai.phase = "taxi"; ai.wait = 10; }
+        break;
+      case "taxi": {
+        moveAI(ai, dt); ai.pos.y = groundY(ai.pos.x, ai.pos.z) + sp.gearH; ai.wait -= dt;
+        const [al] = local(to, ai.pos.x, ai.pos.z);
+        if (ai.wait <= 0 || al > to.rwys[0].len / 2 - 60) { ai.at = to; ai.to = pickDest(ai); ai.phase = "hold"; ai.wait = 25 + Math.random() * 50; placeAtHold(ai, false); }
+        break;
+      }
+    }
+    // pose the model
+    const m = ai.model, u = m.userData;
+    m.position.copy(ai.pos); m.rotation.set(ai.pitch, -ai.hdg, -ai.bank, "YXZ");
+    if (u.gear) { u.gear.scale.y = Math.max(0.02, ai.gear); u.gear.visible = ai.gear > 0.03 || !PLANES[ai.kind].retract; }
+    if (u.prop) u.prop.rotation.z += dt * (20 + ai.v);
+    u.fans.forEach((f) => (f.rotation.z += dt * 30));
+    const blink = ((now + ai.cs.length * 137) % 1200) < 80; u.strobes.forEach((s) => (s.visible = blink));
+    if (u.beacon) u.beacon.visible = ((now + ai.cs.length * 211) % 1000) < 500;
+  }
+
+  // ---------- cars driving on the roads ----------
+  const CARS = [];
+  const carMesh = (function () {
+    const runs = roadRuns.map((pts) => {
+      const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+      return { pts, cum, len: cum[cum.length - 1] };
+    }).filter((r) => r.len > 150);
+    const total = runs.reduce((s, r) => s + r.len, 0), N = Math.min(220, Math.round(total / 120));
+    const cols = [0xd23b2f, 0x2f5fd2, 0xeeeeee, 0x222222, 0x8a8f96, 0x2f8a4f, 0xe0b830, 0xf0f0f0].map((c) => new THREE.Color(c).convertSRGBToLinear());
+    const g = new THREE.BoxGeometry(1.9, 1.5, 4.4); g.translate(0, 0.75, 0);
+    const im = new THREE.InstancedMesh(g, new THREE.MeshLambertMaterial(), Math.max(1, N));
+    for (let i = 0; i < N; i++) {
+      let pick = hash(i, 42) * total, r = runs[0]; for (const rr of runs) { if (pick < rr.len) { r = rr; break; } pick -= rr.len; }
+      CARS.push({ r, s: hash(i, 7) * r.len, v: 11 + hash(i, 9) * 9, dir: hash(i, 11) > 0.5 ? 1 : -1 });
+      im.setColorAt(i, cols[i % cols.length]);
+    }
+    im.count = N; scene.add(im); return im;
+  })();
+  const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _p = new THREE.Vector3(), _one = new THREE.Vector3(1, 1, 1);
+  function updateCars(dt) {
+    CARS.forEach((c, i) => {
+      c.s += c.v * c.dir * dt;
+      if (c.s > c.r.len) { c.s = c.r.len; c.dir = -1; } else if (c.s < 0) { c.s = 0; c.dir = 1; }
+      const { pts, cum } = c.r; let k = 1; while (k < cum.length - 1 && cum[k] < c.s) k++;
+      const t = (c.s - cum[k - 1]) / Math.max(0.001, cum[k] - cum[k - 1]);
+      const x0 = pts[k - 1][0], z0 = pts[k - 1][1], x1 = pts[k][0], z1 = pts[k][1], dx = x1 - x0, dz = z1 - z0, l = Math.hypot(dx, dz) || 1;
+      const x = lerp(x0, x1, t) - dz / l * 2.3 * c.dir, z = lerp(z0, z1, t) + dx / l * 2.3 * c.dir;
+      _q.setFromAxisAngle(AY, Math.atan2(dx * c.dir, dz * c.dir));
+      _m4.compose(_p.set(x, groundY(x, z) + 0.45, z), _q, _one); carMesh.setMatrixAt(i, _m4);
+    });
+    carMesh.instanceMatrix.needsUpdate = true;
+  }
+
   // ================= LOOP =================
   function resize() {
     const r = stage.getBoundingClientRect(), w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
@@ -1601,6 +1822,8 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     S.msgT -= dt;
     if (S.crashed && boom.visible) { S.boomT += dt; boom.scale.setScalar(1 + S.boomT * 30 * (spec.big ? 2 : 1)); boom.material.opacity = Math.max(0, 0.9 - S.boomT * 0.7); }
     animateModel(dt, now);
+    if (S.mode !== "paused") { AI.forEach((ai) => updateAI(ai, dt, now)); updateCars(dt); }
+    RADIO.forEach((r) => (r.t -= dt)); while (RADIO.length && RADIO[0].t <= 0) RADIO.shift();
     beacons.forEach((b) => (b.rotation.y += dt * 3));
     if (S.mode !== "paused") updateCamera(dt, now);
     scene.userData.sky.position.copy(camera.position);
