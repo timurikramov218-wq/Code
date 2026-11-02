@@ -1,0 +1,594 @@
+<title>Gravity Doodle</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Permanent+Marker&display=swap">
+<style>
+/* Layout: a notebook page lying on a desk. Game canvas on top, sticky-note hall of fame and how-to underneath (side by side when wide). One deliberate look: ballpoint ink on graph paper. */
+:root {
+  --desk: #dde4ee;
+  --paper: #f7f9fd;
+  --grid: #cfdcf0;
+  --ink: #1f3f9c;
+  --ink-soft: #7c90cf;
+  --margin: #e0574f;
+  --note: #fff2a1;
+  --note-edge: #f0dc6c;
+  --hi: #f6d53b;
+  --graphite: #343a4a;
+  --muted: #5d6680;
+  --font-marker: "Permanent Marker", "Comic Sans MS", "Chalkboard SE", cursive;
+  --font-hand: "Patrick Hand", "Comic Sans MS", "Chalkboard SE", "Segoe Print", cursive;
+  color-scheme: light;
+}
+html, body { background: var(--desk); color: var(--graphite); }
+body {
+  font-family: var(--font-hand);
+  font-size: 19px;
+  line-height: 1.4;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 22px 40px;
+}
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 20px; }
+header { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px 20px; flex-wrap: wrap; }
+h1 {
+  font-family: var(--font-marker); font-weight: 400; color: var(--ink);
+  font-size: clamp(34px, 7vw, 54px); line-height: 1; margin: 0;
+  transform: rotate(-1.5deg); text-wrap: balance;
+}
+h1 span { background: linear-gradient(transparent 56%, var(--hi) 56%, var(--hi) 90%, transparent 90%); padding: 0 4px; }
+.tagline { margin: 0; color: var(--muted); max-width: 34ch; }
+
+.stage {
+  position: relative; background: var(--paper); border-radius: 4px; overflow: hidden;
+  box-shadow: 0 1px 0 var(--grid), 0 14px 28px -16px var(--ink);
+  user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+}
+canvas { display: block; width: 100%; aspect-ratio: 16 / 9; touch-action: manipulation; cursor: pointer; }
+@media (max-width: 560px) { canvas { aspect-ratio: 4 / 3; } }
+.overlay {
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
+  pointer-events: none; padding: 16px;
+}
+[hidden] { display: none !important; }
+.overlay-card { display: grid; gap: 6px; justify-items: center; }
+.overlay .big { font-family: var(--font-marker); color: var(--ink); font-size: clamp(28px, 6vw, 46px); line-height: 1.05; margin: 0; }
+.overlay .small { margin: 0; color: var(--graphite); font-size: clamp(17px, 2.6vw, 22px); }
+.overlay .hint {
+  margin: 6px 0 0; font-family: var(--font-marker); color: var(--margin); font-size: clamp(16px, 2.4vw, 20px);
+  animation: bob 1.2s ease-in-out infinite;
+}
+@keyframes bob { 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .overlay .hint { animation: none; } }
+.mute {
+  position: absolute; top: 10px; left: 10px; font: inherit; font-size: 16px; color: var(--ink);
+  background: var(--paper); border: 2px solid var(--ink); border-radius: 999px; padding: 2px 12px; cursor: pointer;
+}
+.mute:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--hi); outline-offset: 2px; }
+
+.below { display: grid; gap: 20px; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 760px) { .below { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); } }
+
+.note {
+  background: var(--note); border-bottom: 3px solid var(--note-edge); padding: 18px 20px 20px;
+  transform: rotate(0.6deg); box-shadow: 0 10px 18px -14px var(--graphite); display: grid; gap: 12px; min-width: 0;
+}
+.note h2, .howto h2 { font-family: var(--font-marker); font-weight: 400; color: var(--ink); font-size: 26px; margin: 0; }
+.board { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.board li {
+  display: grid; grid-template-columns: 2.2em minmax(0, 1fr) auto; gap: 8px; align-items: baseline;
+  padding: 3px 0; border-bottom: 1px dashed var(--note-edge); font-variant-numeric: tabular-nums;
+}
+.board .rank { color: var(--muted); }
+.board .who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board .pts { font-family: var(--font-marker); color: var(--ink); }
+.board li.me .who { background: linear-gradient(transparent 60%, var(--hi) 60%); }
+.board li.top .rank { color: var(--margin); font-family: var(--font-marker); }
+.board .empty { display: block; border: 0; color: var(--muted); }
+form.name { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+form.name label { width: 100%; color: var(--muted); font-size: 17px; }
+form.name input {
+  flex: 1 1 160px; min-width: 0; font: inherit; color: var(--graphite); background: var(--paper);
+  border: 2px solid var(--ink); border-radius: 6px; padding: 4px 10px;
+}
+button.save {
+  font: inherit; color: var(--paper); background: var(--ink); border: 2px solid var(--ink);
+  border-radius: 6px; padding: 4px 16px; cursor: pointer;
+}
+button.save:hover { background: var(--graphite); }
+.status { margin: 0; font-size: 17px; color: var(--muted); min-height: 1.4em; }
+
+.howto { display: grid; gap: 10px; min-width: 0; }
+.howto ul { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
+.howto li::marker { color: var(--margin); }
+kbd {
+  font-family: var(--font-hand); border: 1.5px solid var(--ink); border-bottom-width: 3px; border-radius: 5px;
+  padding: 0 6px; color: var(--ink); background: var(--paper);
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Gravity <span>Doodle</span></h1>
+    <p class="tagline">One button. Flip between the floor and the ceiling, dodge the scribbles, top the school board.</p>
+  </header>
+
+  <div class="stage" id="stage">
+    <canvas id="game" aria-label="Gravity Doodle game. Press Space or tap to flip gravity."></canvas>
+    <div class="overlay" id="overlay">
+      <div class="overlay-card">
+        <p class="big" id="ovBig">Ready?</p>
+        <p class="small" id="ovSmall">Tap, click or press Space to flip gravity.</p>
+        <p class="hint" id="ovHint">Tap to start</p>
+      </div>
+    </div>
+    <button class="mute" id="mute" type="button" aria-pressed="false">Sound on</button>
+  </div>
+
+  <div class="below">
+    <section class="note" aria-labelledby="hof">
+      <h2 id="hof">Hall of Fame</h2>
+      <ol class="board" id="board"><li class="empty">Loading the board…</li></ol>
+      <form class="name" id="nameForm" autocomplete="off">
+        <label for="nick">Your name on the board (2–14 letters or numbers)</label>
+        <input id="nick" name="nick" maxlength="14" placeholder="e.g. Sam B, 7th grade">
+        <button class="save" type="submit">Save name</button>
+      </form>
+      <p class="status" id="status" role="status"></p>
+    </section>
+
+    <section class="howto" aria-labelledby="how">
+      <h2 id="how">How to play</h2>
+      <ul>
+        <li>Press <kbd>Space</kbd>, <kbd>↑</kbd>, or tap the page to flip gravity.</li>
+        <li>You can only flip while you're standing on a line.</li>
+        <li>Spikes end your run. So does falling through a hole in the line.</li>
+        <li>Grab yellow stars for +10 points each.</li>
+        <li>It keeps getting faster the longer you last. Every 30 px of paper is 1 point.</li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  // ---------- storage helpers ----------
+  const load = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+  const save = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+
+  // ---------- canvas setup ----------
+  const cv = document.getElementById("game");
+  const ctx = cv.getContext("2d");
+  const H = 360, TOP = 54, BOT = 306, P = 24, G = 2500, SPIKE_H = 20, SPIKE_W = 22;
+  const css = getComputedStyle(document.documentElement);
+  const C = {
+    paper: css.getPropertyValue("--paper").trim(), grid: css.getPropertyValue("--grid").trim(),
+    ink: css.getPropertyValue("--ink").trim(), soft: css.getPropertyValue("--ink-soft").trim(),
+    margin: css.getPropertyValue("--margin").trim(), hi: css.getPropertyValue("--hi").trim(),
+    graphite: css.getPropertyValue("--graphite").trim(),
+  };
+  const MARKER = getComputedStyle(document.body).getPropertyValue("--font-marker") || "cursive";
+  let W = 640, scale = 1, PX = 140;
+  function resize() {
+    const r = cv.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.max(1, Math.round(r.width * dpr));
+    cv.height = Math.max(1, Math.round(r.height * dpr));
+    scale = cv.height / H;
+    W = cv.width / scale;
+    PX = Math.min(150, W * 0.24);
+  }
+  new ResizeObserver(resize).observe(cv);
+  resize();
+
+  // ---------- sound ----------
+  let ac = null, muted = load("gd-muted") === "1";
+  const muteBtn = document.getElementById("mute");
+  function syncMute() { muteBtn.textContent = muted ? "Sound off" : "Sound on"; muteBtn.setAttribute("aria-pressed", String(muted)); }
+  syncMute();
+  muteBtn.addEventListener("click", (e) => { e.stopPropagation(); muted = !muted; save("gd-muted", muted ? "1" : "0"); syncMute(); });
+  muteBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
+  function unlockAudio() {
+    if (ac) return;
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch { ac = null; }
+  }
+  function beep(f1, f2, dur, type = "square", vol = 0.06) {
+    if (!ac || muted) return;
+    const t0 = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.setValueAtTime(f1, t0); o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g).connect(ac.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+
+  // ---------- game state ----------
+  let state = "ready", clock = 0, deadAt = 0;
+  let pl, obs, stars, parts, d, v, starCount, shake, nextX, lastSide, buffer, coyote, score;
+  let best = +(load("gd-best") || 0);
+
+  function reset() {
+    pl = { y: BOT - P, prevY: BOT - P, vy: 0, g: 1, fy: 1, ground: true, squash: 0, dead: false };
+    obs = []; stars = []; parts = [];
+    d = 0; v = 270; starCount = 0; shake = 0; nextX = 760; lastSide = -1; buffer = 0; coyote = 0; score = 0;
+  }
+  reset();
+
+  function gen() {
+    while (nextX < d + W + 320) {
+      const easy = nextX < 2000;
+      const speedAt = Math.min(640, 270 + nextX * 0.016);
+      const minGap = speedAt * 0.52 + 70;
+      const side = Math.random() < (easy ? 0.8 : 0.58) ? -lastSide : lastSide;
+      const kind = nextX > 1200 && Math.random() < 0.38 ? "gap" : "spike";
+      const w = kind === "gap"
+        ? 64 + Math.random() * Math.min(120, 30 + nextX / 50)
+        : SPIKE_W * (1 + Math.floor(Math.random() * Math.min(4, 1 + nextX / 1800)));
+      obs.push({ kind, side, x: nextX, w });
+      const space = minGap * (1 + Math.random() * (easy ? 1.1 : 0.75));
+      if (Math.random() < 0.45) {
+        const ys = [TOP + P / 2 + 4, BOT - P / 2 - 4, (TOP + BOT) / 2];
+        stars.push({ x: nextX + w + space / 2, y: ys[Math.floor(Math.random() * 3)], got: false, spin: Math.random() * 6 });
+      }
+      nextX += w + space;
+      lastSide = side;
+    }
+  }
+
+  function supported(side, x0, x1) {
+    for (const o of obs) {
+      if (o.kind === "gap" && o.side === side && o.x <= x0 + 5 && o.x + o.w >= x1 - 5) return false;
+    }
+    return true;
+  }
+
+  function puff(x, y, n, col, spread = 120) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, s = Math.random() * spread;
+      parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.4 + Math.random() * 0.4, max: 0.8, r: 1.5 + Math.random() * 2.5, col });
+    }
+  }
+
+  function tryFlip() {
+    if (!(pl.ground || coyote > 0) || pl.dead) return false;
+    pl.g *= -1; pl.ground = false; coyote = 0; buffer = 0;
+    pl.vy = pl.g * 140;
+    puff(d + PX + P / 2, pl.y + P / 2, 8, C.soft, 90);
+    beep(pl.g > 0 ? 520 : 380, pl.g > 0 ? 300 : 700, 0.09);
+    return true;
+  }
+
+  function land(y) {
+    pl.y = y; pl.vy = 0; pl.ground = true; pl.squash = 1;
+    puff(d + PX + P / 2, pl.g > 0 ? BOT : TOP, 5, C.soft, 70);
+    if (buffer > 0) tryFlip();
+  }
+
+  function die() {
+    if (pl.dead) return;
+    pl.dead = true; state = "dead"; deadAt = clock; shake = 9;
+    puff(d + PX + P / 2, Math.max(TOP, Math.min(BOT, pl.y + P / 2)), 30, C.ink, 260);
+    beep(220, 50, 0.4, "sawtooth", 0.08);
+    const isBest = score > best;
+    if (isBest) { best = score; save("gd-best", String(best)); }
+    showOverlay(isBest ? "New best!" : "Splat.", `Score ${score} · ${starCount} star${starCount === 1 ? "" : "s"} · best ${best}`, "Tap to try again");
+    board.report(score);
+  }
+
+  function update(dt) {
+    clock += dt;
+    for (const p of parts) { p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.92; p.vy *= 0.92; p.life -= dt; }
+    parts = parts.filter((p) => p.life > 0);
+    shake = Math.max(0, shake - dt * 30);
+    if (state !== "play") return;
+
+    v = Math.min(640, 270 + d * 0.016);
+    d += v * dt;
+    gen();
+    buffer -= dt; coyote -= dt;
+    pl.squash = Math.max(0, pl.squash - dt * 6);
+    pl.fy += (pl.g - pl.fy) * Math.min(1, dt * 18);
+
+    const x0 = d + PX, x1 = x0 + P;
+    pl.prevY = pl.y;
+    if (pl.ground && !supported(pl.g, x0, x1)) { pl.ground = false; coyote = 0.08; }
+    if (!pl.ground) {
+      pl.vy += pl.g * G * dt;
+      pl.y += pl.vy * dt;
+      if (pl.g > 0 && pl.vy >= 0 && pl.y + P >= BOT && pl.prevY + P <= BOT + 0.5 && supported(1, x0, x1)) land(BOT - P);
+      else if (pl.g < 0 && pl.vy <= 0 && pl.y <= TOP && pl.prevY >= TOP - 0.5 && supported(-1, x0, x1)) land(TOP);
+    } else if (buffer > 0) tryFlip();
+
+    if (pl.y > BOT + 14 || pl.y + P < TOP - 14) { die(); return; }
+
+    for (const o of obs) {
+      if (o.kind !== "spike") continue;
+      if (o.x + 5 > x1 - 3 || o.x + o.w - 5 < x0 + 3) continue;
+      const hit = o.side > 0 ? pl.y + P > BOT - SPIKE_H + 6 : pl.y < TOP + SPIKE_H - 6;
+      if (hit) { die(); return; }
+    }
+    const cx = x0 + P / 2, cy = pl.y + P / 2;
+    for (const s of stars) {
+      if (!s.got && Math.hypot(s.x - cx, s.y - cy) < 24) {
+        s.got = true; starCount++;
+        puff(s.x, s.y, 12, C.hi, 140);
+        beep(880, 1500, 0.12, "triangle", 0.07);
+      }
+    }
+    obs = obs.filter((o) => o.x + o.w > d - 80);
+    stars = stars.filter((s) => s.x > d - 80);
+    score = Math.floor(d / 30) + starCount * 10;
+  }
+
+  // ---------- drawing ----------
+  function hatch(x0, x1, y0, y1) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x0, y0, x1 - x0, y1 - y0); ctx.clip();
+    ctx.strokeStyle = C.soft; ctx.lineWidth = 1.2; ctx.globalAlpha = 0.55;
+    ctx.beginPath();
+    const off = -(d % 12);
+    for (let x = x0 - (y1 - y0) - 12 + ((off - x0) % 12); x < x1 + 12; x += 12) {
+      ctx.moveTo(x, y1); ctx.lineTo(x + (y1 - y0), y0);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function surface(side) {
+    const y = side > 0 ? BOT : TOP;
+    const gaps = obs.filter((o) => o.kind === "gap" && o.side === side).map((o) => [o.x - d, o.x + o.w - d]).sort((a, b) => a[0] - b[0]);
+    const segs = []; let cur = -20;
+    for (const [a, b] of gaps) { if (a > cur) segs.push([cur, a]); cur = Math.max(cur, b); }
+    if (cur < W + 20) segs.push([cur, W + 20]);
+    for (const [a, b] of segs) {
+      if (side > 0) hatch(a, b, BOT, H); else hatch(a, b, 0, TOP);
+      ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(a, y); ctx.lineTo(b, y);
+      // ragged edge where the line is torn
+      for (const ex of [a, b]) {
+        if (ex <= -10 || ex >= W + 10) continue;
+        ctx.moveTo(ex, y);
+        ctx.lineTo(ex + (ex === a ? 3 : -3), y + side * 7);
+        ctx.lineTo(ex + (ex === a ? -1 : 1), y + side * 13);
+      }
+      ctx.stroke();
+    }
+  }
+
+  function spikes() {
+    ctx.lineWidth = 2.2; ctx.lineJoin = "round";
+    for (const o of obs) {
+      if (o.kind !== "spike") continue;
+      const sx = o.x - d; if (sx > W + 30 || sx + o.w < -30) continue;
+      const base = o.side > 0 ? BOT : TOP;
+      ctx.beginPath();
+      for (let x = sx; x < sx + o.w - 1; x += SPIKE_W) {
+        ctx.moveTo(x, base); ctx.lineTo(x + SPIKE_W / 2, base - o.side * SPIKE_H); ctx.lineTo(x + SPIKE_W, base);
+      }
+      ctx.fillStyle = C.soft; ctx.globalAlpha = 0.45; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = C.ink; ctx.stroke();
+    }
+  }
+
+  function starPath(r) {
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / 5, rr = i % 2 ? r * 0.45 : r;
+      ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+    }
+    ctx.closePath();
+  }
+
+  function drawStars() {
+    for (const s of stars) {
+      if (s.got) continue;
+      const sx = s.x - d; if (sx < -20 || sx > W + 20) continue;
+      ctx.save(); ctx.translate(sx, s.y + Math.sin(clock * 4 + s.spin) * 3); ctx.rotate(Math.sin(clock * 2 + s.spin) * 0.25);
+      starPath(11); ctx.fillStyle = C.hi; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 1.8; ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawPlayer() {
+    const cx = PX + P / 2, cy = pl.y + P / 2;
+    ctx.save();
+    ctx.translate(cx, cy);
+    const sq = pl.squash * 0.22;
+    let fy = pl.fy; if (Math.abs(fy) < 0.12) fy = 0.12 * Math.sign(fy || 1);
+    ctx.scale(1 + sq, fy * (1 - sq));
+    // body
+    ctx.fillStyle = C.paper; ctx.strokeStyle = C.ink; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.roundRect(-P / 2, -P / 2, P, P, 5); ctx.fill(); ctx.stroke();
+    // scribble shading
+    ctx.save(); ctx.beginPath(); ctx.roundRect(-P / 2, -P / 2, P, P, 5); ctx.clip();
+    ctx.strokeStyle = C.soft; ctx.lineWidth = 1.2; ctx.beginPath();
+    for (let i = -P; i < P; i += 5) { ctx.moveTo(i, P / 2); ctx.lineTo(i + 8, P / 2 - 8); }
+    ctx.stroke(); ctx.restore();
+    // eyes
+    ctx.fillStyle = C.ink;
+    if (pl.dead) {
+      ctx.lineWidth = 2; ctx.beginPath();
+      for (const ex of [1, 8]) { ctx.moveTo(ex - 3, -7); ctx.lineTo(ex + 3, -1); ctx.moveTo(ex + 3, -7); ctx.lineTo(ex - 3, -1); }
+      ctx.stroke();
+    } else {
+      const blink = (clock % 3.2) < 0.12 ? 0.3 : 1;
+      for (const ex of [2, 9]) { ctx.beginPath(); ctx.ellipse(ex, -4, 2.4, 3.2 * blink, 0, 0, Math.PI * 2); ctx.fill(); }
+      ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(5, 3, 3.5, 0.2, Math.PI - 0.2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function draw() {
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    const sx = shake ? (Math.random() - 0.5) * shake : 0, sy = shake ? (Math.random() - 0.5) * shake : 0;
+    ctx.translate(sx, sy);
+    ctx.fillStyle = C.paper; ctx.fillRect(-20, -20, W + 40, H + 40);
+    // graph paper
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1; ctx.beginPath();
+    const go = -((d * 0.5) % 24);
+    for (let x = go; x < W + 24; x += 24) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+    for (let y = 6; y < H; y += 24) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
+    ctx.stroke();
+    // red margin line
+    ctx.strokeStyle = C.margin; ctx.globalAlpha = 0.6; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(40, 0); ctx.lineTo(40, H); ctx.stroke(); ctx.globalAlpha = 1;
+
+    surface(1); surface(-1);
+    spikes();
+    drawStars();
+    for (const p of parts) {
+      ctx.globalAlpha = Math.max(0, p.life / p.max); ctx.fillStyle = p.col;
+      ctx.beginPath(); ctx.arc(p.x - d, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    if (!(pl.dead && clock - deadAt > 0.05 && pl.y > BOT + 10)) drawPlayer();
+
+    // HUD
+    if (state !== "ready") {
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      ctx.fillStyle = C.ink; ctx.font = `30px ${MARKER}`;
+      ctx.fillText(String(score), W - 18, TOP / 2 + 2);
+      ctx.font = `16px ${MARKER}`; ctx.fillStyle = C.graphite;
+      ctx.fillText(`best ${best}`, W - 18, H - (H - BOT) / 2);
+    }
+  }
+
+  // ---------- overlay ----------
+  const ov = document.getElementById("overlay"), ovBig = document.getElementById("ovBig"),
+        ovSmall = document.getElementById("ovSmall"), ovHint = document.getElementById("ovHint");
+  function showOverlay(big, small, hint) { ovBig.textContent = big; ovSmall.textContent = small; ovHint.textContent = hint; ov.hidden = false; }
+  function hideOverlay() { ov.hidden = true; }
+  if (best > 0) ovSmall.textContent = `Your best: ${best}. Tap, click or press Space to flip gravity.`;
+
+  // ---------- input ----------
+  function start() { reset(); state = "play"; hideOverlay(); beep(300, 600, 0.12, "triangle"); }
+  function press() {
+    unlockAudio();
+    if (ac && ac.state === "suspended") ac.resume();
+    if (state === "ready") start();
+    else if (state === "paused") { state = "play"; hideOverlay(); }
+    else if (state === "play") { if (!tryFlip()) buffer = 0.14; }
+    else if (state === "dead" && clock - deadAt > 0.5) start();
+  }
+  document.getElementById("stage").addEventListener("pointerdown", (e) => {
+    if (e.button > 0) return;
+    e.preventDefault(); press();
+  });
+  window.addEventListener("keydown", (e) => {
+    if (e.target.closest && e.target.closest("input, textarea, button")) return;
+    if (["Space", "ArrowUp", "ArrowDown", "KeyW", "KeyS", "Enter"].includes(e.code)) {
+      e.preventDefault(); if (!e.repeat) press();
+    }
+  });
+  function pause() { if (state === "play") { state = "paused"; showOverlay("Paused", `Score ${score}`, "Tap to keep going"); } }
+  document.addEventListener("visibilitychange", () => { if (document.hidden) pause(); });
+  window.addEventListener("blur", pause);
+
+  // ---------- loop ----------
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.033, (now - last) / 1000); last = now;
+    update(dt); draw();
+    requestAnimationFrame(frame);
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => {});
+  requestAnimationFrame(frame);
+
+  // ---------- shared Hall of Fame ----------
+  const board = (() => {
+    const listEl = document.getElementById("board"), statusEl = document.getElementById("status");
+    const form = document.getElementById("nameForm"), input = document.getElementById("nick");
+    let db = null, uid = null, mine = null, pending = 0, canPost = true;
+    let nick = load("gd-nick") || "";
+    input.value = nick;
+    const setStatus = (t) => { statusEl.textContent = t; };
+    const validNick = (n) => /^[\p{L}\p{N}][\p{L}\p{N} ._-]{0,12}[\p{L}\p{N}.]$/u.test(n);
+
+    function render(rows) {
+      listEl.replaceChildren();
+      if (!rows.length) {
+        const li = document.createElement("li"); li.className = "empty";
+        li.textContent = "No scores yet. Play a round and be the first name up here.";
+        listEl.append(li); return;
+      }
+      rows.forEach((r, i) => {
+        const li = document.createElement("li");
+        if (r.id === uid) li.classList.add("me");
+        if (i < 3) li.classList.add("top");
+        const rank = document.createElement("span"); rank.className = "rank"; rank.textContent = `${i + 1}.`;
+        const who = document.createElement("span"); who.className = "who";
+        who.textContent = (typeof r.nick === "string" && r.nick ? r.nick.slice(0, 14) : "Anonymous") + (r.id === uid ? " (you)" : "");
+        const pts = document.createElement("span"); pts.className = "pts";
+        pts.textContent = String(Math.max(0, Math.floor(+r.best || 0)));
+        li.append(rank, who, pts); listEl.append(li);
+      });
+    }
+
+    function explain(e) {
+      const code = e && e.code;
+      if (code === "not_granted") {
+        canPost = false;
+        return "You can play and watch the board, but posting scores needs edit access. Ask whoever shared this page to give you Contributor access.";
+      }
+      if (code === "resource_exhausted" || code === "quota_exceeded") return "The board is busy right now. Your best is saved on this device.";
+      return "Couldn't reach the board. Your best is saved on this device.";
+    }
+
+    async function write(sc) {
+      if (!db || !uid || !canPost) return;
+      try {
+        await db.collection("scores").doc(uid).set({ nick, best: sc, at: Date.now() });
+        mine = { nick, best: sc }; pending = 0;
+        setStatus(`Posted ${sc} to the Hall of Fame as ${nick}.`);
+      } catch (e) { setStatus(explain(e)); }
+    }
+
+    async function report(sc) {
+      if (!db || !uid || !canPost) return;
+      const prev = mine ? +mine.best || 0 : 0;
+      if (sc <= prev) return;
+      if (!validNick(nick)) { pending = Math.max(pending, sc); setStatus(`New personal best: ${sc}! Add your name below to post it.`); input.focus({ preventScroll: true }); return; }
+      await write(sc);
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const n = input.value.trim().replace(/\s+/g, " ");
+      if (!validNick(n)) { setStatus("Names need 2–14 letters or numbers (spaces, dots, dashes are OK)."); return; }
+      nick = n; save("gd-nick", nick); input.value = nick;
+      if (!db) { setStatus(`Saved. You're playing as ${nick}.`); return; }
+      if (!uid) { setStatus("Sign in to Claude to post scores to the shared board."); return; }
+      const localBest = best;
+      const target = Math.max(pending, mine ? +mine.best || 0 : 0, localBest);
+      if (target > 0) await write(target);
+      else setStatus(`Saved. Scores will post as ${nick}.`);
+    });
+
+    (async () => {
+      const c = window.claude;
+      if (!c || typeof c.use !== "function") { render([]); listEl.firstChild.textContent = "The shared board only works on the published page. Your best is saved on this device."; return; }
+      const [d0, u0] = await Promise.all([c.use("db"), c.use("user")]);
+      if (!d0) { render([]); listEl.firstChild.textContent = "Sign in to see the school board. Your best is saved on this device."; return; }
+      db = d0;
+      uid = u0 ? await u0.id() : null;
+      let loaded = false;
+      const timer = setTimeout(() => { if (!loaded) setStatus("The board is taking a while to load. You can keep playing."); }, 10000);
+      db.collection("scores").orderBy("best", "desc").limit(10).onSnapshot(
+        (snap) => { loaded = true; clearTimeout(timer); render(snap.docs.map((s) => ({ id: s.id, ...(s.data() || {}) }))); },
+        (e) => { loaded = true; clearTimeout(timer); setStatus(explain(e)); }
+      );
+      if (uid) {
+        try {
+          const s = await db.collection("scores").doc(uid).get();
+          if (s.exists) { mine = s.data(); if (!nick && mine.nick) { nick = String(mine.nick); input.value = nick; } }
+        } catch {}
+        if (best > (mine ? +mine.best || 0 : 0)) pending = best;
+      } else {
+        setStatus("Sign in to Claude to put your name on the board.");
+      }
+    })();
+
+    return { report };
+  })();
+})();
+</script>
