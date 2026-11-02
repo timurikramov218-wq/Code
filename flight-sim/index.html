@@ -1,0 +1,811 @@
+<title>Skyhop Islands</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Share+Tech+Mono&display=swap">
+<style>
+/* Layout: an instrument-panel page. The flight view fills the top, the ring-race board and controls card sit below it (side by side when wide). One deliberate dark cockpit look. */
+:root {
+  --panel: #10161d;
+  --bezel: #1b242e;
+  --line: #2c3a48;
+  --text: #dfe8ee;
+  --muted: #8a9bab;
+  --hud: #7dffb0;
+  --amber: #ffb547;
+  --warn: #ff5f52;
+  --font-display: "Chakra Petch", "Trebuchet MS", system-ui, sans-serif;
+  --font-mono: "Share Tech Mono", ui-monospace, "Courier New", monospace;
+  color-scheme: dark;
+}
+html, body { background: var(--panel); color: var(--text); }
+body {
+  font-family: var(--font-display); font-size: 16px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px 40px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 18px; }
+header { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px 24px; flex-wrap: wrap; }
+h1 { margin: 0; font-weight: 700; font-size: clamp(28px, 5.5vw, 44px); letter-spacing: 0.02em; line-height: 1; text-wrap: balance; }
+h1 small { display: block; font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.18em; color: var(--hud); margin-bottom: 6px; font-weight: 400; }
+.tagline { margin: 0; color: var(--muted); max-width: 46ch; }
+
+.stage {
+  position: relative; border: 2px solid var(--line); border-radius: 10px; overflow: hidden; background: #000;
+  aspect-ratio: 16 / 9; max-height: 78vh; width: 100%;
+  user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; touch-action: none;
+}
+@media (max-width: 640px) { .stage { aspect-ratio: 3 / 4; } }
+.stage:fullscreen { max-height: none; border: 0; border-radius: 0; aspect-ratio: auto; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+[hidden] { display: none !important; }
+.menu {
+  position: absolute; inset: 0; display: grid; place-items: center; padding: 16px;
+  background: color-mix(in srgb, var(--panel) 62%, transparent);
+}
+.menu-card {
+  background: var(--bezel); border: 1px solid var(--line); border-radius: 10px; padding: 22px 22px 20px;
+  display: grid; gap: 12px; max-width: 420px; width: 100%; text-align: center;
+}
+.menu-card h2 { margin: 0; font-size: clamp(22px, 4vw, 30px); }
+.menu-card p { margin: 0; color: var(--muted); }
+.menu-card .result { font-family: var(--font-mono); color: var(--hud); font-size: 18px; }
+.menu-card .result.bad { color: var(--warn); }
+.btns { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+.btn {
+  font: inherit; font-weight: 700; color: var(--panel); background: var(--hud); border: 0; border-radius: 8px;
+  padding: 10px 12px; cursor: pointer; letter-spacing: 0.02em;
+}
+.btn.alt { background: transparent; color: var(--text); border: 1px solid var(--line); }
+.btn:hover { filter: brightness(1.08); }
+.btn:focus-visible, .chip:focus-visible, input:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+.chips { position: absolute; top: calc(10px + env(safe-area-inset-top, 0px)); left: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  font: inherit; font-size: 13px; color: var(--text); background: color-mix(in srgb, var(--panel) 75%, transparent);
+  border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; cursor: pointer;
+}
+
+/* touch controls */
+.stick {
+  position: absolute; left: 18px; bottom: 18px; width: 130px; height: 130px; border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--hud) 50%, transparent); background: color-mix(in srgb, var(--panel) 35%, transparent);
+  touch-action: none;
+}
+.stick .knob {
+  position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%;
+  background: color-mix(in srgb, var(--hud) 55%, transparent); border: 2px solid var(--hud);
+}
+.throttle {
+  position: absolute; right: 18px; bottom: 18px; width: 54px; height: 170px; border-radius: 10px;
+  border: 2px solid color-mix(in srgb, var(--amber) 60%, transparent); background: color-mix(in srgb, var(--panel) 45%, transparent);
+  touch-action: none; cursor: ns-resize;
+}
+.throttle .fill { position: absolute; left: 4px; right: 4px; bottom: 4px; border-radius: 6px; background: color-mix(in srgb, var(--amber) 55%, transparent); }
+.throttle .lbl { position: absolute; top: -22px; left: 0; right: 0; text-align: center; font-family: var(--font-mono); font-size: 12px; color: var(--amber); }
+.brake {
+  position: absolute; right: 84px; bottom: 18px; font: inherit; font-size: 13px; font-weight: 700; color: var(--text);
+  background: color-mix(in srgb, var(--panel) 60%, transparent); border: 2px solid var(--line); border-radius: 8px; padding: 8px 10px;
+}
+@media (hover: hover) and (pointer: fine) { .stick, .brake { display: none; } }
+
+.below { display: grid; gap: 18px; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 820px) { .below { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); } }
+.card { background: var(--bezel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+.card h2 { margin: 0; font-size: 20px; }
+.card h2 span { font-family: var(--font-mono); font-size: 12px; color: var(--hud); letter-spacing: 0.15em; display: block; font-weight: 400; }
+.board { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.board li { display: grid; grid-template-columns: 2.4em minmax(0, 1fr) auto; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--line); }
+.board .who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board .t { color: var(--hud); }
+.board li.me .who { color: var(--amber); }
+.board li.top .rank { color: var(--amber); }
+.board .empty { display: block; color: var(--muted); border: 0; font-family: var(--font-display); }
+form.name { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+form.name label { width: 100%; color: var(--muted); font-size: 14px; }
+form.name input {
+  flex: 1 1 160px; min-width: 0; font: inherit; color: var(--text); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px;
+}
+.status { margin: 0; font-size: 14px; color: var(--muted); min-height: 1.4em; }
+.keys { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; margin: 0; align-items: baseline; }
+.keys dt { white-space: nowrap; }
+.keys dd { margin: 0; color: var(--muted); }
+kbd {
+  font-family: var(--font-mono); font-size: 13px; color: var(--hud); border: 1px solid var(--line); border-bottom-width: 3px;
+  border-radius: 5px; padding: 0 6px; background: var(--panel);
+}
+.tip { margin: 0; color: var(--muted); font-size: 14px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><small>FLIGHT SIM · RWY 36</small>Skyhop Islands</h1>
+    <p class="tagline">Take off, fly a low-poly archipelago, thread the ring course, and bring it back down on the runway.</p>
+  </header>
+
+  <div class="stage" id="stage">
+    <canvas id="world" aria-label="3D flight view"></canvas>
+    <canvas id="hud" aria-hidden="true"></canvas>
+    <div class="chips">
+      <button class="chip" id="camBtn" type="button">View: chase</button>
+      <button class="chip" id="invBtn" type="button" aria-pressed="false">Pitch: ↑ climbs</button>
+      <button class="chip" id="sndBtn" type="button" aria-pressed="false">Sound off</button>
+      <button class="chip" id="fsBtn" type="button">Full screen</button>
+      <button class="chip" id="menuBtn" type="button">Menu</button>
+    </div>
+    <div class="stick" id="stick"><div class="knob" id="knob"></div></div>
+    <button class="brake" id="brakeBtn" type="button">BRAKE</button>
+    <div class="throttle" id="throttle"><div class="lbl" id="thrLbl">THR 0%</div><div class="fill" id="thrFill"></div></div>
+
+    <div class="menu" id="menu">
+      <div class="menu-card">
+        <h2 id="menuTitle">Ready for departure</h2>
+        <p class="result" id="menuResult" hidden></p>
+        <p id="menuText">Push the throttle up, roll down the runway, and pull back gently at about 60 knots to lift off.</p>
+        <div class="btns">
+          <button class="btn" id="raceBtn" type="button">Ring Race</button>
+          <button class="btn alt" id="freeBtn" type="button">Free Flight</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="below">
+    <section class="card" aria-labelledby="hof">
+      <h2 id="hof"><span>RING RACE · 10 GATES</span>Fastest pilots</h2>
+      <ol class="board" id="board"><li class="empty">Loading the board…</li></ol>
+      <form class="name" id="nameForm" autocomplete="off">
+        <label for="nick">Your call sign on the board (2–14 letters or numbers)</label>
+        <input id="nick" name="nick" maxlength="14" placeholder="e.g. Maverick 7B">
+        <button class="btn" type="submit">Save</button>
+      </form>
+      <p class="status" id="status" role="status"></p>
+    </section>
+
+    <section class="card" aria-labelledby="ctl">
+      <h2 id="ctl"><span>PILOT'S NOTES</span>Controls</h2>
+      <dl class="keys">
+        <dt><kbd>↑</kbd> <kbd>↓</kbd> or <kbd>W</kbd> <kbd>S</kbd></dt><dd>Pitch the nose up and down</dd>
+        <dt><kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd> <kbd>D</kbd></dt><dd>Roll (bank) to turn</dd>
+        <dt><kbd>Q</kbd> <kbd>E</kbd></dt><dd>Rudder (steer on the ground)</dd>
+        <dt><kbd>R</kbd> <kbd>F</kbd> or <kbd>Shift</kbd> <kbd>Z</kbd></dt><dd>Throttle up and down</dd>
+        <dt><kbd>Space</kbd></dt><dd>Wheel brakes</dd>
+        <dt><kbd>C</kbd> · <kbd>P</kbd></dt><dd>Switch camera · pause</dd>
+      </dl>
+      <p class="tip">On a phone or tablet, use the left stick to steer and drag the orange bar to set throttle. Keep above 55 knots in the air or the wing stalls. To land, line up with the runway, slow down to about 70 knots, and touch down gently.</p>
+    </section>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  "use strict";
+  const load = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+  const save = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+  const $ = (id) => document.getElementById(id);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const smooth = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
+
+  if (!window.THREE) { $("menuText").textContent = "The 3D engine didn't load. Check your connection and reload the page."; return; }
+
+  // ---------------- terrain function ----------------
+  function hash(x, z) { const s = Math.sin(x * 127.1 + z * 311.7) * 43758.5453; return s - Math.floor(s); }
+  function vnoise(x, z) {
+    const xi = Math.floor(x), zi = Math.floor(z), xf = x - xi, zf = z - zi;
+    const u = xf * xf * (3 - 2 * xf), v = zf * zf * (3 - 2 * zf);
+    const a = hash(xi, zi), b = hash(xi + 1, zi), c = hash(xi, zi + 1), d = hash(xi + 1, zi + 1);
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+  }
+  function fbm(x, z) { let s = 0, amp = 0.5, f = 1; for (let i = 0; i < 5; i++) { s += amp * vnoise(x * f, z * f); f *= 2.03; amp *= 0.5; } return s; }
+  const RWY = { x: 0, z0: 60, z1: -560, half: 16, y: 14 };
+  function heightAt(x, z) {
+    let h = (fbm(x * 0.0011 + 3.1, z * 0.0011 + 7.7) - 0.47) * 620;
+    if (h > 0) h = h * (0.6 + 0.4 * fbm(x * 0.004, z * 0.004));
+    const dr = Math.hypot(x, (z + 250) / 2.3);
+    const f = smooth(430, 230, dr);
+    h = h * (1 - f) + RWY.y * f;
+    h -= smooth(1500, 2100, Math.hypot(x, z)) * 320;
+    return h;
+  }
+  const onRunway = (x, z) => Math.abs(x - RWY.x) < RWY.half && z < RWY.z0 && z > RWY.z1;
+  const groundY = (x, z) => onRunway(x, z) ? RWY.y + 0.3 : heightAt(x, z);
+
+  // ---------------- three setup ----------------
+  const stage = $("stage"), worldCv = $("world"), hudCv = $("hud"), hud = hudCv.getContext("2d");
+  const renderer = new THREE.WebGLRenderer({ canvas: worldCv, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  const scene = new THREE.Scene();
+  const SKY = new THREE.Color(0x9fd0f0);
+  scene.background = SKY;
+  scene.fog = new THREE.Fog(SKY, 900, 3200);
+  const camera = new THREE.PerspectiveCamera(65, 16 / 9, 0.5, 6000);
+  scene.add(new THREE.HemisphereLight(0xdff2ff, 0x4a5a3a, 0.75));
+  const sun = new THREE.DirectionalLight(0xfff1d6, 0.85); sun.position.set(-600, 900, 400); scene.add(sun);
+
+  // terrain mesh
+  (function buildTerrain() {
+    const SIZE = 4600, SEG = 184;
+    const g = new THREE.PlaneGeometry(SIZE, SIZE, SEG, SEG); g.rotateX(-Math.PI / 2);
+    const p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) p.setY(i, heightAt(p.getX(i), p.getZ(i)));
+    const ng = g.toNonIndexed(); const np = ng.attributes.position;
+    const col = new Float32Array(np.count * 3); const c = new THREE.Color();
+    for (let t = 0; t < np.count; t += 3) {
+      const y0 = np.getY(t), y1 = np.getY(t + 1), y2 = np.getY(t + 2);
+      const y = (y0 + y1 + y2) / 3, span = Math.max(y0, y1, y2) - Math.min(y0, y1, y2);
+      const n = hash(Math.floor(np.getX(t) / 7), Math.floor(np.getZ(t) / 7)) * 0.08;
+      if (y < -4) c.setHSL(0.13, 0.25, 0.42 + n);
+      else if (y < 5) c.setHSL(0.12, 0.45, 0.72 + n);
+      else if (span > 26 || y > 230) c.setHSL(0.08, 0.06, 0.48 + n);
+      else if (y < 170) c.setHSL(0.27 + n * 0.4, 0.42, 0.36 + n);
+      else c.setHSL(0.1, 0.12, 0.55 + n);
+      if (y > 300) c.setHSL(0.58, 0.15, 0.93);
+      for (let k = 0; k < 3; k++) { col[(t + k) * 3] = c.r; col[(t + k) * 3 + 1] = c.g; col[(t + k) * 3 + 2] = c.b; }
+    }
+    ng.setAttribute("color", new THREE.BufferAttribute(col, 3));
+    ng.computeVertexNormals();
+    scene.add(new THREE.Mesh(ng, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })));
+    const water = new THREE.Mesh(new THREE.PlaneGeometry(20000, 20000), new THREE.MeshLambertMaterial({ color: 0x2b86c0, transparent: true, opacity: 0.88 }));
+    water.rotation.x = -Math.PI / 2; water.position.y = 0; scene.add(water);
+  })();
+
+  // runway with markings
+  (function buildRunway() {
+    const len = RWY.z0 - RWY.z1, cz = (RWY.z0 + RWY.z1) / 2;
+    const rw = new THREE.Mesh(new THREE.BoxGeometry(RWY.half * 2, 0.6, len), new THREE.MeshLambertMaterial({ color: 0x3a3f46 }));
+    rw.position.set(RWY.x, RWY.y, cz); scene.add(rw);
+    const white = new THREE.MeshBasicMaterial({ color: 0xf2f2f2 });
+    for (let z = RWY.z0 - 40; z > RWY.z1 + 40; z -= 30) {
+      const s = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 14), white); s.position.set(RWY.x, RWY.y + 0.32, z); scene.add(s);
+    }
+    for (const zEnd of [RWY.z0 - 12, RWY.z1 + 12]) for (let i = -5; i <= 5; i++) {
+      if (i === 0) continue;
+      const s = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.05, 16), white); s.position.set(RWY.x + i * 2.6, RWY.y + 0.32, zEnd); scene.add(s);
+    }
+    // small tower and hangar
+    const tower = new THREE.Mesh(new THREE.BoxGeometry(6, 22, 6), new THREE.MeshLambertMaterial({ color: 0xe8e3d6 }));
+    tower.position.set(60, RWY.y + 11, -120); scene.add(tower);
+    const cab = new THREE.Mesh(new THREE.BoxGeometry(9, 5, 9), new THREE.MeshLambertMaterial({ color: 0x5fb3d9 }));
+    cab.position.set(60, RWY.y + 24, -120); scene.add(cab);
+    const hangar = new THREE.Mesh(new THREE.BoxGeometry(34, 12, 26), new THREE.MeshLambertMaterial({ color: 0xc0573e }));
+    hangar.position.set(70, RWY.y + 6, -40); scene.add(hangar);
+  })();
+
+  // trees
+  (function buildTrees() {
+    const N = 900, geo = new THREE.ConeGeometry(4, 13, 6); geo.translate(0, 6.5, 0);
+    const mesh = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ color: 0x2f6b3a, flatShading: true }), N);
+    const m = new THREE.Matrix4(); let n = 0, tries = 0;
+    while (n < N && tries < 20000) {
+      tries++;
+      const x = (hash(tries, 1.3) - 0.5) * 4000, z = (hash(2.7, tries) - 0.5) * 4000;
+      const h = heightAt(x, z);
+      if (h < 8 || h > 160) continue;
+      if (Math.abs(x) < 120 && z < 140 && z > -660) continue;
+      const s = 0.7 + hash(x, z) * 0.9;
+      m.makeScale(s, s, s); m.setPosition(x, h - 1, z); mesh.setMatrixAt(n++, m);
+    }
+    mesh.count = n; scene.add(mesh);
+  })();
+
+  // clouds
+  (function buildClouds() {
+    const mat = new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0xaab6c4, transparent: true, opacity: 0.92, flatShading: true });
+    const geo = new THREE.IcosahedronGeometry(1, 0);
+    for (let i = 0; i < 34; i++) {
+      const grp = new THREE.Group();
+      const parts = 3 + Math.floor(hash(i, 9) * 4);
+      for (let k = 0; k < parts; k++) {
+        const b = new THREE.Mesh(geo, mat); const s = 26 + hash(i, k) * 30;
+        b.scale.set(s * 1.4, s * 0.7, s); b.position.set((k - parts / 2) * 34, hash(k, i) * 12, hash(i + k, 3) * 30); grp.add(b);
+      }
+      grp.position.set((hash(i, 4.4) - 0.5) * 4200, 330 + hash(i, 5.5) * 160, (hash(6.6, i) - 0.5) * 4200);
+      scene.add(grp);
+    }
+  })();
+
+  // aircraft
+  const plane = new THREE.Group();
+  (function buildPlane() {
+    const white = new THREE.MeshLambertMaterial({ color: 0xf1f3f5, flatShading: true });
+    const orange = new THREE.MeshLambertMaterial({ color: 0xff7a2f, flatShading: true });
+    const dark = new THREE.MeshLambertMaterial({ color: 0x24303c, flatShading: true });
+    const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); plane.add(m); return m; };
+    add(new THREE.BoxGeometry(1.3, 1.3, 7), white, 0, 0, 0);
+    add(new THREE.BoxGeometry(1.0, 0.7, 1.6), dark, 0, 0.8, -1.2);
+    add(new THREE.BoxGeometry(11, 0.22, 1.7), orange, 0, 0.35, -0.6);
+    add(new THREE.BoxGeometry(3.8, 0.16, 1.0), orange, 0, 0.2, 3.1);
+    add(new THREE.BoxGeometry(0.16, 1.7, 1.2), orange, 0, 1.0, 3.1);
+    add(new THREE.BoxGeometry(0.9, 0.9, 0.6), dark, 0, 0, -3.7);
+    add(new THREE.BoxGeometry(0.2, 0.9, 0.2), dark, -1, -1, -1.4);
+    add(new THREE.BoxGeometry(0.2, 0.9, 0.2), dark, 1, -1, -1.4);
+    add(new THREE.BoxGeometry(0.2, 0.7, 0.2), dark, 0, -0.9, 2.6);
+    plane.userData.prop = add(new THREE.BoxGeometry(0.18, 3, 0.12), dark, 0, 0, -4.05);
+  })();
+  scene.add(plane);
+
+  // explosion
+  const boom = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0xff8a3d, transparent: true, opacity: 0.9 }));
+  boom.visible = false; scene.add(boom);
+
+  // rings
+  const ringGeo = new THREE.TorusGeometry(20, 1.6, 8, 28);
+  const ringNext = new THREE.MeshBasicMaterial({ color: 0xffd23f });
+  const ringOther = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45 });
+  const rings = [];
+  (function buildRings() {
+    const pts = [];
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2 + 0.25 * Math.sin(i * 1.7);
+      const r = 760 + 260 * Math.sin(i * 2.3 + 0.4);
+      const x = Math.sin(a) * r, z = -250 - Math.cos(a) * r;
+      const y = Math.max(heightAt(x, z), 0) + 75 + (i % 3) * 35;
+      pts.push(new THREE.Vector3(x, y, z));
+    }
+    pts.forEach((p, i) => {
+      const m = new THREE.Mesh(ringGeo, ringOther); m.position.copy(p);
+      m.lookAt(i < pts.length - 1 ? pts[i + 1] : new THREE.Vector3(0, p.y, 0));
+      scene.add(m); rings.push(m);
+    });
+  })();
+  function setRingsVisible(on) { rings.forEach((r) => (r.visible = on)); }
+  setRingsVisible(false);
+
+  // ---------------- sim state ----------------
+  const S = {
+    mode: "menu", pos: new THREE.Vector3(), q: new THREE.Quaternion(), speed: 0, sink: 0, throttle: 0,
+    grounded: true, crashed: false, t: 0, raceT: 0, next: 0, msg: "", msgT: 0, boomT: 0, cam: "chase", vs: 0, landed: 0,
+  };
+  const V = { fwd: new THREE.Vector3(), up: new THREE.Vector3(), right: new THREE.Vector3() };
+  const tmpQ = new THREE.Quaternion(), AX = new THREE.Vector3(1, 0, 0), AY = new THREE.Vector3(0, 1, 0), AZ = new THREE.Vector3(0, 0, 1);
+  const STALL = 28, MS2KT = 1.944, M2FT = 3.281;
+
+  function spawn() {
+    S.pos.set(RWY.x, RWY.y + 0.3 + 1.4, RWY.z0 - 20);
+    S.q.identity(); S.speed = 0; S.sink = 0; S.throttle = 0; S.grounded = true; S.crashed = false;
+    S.next = 0; S.raceT = 0; S.landed = 0; S.boomT = 0; boom.visible = false; plane.visible = S.cam === "chase";
+    camera.position.set(S.pos.x, S.pos.y + 8, S.pos.z + 30);
+    rings.forEach((r) => { r.userData.done = false; r.material = ringOther; });
+  }
+  spawn();
+
+  function flash(text, secs = 2.2) { S.msg = text; S.msgT = secs; }
+
+  // ---------------- input ----------------
+  const keys = new Set();
+  let invert = load("sky-invert") === "1";
+  const stick = { x: 0, y: 0 };
+  let brakeHeld = false;
+  window.addEventListener("keydown", (e) => {
+    if (e.target.closest && e.target.closest("input, textarea")) return;
+    const k = e.code;
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(k)) e.preventDefault();
+    keys.add(k);
+    if (e.repeat) return;
+    if (k === "KeyC") toggleCam();
+    if (k === "KeyP") togglePause();
+    if (k === "Escape" && S.mode !== "menu") openMenu("Paused", "", "Pick a mission to restart, or press P to keep flying.");
+  });
+  window.addEventListener("keyup", (e) => keys.delete(e.code));
+  window.addEventListener("blur", () => { keys.clear(); if (S.mode === "fly") togglePause(); });
+  document.addEventListener("visibilitychange", () => { if (document.hidden && S.mode === "fly") togglePause(); });
+
+  // touch stick
+  const stickEl = $("stick"), knob = $("knob");
+  let stickId = null;
+  function stickMove(e) {
+    const r = stickEl.getBoundingClientRect();
+    const dx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2), dy = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
+    const m = Math.hypot(dx, dy), s = m > 1 ? 1 / m : 1;
+    stick.x = dx * s; stick.y = dy * s;
+    knob.style.transform = `translate(${stick.x * 38}px, ${stick.y * 38}px)`;
+  }
+  stickEl.addEventListener("pointerdown", (e) => { stickId = e.pointerId; stickEl.setPointerCapture(e.pointerId); stickMove(e); });
+  stickEl.addEventListener("pointermove", (e) => { if (e.pointerId === stickId) stickMove(e); });
+  const stickEnd = (e) => { if (e.pointerId !== stickId) return; stickId = null; stick.x = stick.y = 0; knob.style.transform = ""; };
+  stickEl.addEventListener("pointerup", stickEnd); stickEl.addEventListener("pointercancel", stickEnd);
+
+  // throttle bar
+  const thrEl = $("throttle"), thrFill = $("thrFill"), thrLbl = $("thrLbl");
+  let thrId = null;
+  function thrMove(e) { const r = thrEl.getBoundingClientRect(); S.throttle = clamp(1 - (e.clientY - r.top - 4) / (r.height - 8), 0, 1); }
+  thrEl.addEventListener("pointerdown", (e) => { thrId = e.pointerId; thrEl.setPointerCapture(e.pointerId); thrMove(e); });
+  thrEl.addEventListener("pointermove", (e) => { if (e.pointerId === thrId) thrMove(e); });
+  thrEl.addEventListener("pointerup", () => (thrId = null)); thrEl.addEventListener("pointercancel", () => (thrId = null));
+  const brakeBtn = $("brakeBtn");
+  brakeBtn.addEventListener("pointerdown", () => (brakeHeld = true));
+  for (const ev of ["pointerup", "pointerleave", "pointercancel"]) brakeBtn.addEventListener(ev, () => (brakeHeld = false));
+
+  // chips
+  const camBtn = $("camBtn"), invBtn = $("invBtn"), sndBtn = $("sndBtn");
+  function toggleCam() { S.cam = S.cam === "chase" ? "cockpit" : "chase"; camBtn.textContent = `View: ${S.cam}`; plane.visible = S.cam === "chase" && !S.crashed; }
+  camBtn.addEventListener("click", toggleCam);
+  function syncInv() { invBtn.textContent = invert ? "Pitch: ↓ climbs" : "Pitch: ↑ climbs"; invBtn.setAttribute("aria-pressed", String(invert)); }
+  syncInv();
+  invBtn.addEventListener("click", () => { invert = !invert; save("sky-invert", invert ? "1" : "0"); syncInv(); });
+  $("fsBtn").addEventListener("click", () => {
+    try { if (document.fullscreenElement) document.exitFullscreen(); else stage.requestFullscreen().catch(() => {}); } catch {}
+  });
+  $("menuBtn").addEventListener("click", () => openMenu("Paused", "", "Pick a mission to restart, or close this to keep flying."));
+
+  // engine sound
+  let ac = null, osc = null, gain = null, soundOn = false;
+  function syncSnd() { sndBtn.textContent = soundOn ? "Sound on" : "Sound off"; sndBtn.setAttribute("aria-pressed", String(soundOn)); }
+  sndBtn.addEventListener("click", () => {
+    soundOn = !soundOn; syncSnd();
+    if (soundOn && !ac) {
+      try {
+        ac = new (window.AudioContext || window.webkitAudioContext)();
+        osc = ac.createOscillator(); osc.type = "sawtooth";
+        const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 420;
+        gain = ac.createGain(); gain.gain.value = 0;
+        osc.connect(lp).connect(gain).connect(ac.destination); osc.start();
+      } catch { ac = null; }
+    }
+    if (ac && ac.state === "suspended") ac.resume();
+  });
+  function chime(f) {
+    if (!ac || !soundOn) return;
+    const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime;
+    o.type = "triangle"; o.frequency.setValueAtTime(f, t0); o.frequency.exponentialRampToValueAtTime(f * 1.5, t0 + 0.15);
+    g.gain.setValueAtTime(0.12, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.3);
+    o.connect(g).connect(ac.destination); o.start(t0); o.stop(t0 + 0.32);
+  }
+
+  // ---------------- menu ----------------
+  const menu = $("menu"), menuTitle = $("menuTitle"), menuText = $("menuText"), menuResult = $("menuResult");
+  let pausedFrom = null;
+  function openMenu(title, result, text, bad = false) {
+    pausedFrom = S.mode === "fly" ? S.race : null;
+    S.mode = "menu"; menuTitle.textContent = title; menuText.textContent = text;
+    menuResult.hidden = !result; menuResult.textContent = result || ""; menuResult.classList.toggle("bad", bad);
+    menu.hidden = false; keys.clear();
+  }
+  function startMission(race) {
+    S.race = race; spawn(); setRingsVisible(race);
+    if (race) rings[0].material = ringNext;
+    S.mode = "fly"; menu.hidden = true; pausedFrom = null;
+    flash(race ? "Ring Race: fly through all 10 gold rings" : "Free Flight: the sky is yours", 3);
+  }
+  $("raceBtn").addEventListener("click", () => startMission(true));
+  $("freeBtn").addEventListener("click", () => startMission(false));
+  function togglePause() {
+    if (S.mode === "fly") openMenu("Paused", "", "Pick a mission to restart, or press P to keep flying.");
+    else if (S.mode === "menu" && pausedFrom !== null && !S.crashed) { S.mode = "fly"; menu.hidden = true; }
+  }
+  menu.addEventListener("click", (e) => { if (e.target === menu && pausedFrom !== null && !S.crashed) { S.mode = "fly"; menu.hidden = true; } });
+
+  // ---------------- physics ----------------
+  function crash(reason) {
+    S.crashed = true; S.grounded = false; plane.visible = false;
+    boom.visible = true; boom.position.copy(S.pos); boom.scale.setScalar(1); S.boomT = 0;
+    if (ac && soundOn) chime(90);
+    setTimeout(() => openMenu("Crashed", reason, "Every pilot has a bad day. Try again?", true), 1300);
+  }
+
+  function step(dt) {
+    const fwd = V.fwd.set(0, 0, -1).applyQuaternion(S.q), up = V.up.set(0, 1, 0).applyQuaternion(S.q), right = V.right.set(1, 0, 0).applyQuaternion(S.q);
+    // inputs
+    let pitch = 0, roll = 0, yaw = 0;
+    const kUp = keys.has("ArrowUp") || keys.has("KeyW"), kDn = keys.has("ArrowDown") || keys.has("KeyS");
+    pitch += (kUp ? 1 : 0) - (kDn ? 1 : 0);
+    if (invert) pitch = -pitch;
+    roll += (keys.has("ArrowRight") || keys.has("KeyD") ? 1 : 0) - (keys.has("ArrowLeft") || keys.has("KeyA") ? 1 : 0);
+    yaw += (keys.has("KeyE") ? 1 : 0) - (keys.has("KeyQ") ? 1 : 0);
+    pitch += invert ? stick.y : -stick.y; roll += stick.x;
+    pitch = clamp(pitch, -1, 1); roll = clamp(roll, -1, 1);
+    if (keys.has("KeyR") || keys.has("ShiftLeft") || keys.has("ShiftRight") || keys.has("PageUp")) S.throttle = clamp(S.throttle + dt * 0.6, 0, 1);
+    if (keys.has("KeyF") || keys.has("KeyZ") || keys.has("PageDown")) S.throttle = clamp(S.throttle - dt * 0.6, 0, 1);
+    const brake = keys.has("Space") || keys.has("KeyB") || brakeHeld;
+
+    // speed
+    S.speed += (S.throttle * 28 - 0.0045 * S.speed * S.speed - 9.8 * fwd.y) * dt;
+    if (S.grounded) S.speed -= (brake ? 9 : 0.5) * dt;
+    S.speed = Math.max(0, S.speed);
+
+    if (S.grounded) {
+      // steering on the ground: rudder and roll keys both steer
+      const heading = Math.atan2(-fwd.x, -fwd.z) - (yaw + roll * 0.6) * 0.7 * dt * clamp(S.speed / 8, 0, 1);
+      S.q.setFromAxisAngle(AY, heading);
+      fwd.set(0, 0, -1).applyQuaternion(S.q);
+      S.pos.addScaledVector(fwd, S.speed * dt);
+      const gy = groundY(S.pos.x, S.pos.z);
+      S.pos.y = gy + 1.4;
+      if (gy < 0.6) { crash("You rolled into the sea."); return; }
+      if (pitch > 0.2 && S.speed > 30) {
+        S.grounded = false; S.sink = 0;
+        S.q.multiply(tmpQ.setFromAxisAngle(AX, 0.06));
+        flash("Lift-off!", 1.4);
+      }
+      if (S.landed && S.speed < 2) { S.landed = 0; flash("Stopped on the runway. Nice flying!", 3); }
+    } else {
+      const auth = clamp(S.speed / 40, 0.25, 1.1);
+      S.q.multiply(tmpQ.setFromAxisAngle(AX, pitch * 1.05 * auth * dt));
+      S.q.multiply(tmpQ.setFromAxisAngle(AZ, -roll * 2.0 * auth * dt));
+      S.q.multiply(tmpQ.setFromAxisAngle(AY, -yaw * 0.45 * auth * dt));
+      // coordinated turn from bank
+      S.q.premultiply(tmpQ.setFromAxisAngle(AY, right.y * 0.85 * auth * dt));
+      // gentle roll assist when stick is centered
+      if (!roll && up.y > 0.2) S.q.multiply(tmpQ.setFromAxisAngle(AZ, -right.y * 0.9 * dt));
+      // stall
+      const lift = clamp(S.speed / STALL, 0, 1) ** 2;
+      if (lift < 1) { S.sink -= (1 - lift) * 9.8 * dt; S.q.premultiply(tmpQ.setFromAxisAngle(right, -(1 - lift) * 0.9 * dt)); }
+      else S.sink *= Math.max(0, 1 - dt * 2.5);
+      S.q.normalize();
+      fwd.set(0, 0, -1).applyQuaternion(S.q);
+      const prevY = S.pos.y;
+      S.pos.addScaledVector(fwd, S.speed * dt);
+      S.pos.y += S.sink * dt;
+      S.vs = (S.pos.y - prevY) / dt;
+
+      const gy = groundY(S.pos.x, S.pos.z);
+      if (S.pos.y - 1.4 <= gy) {
+        right.set(1, 0, 0).applyQuaternion(S.q);
+        const gentle = S.vs > -4.5 && Math.abs(right.y) < 0.26 && fwd.y > -0.14 && fwd.y < 0.3 && S.speed < 55;
+        const slope = Math.abs(heightAt(S.pos.x + 6, S.pos.z) - heightAt(S.pos.x - 6, S.pos.z)) + Math.abs(heightAt(S.pos.x, S.pos.z + 6) - heightAt(S.pos.x, S.pos.z - 6));
+        if (gy < 0.6) { crash("Splashdown! The plane went into the water."); return; }
+        if (gentle && (onRunway(S.pos.x, S.pos.z) || slope < 3)) {
+          S.grounded = true; S.sink = 0; S.landed = 1;
+          const fpm = Math.round(-S.vs * M2FT * 60);
+          flash(onRunway(S.pos.x, S.pos.z) ? `Touchdown! ${fpm} ft/min. Hold Space to brake.` : `Field landing! ${fpm} ft/min`, 3);
+          chime(520);
+        } else {
+          crash(S.vs < -4.5 ? "You hit the ground too hard. Slow your descent." : "You flew into the terrain.");
+          return;
+        }
+      }
+    }
+
+    // rings
+    if (S.race && S.next < rings.length) {
+      const r = rings[S.next];
+      if (r.position.distanceTo(S.pos) < 21) {
+        r.userData.done = true; r.visible = false; S.next++; chime(660 + S.next * 40);
+        if (S.next < rings.length) { rings[S.next].material = ringNext; flash(`Ring ${S.next} of 10`, 1.2); }
+        else {
+          const t = S.raceT;
+          flash(`Course complete in ${fmt(t)}! Now land on the runway.`, 5);
+          board.report(Math.round(t * 1000));
+        }
+      }
+    }
+    if (S.race && S.next < rings.length) S.raceT += dt;
+    if (Math.hypot(S.pos.x, S.pos.z) > 2300 && !S.grounded && S.msgT <= 0) flash("You're leaving the islands. Turn back!", 2);
+  }
+
+  function fmt(t) { const m = Math.floor(t / 60), s = t - m * 60; return `${m}:${s < 10 ? "0" : ""}${s.toFixed(1)}`; }
+
+  // ---------------- camera + render ----------------
+  const camTarget = new THREE.Vector3(), look = new THREE.Vector3();
+  function updateCamera(dt) {
+    const fwd = V.fwd.set(0, 0, -1).applyQuaternion(S.q), up = V.up.set(0, 1, 0).applyQuaternion(S.q);
+    if (S.cam === "cockpit" && !S.crashed) {
+      camera.position.copy(S.pos).addScaledVector(up, 1.2).addScaledVector(fwd, -0.6);
+      camera.quaternion.copy(S.q);
+    } else {
+      camTarget.copy(S.pos).addScaledVector(fwd, -26).addScaledVector(up, 4).add(new THREE.Vector3(0, 4, 0));
+      const gy = Math.max(groundY(camTarget.x, camTarget.z), 0) + 2;
+      if (camTarget.y < gy) camTarget.y = gy;
+      camera.position.lerp(camTarget, 1 - Math.exp(-dt * 4.5));
+      look.copy(S.pos).addScaledVector(fwd, 24);
+      camera.up.set(0, 1, 0); camera.lookAt(look);
+    }
+  }
+
+  function resize() {
+    const r = stage.getBoundingClientRect();
+    const w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.fov = w / h < 1 ? 80 : 65; camera.updateProjectionMatrix();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    hudCv.width = Math.round(w * dpr); hudCv.height = Math.round(h * dpr);
+    hud.setTransform(dpr, 0, 0, dpr, 0, 0);
+    hudSize.w = w; hudSize.h = h;
+  }
+  const hudSize = { w: 1, h: 1 };
+  new ResizeObserver(resize).observe(stage);
+
+  // ---------------- HUD ----------------
+  const css = getComputedStyle(document.documentElement);
+  const HC = { hud: css.getPropertyValue("--hud").trim(), amber: css.getPropertyValue("--amber").trim(), warn: css.getPropertyValue("--warn").trim(), panel: css.getPropertyValue("--panel").trim() };
+  const MONO = css.getPropertyValue("--font-mono").trim();
+  const proj = new THREE.Vector3();
+  function drawHud() {
+    const { w, h } = hudSize; hud.clearRect(0, 0, w, h);
+    thrFill.style.height = `${Math.round(S.throttle * (thrEl.clientHeight - 8))}px`;
+    thrLbl.textContent = `THR ${Math.round(S.throttle * 100)}%`;
+    if (S.mode === "menu" && !pausedFrom) return;
+    const fwd = V.fwd.set(0, 0, -1).applyQuaternion(S.q), up = V.up.set(0, 1, 0).applyQuaternion(S.q), right = V.right.set(1, 0, 0).applyQuaternion(S.q);
+    const pitchDeg = Math.asin(clamp(fwd.y, -1, 1)) * 57.3, rollR = Math.atan2(right.y, up.y);
+    const cx = w / 2, cy = h * 0.48, sc = Math.min(w, h) / 600;
+    const fs = Math.max(13, Math.round(17 * sc));
+    hud.lineWidth = 2; hud.strokeStyle = HC.hud; hud.fillStyle = HC.hud; hud.font = `${fs}px ${MONO}`;
+    hud.shadowColor = "rgba(0,0,0,0.55)"; hud.shadowBlur = 3;
+
+    // pitch ladder
+    hud.save(); hud.beginPath(); hud.arc(cx, cy, Math.min(w, h) * 0.3, 0, Math.PI * 2); hud.clip();
+    hud.translate(cx, cy); hud.rotate(rollR);
+    const ppd = 6 * sc;
+    hud.translate(0, pitchDeg * ppd);
+    for (let a = -60; a <= 60; a += 10) {
+      const y = -a * ppd, len = a === 0 ? 220 * sc : 70 * sc;
+      hud.beginPath();
+      if (a === 0) { hud.moveTo(-len, y); hud.lineTo(len, y); }
+      else { hud.setLineDash(a < 0 ? [6, 5] : []); hud.moveTo(-len, y); hud.lineTo(-len / 3, y); hud.moveTo(len / 3, y); hud.lineTo(len, y); }
+      hud.stroke(); hud.setLineDash([]);
+      if (a) { hud.textAlign = "left"; hud.textBaseline = "middle"; hud.fillText(String(a), len + 6, y); }
+    }
+    hud.restore();
+    // aircraft symbol
+    hud.beginPath(); hud.moveTo(cx - 40 * sc, cy); hud.lineTo(cx - 14 * sc, cy); hud.lineTo(cx, cy + 10 * sc); hud.lineTo(cx + 14 * sc, cy); hud.lineTo(cx + 40 * sc, cy); hud.stroke();
+
+    // speed and altitude boxes
+    const kt = Math.round(S.speed * MS2KT), ft = Math.round(Math.max(0, S.pos.y) * M2FT);
+    const agl = Math.round((S.pos.y - 1.4 - Math.max(0, groundY(S.pos.x, S.pos.z))) * M2FT);
+    const bw = 92 * sc + 20, bh = fs + 14;
+    const stall = !S.grounded && S.speed < STALL * 1.05;
+    const box = (x, label, val, color) => {
+      hud.strokeStyle = color; hud.fillStyle = "rgba(10,16,22,0.55)"; hud.fillRect(x, cy - bh / 2, bw, bh); hud.strokeRect(x, cy - bh / 2, bw, bh);
+      hud.fillStyle = color; hud.textAlign = "center"; hud.textBaseline = "middle"; hud.fillText(val, x + bw / 2, cy);
+      hud.font = `${Math.round(fs * 0.7)}px ${MONO}`; hud.fillText(label, x + bw / 2, cy - bh / 2 - fs * 0.6); hud.font = `${fs}px ${MONO}`;
+    };
+    box(Math.max(10, cx - 230 * sc - bw), "AIRSPEED KT", String(kt), stall ? HC.warn : HC.hud);
+    box(Math.min(w - bw - 10, cx + 230 * sc), "ALTITUDE FT", String(ft), HC.hud);
+    hud.textAlign = "center"; hud.fillStyle = HC.hud;
+    const vsfpm = S.grounded ? 0 : Math.round(S.vs * M2FT * 60 / 10) * 10;
+    hud.font = `${Math.round(fs * 0.75)}px ${MONO}`;
+    hud.fillText(`VS ${vsfpm > 0 ? "+" : ""}${vsfpm}`, Math.min(w - bw - 10, cx + 230 * sc) + bw / 2, cy + bh / 2 + fs * 0.8);
+    hud.fillText(`AGL ${Math.max(0, agl)}`, Math.min(w - bw - 10, cx + 230 * sc) + bw / 2, cy + bh / 2 + fs * 1.8);
+    hud.fillText(S.grounded ? "ON GROUND" : `THR ${Math.round(S.throttle * 100)}%`, Math.max(10, cx - 230 * sc - bw) + bw / 2, cy + bh / 2 + fs * 0.8);
+    hud.font = `${fs}px ${MONO}`;
+
+    // heading tape
+    const hdg = ((Math.atan2(fwd.x, -fwd.z) * 57.3) + 360) % 360;
+    const ty = 26 + fs, tw = Math.min(w * 0.6, 420);
+    hud.save(); hud.beginPath(); hud.rect(cx - tw / 2, ty - fs - 6, tw, fs * 2 + 10); hud.clip();
+    for (let a = Math.floor((hdg - 60) / 10) * 10; a <= hdg + 60; a += 10) {
+      const x = cx + (a - hdg) * (tw / 120), n = ((a % 360) + 360) % 360;
+      hud.beginPath(); hud.moveTo(x, ty + 4); hud.lineTo(x, ty + (n % 30 ? 9 : 14)); hud.stroke();
+      if (n % 30 === 0) { const lbl = { 0: "N", 90: "E", 180: "S", 270: "W" }[n] ?? String(n / 10); hud.textAlign = "center"; hud.fillText(lbl, x, ty - 6); }
+    }
+    hud.restore();
+    hud.beginPath(); hud.moveTo(cx, ty + 16); hud.lineTo(cx - 6, ty + 24); hud.lineTo(cx + 6, ty + 24); hud.closePath(); hud.fill();
+    hud.font = `${Math.round(fs * 0.8)}px ${MONO}`; hud.fillText(String(Math.round(hdg)).padStart(3, "0"), cx, ty + 24 + fs * 0.8);
+    hud.font = `${fs}px ${MONO}`;
+
+    // race info + ring marker
+    if (S.race) {
+      hud.textAlign = "left"; hud.textBaseline = "middle"; hud.fillStyle = HC.amber;
+      const ry = Math.max(70, h * 0.16);
+      hud.fillText(`RING ${Math.min(S.next + 1, 10)}/10`, 14, ry);
+      hud.fillText(`TIME ${fmt(S.raceT)}`, 14, ry + fs * 1.3);
+      if (S.next < rings.length) {
+        proj.copy(rings[S.next].position).project(camera);
+        let x = proj.x, y = proj.y; const behind = proj.z > 1;
+        if (behind) { x = -x; y = -y; }
+        const on = !behind && Math.abs(x) < 0.95 && Math.abs(y) < 0.95;
+        const m = Math.max(Math.abs(x), Math.abs(y)); if (!on) { x = x / m * 0.88; y = y / m * 0.88; }
+        const sx = (x + 1) / 2 * w, sy = (1 - y) / 2 * h;
+        const dist = Math.round(rings[S.next].position.distanceTo(S.pos));
+        hud.strokeStyle = HC.amber; hud.fillStyle = HC.amber;
+        hud.save(); hud.translate(sx, sy);
+        if (on) { hud.beginPath(); hud.moveTo(0, -12); hud.lineTo(12, 0); hud.lineTo(0, 12); hud.lineTo(-12, 0); hud.closePath(); hud.stroke(); }
+        else { hud.rotate(Math.atan2(-y, x)); hud.beginPath(); hud.moveTo(16, 0); hud.lineTo(-6, -10); hud.lineTo(-6, 10); hud.closePath(); hud.fill(); }
+        hud.restore();
+        hud.textAlign = "center"; hud.font = `${Math.round(fs * 0.75)}px ${MONO}`; hud.fillText(`${dist} m`, sx, sy + 26); hud.font = `${fs}px ${MONO}`;
+      }
+    }
+
+    // warnings + messages
+    hud.textAlign = "center"; hud.textBaseline = "middle";
+    const blink = Math.floor(performance.now() / 300) % 2 === 0;
+    if (stall && blink) { hud.fillStyle = HC.warn; hud.font = `bold ${Math.round(fs * 1.4)}px ${MONO}`; hud.fillText("STALL · ADD THROTTLE", cx, cy + 110 * sc); }
+    else if (!S.grounded && agl < 300 && S.vs < -12 && blink) { hud.fillStyle = HC.warn; hud.font = `bold ${Math.round(fs * 1.4)}px ${MONO}`; hud.fillText("PULL UP", cx, cy + 110 * sc); }
+    if (S.msgT > 0) {
+      hud.font = `${Math.round(fs * 1.05)}px ${MONO}`; hud.fillStyle = HC.amber;
+      hud.globalAlpha = clamp(S.msgT, 0, 1); hud.fillText(S.msg, cx, cy - 150 * sc); hud.globalAlpha = 1;
+    }
+    hud.shadowBlur = 0;
+  }
+
+  // ---------------- main loop ----------------
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (S.mode === "fly" && !S.crashed) { for (let i = 0; i < 2; i++) step(dt / 2); }
+    S.msgT -= dt;
+    if (S.crashed && boom.visible) {
+      S.boomT += dt; boom.scale.setScalar(1 + S.boomT * 26); boom.material.opacity = Math.max(0, 0.9 - S.boomT * 0.7);
+      boom.material.color.setHSL(0.07 - S.boomT * 0.05, 0.9, Math.max(0.2, 0.6 - S.boomT * 0.3));
+    }
+    plane.position.copy(S.pos); plane.position.y -= 0.4; plane.quaternion.copy(S.q);
+    plane.userData.prop.rotation.z += dt * (6 + S.throttle * 60);
+    if (S.mode !== "menu" || pausedFrom !== null || S.crashed) updateCamera(dt);
+    else { // idle orbit on the menu
+      const a = now / 9000; camera.position.set(Math.sin(a) * 90, RWY.y + 40, RWY.z0 - 20 + Math.cos(a) * 90); camera.up.set(0, 1, 0); camera.lookAt(S.pos);
+    }
+    if (gain && ac) gain.gain.setTargetAtTime(soundOn && S.mode === "fly" && !S.crashed ? 0.025 + S.throttle * 0.04 : 0, ac.currentTime, 0.1);
+    if (osc && ac) osc.frequency.setTargetAtTime(55 + S.throttle * 70 + S.speed * 0.4, ac.currentTime, 0.1);
+    renderer.render(scene, camera);
+    drawHud();
+    requestAnimationFrame(frame);
+  }
+  resize();
+  requestAnimationFrame(frame);
+
+  // ---------------- shared leaderboard ----------------
+  const board = (() => {
+    const listEl = $("board"), statusEl = $("status"), form = $("nameForm"), input = $("nick");
+    let db = null, uid = null, mine = null, pending = 0, canPost = true;
+    let nick = load("sky-nick") || "";
+    let localBest = +(load("sky-best") || 0);
+    input.value = nick;
+    const setStatus = (t) => { statusEl.textContent = t; };
+    const validNick = (n) => /^[\p{L}\p{N}][\p{L}\p{N} ._-]{0,12}[\p{L}\p{N}.]$/u.test(n);
+    const fmtMs = (ms) => fmt(ms / 1000);
+    function emptyMsg(t) { listEl.replaceChildren(); const li = document.createElement("li"); li.className = "empty"; li.textContent = t; listEl.append(li); }
+    function render(rows) {
+      if (!rows.length) { emptyMsg("No times yet. Fly the Ring Race and set the first record."); return; }
+      listEl.replaceChildren();
+      rows.forEach((r, i) => {
+        const li = document.createElement("li");
+        if (r.id === uid) li.classList.add("me");
+        if (i < 3) li.classList.add("top");
+        const a = document.createElement("span"); a.className = "rank"; a.textContent = `${i + 1}.`;
+        const b = document.createElement("span"); b.className = "who";
+        b.textContent = (typeof r.nick === "string" && r.nick ? r.nick.slice(0, 14) : "Pilot") + (r.id === uid ? " (you)" : "");
+        const c = document.createElement("span"); c.className = "t"; c.textContent = fmtMs(Math.max(0, +r.ms || 0));
+        li.append(a, b, c); listEl.append(li);
+      });
+    }
+    function explain(e) {
+      if (e && e.code === "not_granted") { canPost = false; return "You can fly and see the board, but posting times needs Contributor access. Ask whoever shared this page."; }
+      return "Couldn't reach the board right now. Your best time is saved on this device.";
+    }
+    async function write(ms) {
+      if (!db || !uid || !canPost) return;
+      try { await db.collection("rings").doc(uid).set({ nick, ms, at: Date.now() }); mine = { nick, ms }; pending = 0; setStatus(`Posted ${fmtMs(ms)} as ${nick}.`); }
+      catch (e) { setStatus(explain(e)); }
+    }
+    async function report(ms) {
+      if (!localBest || ms < localBest) { localBest = ms; save("sky-best", String(ms)); }
+      if (!db || !uid || !canPost) { setStatus(`Your time: ${fmtMs(ms)}. Best on this device: ${fmtMs(localBest)}.`); return; }
+      if (mine && +mine.ms && ms >= +mine.ms) { setStatus(`${fmtMs(ms)}. Your record is still ${fmtMs(+mine.ms)}.`); return; }
+      if (!validNick(nick)) { pending = pending ? Math.min(pending, ms) : ms; setStatus(`New personal record: ${fmtMs(ms)}! Add a call sign below to post it.`); return; }
+      await write(ms);
+    }
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const n = input.value.trim().replace(/\s+/g, " ");
+      if (!validNick(n)) { setStatus("Call signs need 2–14 letters or numbers (spaces, dots and dashes are OK)."); return; }
+      nick = n; save("sky-nick", nick); input.value = nick;
+      if (!db) { setStatus(`Saved. You're flying as ${nick}.`); return; }
+      if (!uid) { setStatus("Sign in to Claude to post times to the shared board."); return; }
+      const cands = [pending, mine && +mine.ms, localBest].filter((x) => x > 0);
+      if (cands.length) await write(Math.min(...cands)); else setStatus(`Saved. Times will post as ${nick}.`);
+    });
+    (async () => {
+      const c = window.claude;
+      if (!c || typeof c.use !== "function") { emptyMsg("The shared board works on the published page. Your best time is saved on this device."); return; }
+      const [d0, u0] = await Promise.all([c.use("db"), c.use("user")]);
+      if (!d0) { emptyMsg("Sign in to see the school board. Your best time is saved on this device."); return; }
+      db = d0; uid = u0 ? await u0.id() : null;
+      let loaded = false;
+      const timer = setTimeout(() => { if (!loaded) setStatus("The board is taking a while to load. You can keep flying."); }, 10000);
+      db.collection("rings").orderBy("ms", "asc").limit(10).onSnapshot(
+        (snap) => { loaded = true; clearTimeout(timer); render(snap.docs.map((s) => ({ id: s.id, ...(s.data() || {}) }))); },
+        (e) => { loaded = true; clearTimeout(timer); setStatus(explain(e)); }
+      );
+      if (uid) {
+        try { const s = await db.collection("rings").doc(uid).get(); if (s.exists) { mine = s.data(); if (!nick && mine.nick) { nick = String(mine.nick); input.value = nick; } } } catch {}
+        if (localBest && (!mine || localBest < +mine.ms)) pending = localBest;
+      } else setStatus("Sign in to Claude to put your call sign on the board.");
+    })();
+    return { report };
+  })();
+})();
+</script>
