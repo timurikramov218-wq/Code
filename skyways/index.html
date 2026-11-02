@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Skyways Flight Sim</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -216,6 +218,8 @@ body { font-family: var(--font-body); padding-block: 18px 48px; background-image
 .throttle::after { content: none; }
 .tbtns { grid-template-columns: repeat(2, auto); right: 92px; gap: 6px; }
 .tbtn { min-width: 0; padding: 10px 12px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+/* phones: the two-column button block would cover the stick, so it becomes a row of three above it */
+@media (max-width: 480px) { .tbtns { grid-template-columns: repeat(3, auto); left: 14px; right: auto; bottom: calc(172px + env(safe-area-inset-bottom, 0px)); } }
 
 /* briefing: an editorial sheet */
 .dialog { background: rgba(10,10,12,0.66); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); align-items: start; padding: 72px 16px 16px; }
@@ -371,7 +375,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
         <dt><kbd>1</kbd>–<kbd>6</kbd> or <kbd>C</kbd></dt><dd>Camera views (drag to look around in Orbit)</dd>
         <dt><kbd>X</kbd> · <kbd>T</kbd></dt><dd>Spoilers (speed brakes) · reverse thrust on the ground</dd>
         <dt><kbd>[</kbd> <kbd>]</kbd> · <kbd>L</kbd> · <kbd>N</kbd></dt><dd>Pitch trim · landing lights · parking brake</dd>
-        <dt><kbd>M</kbd> · <kbd>P</kbd></dt><dd>Map: local, whole world, off · pause</dd>
+        <dt><kbd>M</kbd> · <kbd>P</kbd> · <kbd>H</kbd></dt><dd>Map: local, whole world, off · pause · this help</dd>
         <dt><kbd>U</kbd> · <kbd>K</kbd></dt><dd>Autopilot on/off · push back from the gate</dd>
       </dl>
     </div>
@@ -1680,7 +1684,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
   window.addEventListener("keydown", (e) => {
     if (e.target.closest && e.target.closest("input, select, textarea")) return;
     const k = e.code;
-    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(k)) e.preventDefault();
+    if (S.mode === "fly" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(k)) e.preventDefault();
     keys.add(k); if (e.repeat) return;
     if (/^Digit[1-6]$/.test(k)) setCam(CAMS[+k.slice(5) - 1][0]);
     if (k === "KeyC") cycleCam();
@@ -1701,7 +1705,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     if (k === "KeyP" || k === "Escape") { if (S.mode === "fly") pause(); else if (S.mode === "paused") resume(); }
   });
   window.addEventListener("keyup", (e) => keys.delete(e.code));
-  window.addEventListener("blur", () => { keys.clear(); if (S.mode === "fly") pause(); });
+  window.addEventListener("blur", () => { keys.clear(); touchBrake = false; if (typeof stickId !== "undefined" && stickId !== null) { stickId = null; stick.x = stick.y = 0; knob.style.transform = ""; } if (S.mode === "fly") pause(); });
   document.addEventListener("visibilitychange", () => { if (document.hidden && S.mode === "fly") pause(); });
 
   const helpEl = $("help");
@@ -2004,10 +2008,13 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
   }
 
   // ================= PHYSICS =================
+  let crashId = 0;
   function crash(reason) {
     if (S.crashed) return;
     S.crashed = true; model.visible = false; boom.visible = true; boom.position.copy(S.pos); boom.scale.setScalar(1); S.boomT = 0; chime(80, 0.8);
+    const id = ++crashId;
     setTimeout(() => {
+      if (id !== crashId || !S.crashed) return;   // a new flight was started meanwhile
       S.mode = "over";
       const p = document.createElement("p"); p.className = "result bad"; p.textContent = reason;
       showBrief("INCIDENT REPORT", "Crashed", p, "Pick a plane and route, then try again. Tip: keep your speed up in turns and touch down gently.", false);
@@ -2156,7 +2163,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
         const gentle = S.vs > -4.2 && Math.abs(right.y) < 0.26 && fwd.y > -0.13 && fwd.y < 0.3 && S.speed < spec.stall * 1.85;
         if (!gentle) { crash(S.vs <= -4.2 ? `Hard landing at ${Math.round(-S.vs * M2FT * 60)} ft/min. Aim for under 600.` : "You flew into the ground."); return; }
         if (spec.retract && S.gearPos < 0.9) { crash("Belly landing! Press G to lower the gear before you land."); return; }
-        if (!rw && am < 0.97) { crash("That wasn't a runway. Land on one of the four airports."); return; }
+        if (!rw && am < 0.97) { crash("That wasn't a runway. Land on an airport runway."); return; }
         S.grounded = true; S.sink = 0; S.pos.y = gy + spec.gearH; S.gs = Math.hypot(S.vel.x, S.vel.z); S.groundPitch = clamp(Math.asin(clamp(fwd.y, -1, 1)), 0, 0.2);
         S.touchFpm = Math.round(-S.vs * M2FT * 60); S.landedAt = rw || airportMask(S.pos.x, S.pos.z)[1];
         if (spec.big && S.spoiler < 1) { S.spoiler = 1; S.autoSpoiler = true; syncTouchKeys(); }
@@ -2183,7 +2190,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     const m = Math.floor(S.flightT / 60), s = Math.floor(S.flightT % 60);
     r.textContent = `${S.from.code} → ${a.code} · ${m}:${String(s).padStart(2, "0")} · touchdown ${fpm} ft/min`;
     wrap.append(st, r);
-    const next = AIRPORTS.filter((x) => x !== a)[Math.floor(Math.random() * 3)];
+    const others = AIRPORTS.filter((x) => x !== a), next = others[Math.floor(Math.random() * others.length)];
     fromSel.value = String(AIRPORTS.indexOf(a)); toSel.value = String(AIRPORTS.indexOf(next)); S.from = a;
     showBrief("ARRIVED", `Welcome to ${a.name}`, wrap, `Next leg is set up: ${a.code} → ${next.code}. Pick a different plane or route if you like.`, false);
   }
@@ -2251,7 +2258,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
   const css = getComputedStyle(document.documentElement);
   const HC = { hud: css.getPropertyValue("--hud").trim(), amber: css.getPropertyValue("--amber").trim(), warn: css.getPropertyValue("--warn").trim(), deck: css.getPropertyValue("--deck").trim() };
   const MONO = css.getPropertyValue("--font-mono").trim();
-  const hudSize = { w: 1, h: 1 };
+  const hudSize = { w: 1, h: 1 }, coarseMQ = matchMedia("(pointer: coarse)");
   // minimap base image
   const mapImg = document.createElement("canvas"); mapImg.width = mapImg.height = 320; const MAP_R = WORLD;
   (function () {
@@ -2372,8 +2379,9 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       if (S.flaps > 0 && iasKt > vmaxKt * 0.62) items.push(["FLAP OVERSPEED", HC.warn]);
       if (spec.retract && S.gearPos > 0.5 && !S.grounded && iasKt > vmaxKt * 0.7) items.push(["GEAR OVERSPEED", HC.warn]);
     }
-    const stripY = h - dashH - (matchMedia("(pointer: coarse)").matches && !cock ? 30 : 20);
-    const iw = 104 * Math.max(0.8, sc); const x0 = cx - (items.length - 1) * iw / 2;
+    const narrowTouch = coarseMQ.matches && !cock && w < 480;   // phone: stick, buttons and throttle fill the bottom edge
+    const stripY = h - dashH - (narrowTouch ? 156 : coarseMQ.matches && !cock ? 30 : 20);
+    const iw = Math.min(104 * Math.max(0.8, sc), (w - (narrowTouch ? 130 : 24)) / items.length); const x0 = cx - (items.length - 1) * iw / 2;
     items.forEach(([t, c], i) => { hud.fillStyle = c; hud.fillText(t, x0 + i * iw, stripY); });
 
     // warnings + messages
@@ -2381,7 +2389,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     hud.font = `bold ${Math.round(fs * 1.35)}px ${MONO}`;
     if (stall && blink) { hud.fillStyle = HC.warn; hud.fillText("STALL", cx, cy + 100 * sc); }
     else if (!S.grounded && agl < 400 && S.vs < -10 && blink) { hud.fillStyle = HC.warn; hud.fillText("PULL UP", cx, cy + 100 * sc); }
-    if (S.msgT > 0) { hud.font = `${Math.round(fs * 1.0)}px ${MONO}`; hud.fillStyle = HC.amber; hud.globalAlpha = clamp(S.msgT, 0, 1); hud.fillText(S.msg, cx, cy - 135 * sc); hud.globalAlpha = 1; }
+    if (S.msgT > 0) { hud.font = `${Math.round(fs * 1.0)}px ${MONO}`; hud.fillStyle = HC.amber; hud.globalAlpha = clamp(S.msgT, 0, 1); hud.fillText(S.msg, cx, cy - 135 * sc, w - 24); hud.globalAlpha = 1; }
     hud.shadowBlur = 0;
 
     // traffic markers and TCAS-style alert
@@ -2401,8 +2409,8 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     }
     if (threat && blink) { hud.font = `bold ${Math.round(fs * 1.25)}px ${MONO}`; hud.textAlign = "center"; hud.fillStyle = HC.warn; hud.fillText(`TRAFFIC · ${threat.cs}`, cx, cy + 135 * sc); }
     if (RADIO.length) {
-      const coarse = matchMedia("(pointer: coarse)").matches, lh = Math.round(fs * 1.25);
-      let ry = h - dashH - (coarse && !cock ? 190 : 46) - (RADIO.length - 1) * lh;
+      const coarse = coarseMQ.matches, lh = Math.round(fs * 1.25);
+      let ry = h - dashH - (coarse && !cock ? (w < 480 ? 262 : 190) : 46) - (RADIO.length - 1) * lh;
       hud.font = `${Math.round(fs * 0.78)}px ${MONO}`; hud.textAlign = "left"; hud.textBaseline = "middle";
       for (const r of RADIO) {
         hud.globalAlpha = clamp(r.t, 0, 1); const tw = Math.min(hud.measureText(r.text).width, w - 40);
@@ -2830,6 +2838,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     if (S.mode === "fly" && !S.crashed) { step(dt / 2); if (!S.crashed && S.mode === "fly") step(dt / 2); }
+    else if (S.mode === "paused") readPad();
     S.msgT -= dt;
     if (S.crashed && boom.visible) { S.boomT += dt; boom.scale.setScalar(1 + S.boomT * 30 * (spec.big ? 2 : 1)); boom.material.opacity = Math.max(0, 0.9 - S.boomT * 0.7); }
     animateModel(dt, now);
