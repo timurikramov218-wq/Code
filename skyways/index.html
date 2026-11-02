@@ -105,6 +105,20 @@ select { font: inherit; color: var(--text); background: var(--deck); border: 1px
 .result.bad { color: var(--warn); }
 .stars { font-size: 26px; color: var(--amber); letter-spacing: 4px; }
 
+.ap {
+  position: absolute; top: calc(48px + env(safe-area-inset-top, 0px)); left: 8px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; max-width: calc(100% - 200px);
+  background: color-mix(in srgb, var(--deck) 82%, transparent); border: 1px solid var(--edge); border-radius: 10px; padding: 6px;
+}
+@media (max-width: 680px) { .ap { max-width: calc(100% - 16px); top: calc(84px + env(safe-area-inset-top, 0px)); } }
+.apb { font: 700 12px var(--font-mono); color: var(--muted); background: var(--deck); border: 1px solid var(--edge); border-radius: 6px; padding: 7px 9px; cursor: pointer; }
+.apb[aria-pressed="true"] { color: var(--deck); background: var(--hud); border-color: var(--hud); }
+.apv { display: flex; align-items: center; gap: 2px; font: 11px var(--font-mono); color: var(--muted); background: var(--deck); border: 1px solid var(--edge); border-radius: 6px; padding: 2px 4px; }
+.apv span { padding: 0 3px; }
+.apv output { min-width: 3.4em; text-align: center; color: var(--amber); font: 13px var(--font-mono); }
+.apv button { font: 700 14px var(--font-mono); color: var(--text); background: transparent; border: 0; width: 24px; height: 26px; cursor: pointer; border-radius: 4px; }
+.apv button:hover { background: var(--edge); }
+.pushbtn { position: absolute; left: 50%; bottom: calc(60px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); font: 700 16px var(--font-display); letter-spacing: 0.04em; color: var(--deck); background: var(--amber); border: 0; border-radius: 8px; padding: 10px 22px; cursor: pointer; }
+.apb:focus-visible, .apv button:focus-visible, .pushbtn:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .help {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(520px, calc(100% - 32px));
   background: color-mix(in srgb, var(--glass) 92%, transparent); border: 1px solid var(--edge); border-radius: 12px; padding: 16px 18px;
@@ -143,6 +157,7 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
 
     <div class="topbar">
       <div class="cams" id="cams" role="group" aria-label="Camera view"></div>
+      <button class="chip" id="apToggle" type="button" aria-pressed="false"><kbd>U</kbd>Autopilot</button>
       <button class="chip" id="helpBtn" type="button"><kbd>H</kbd>Controls</button>
       <button class="chip" id="invBtn" type="button" aria-pressed="false">Invert pitch</button>
       <button class="chip" id="sndBtn" type="button" aria-pressed="false">Sound</button>
@@ -160,6 +175,18 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
       <div class="throttle" id="throttle"><div class="lbl" id="thrLbl">THR 0%</div><div class="fill" id="thrFill"></div></div>
     </div>
 
+    <div class="ap" id="apPanel" hidden>
+      <button class="apb" id="apOn" type="button" aria-pressed="false">AP</button>
+      <button class="apb" id="apThr" type="button" aria-pressed="false">A/THR</button>
+      <div class="apv"><span>SPD</span><button type="button" data-ap="spd" data-d="-10" aria-label="Speed down">−</button><output id="apSpd">250</output><button type="button" data-ap="spd" data-d="10" aria-label="Speed up">+</button></div>
+      <div class="apv"><span>HDG</span><button type="button" data-ap="hdg" data-d="-5" aria-label="Heading left">−</button><output id="apHdg">000</output><button type="button" data-ap="hdg" data-d="5" aria-label="Heading right">+</button></div>
+      <div class="apv"><span>ALT</span><button type="button" data-ap="alt" data-d="-500" aria-label="Altitude down">−</button><output id="apAlt">3000</output><button type="button" data-ap="alt" data-d="500" aria-label="Altitude up">+</button></div>
+      <div class="apv"><span>V/S</span><button type="button" data-ap="vs" data-d="-200" aria-label="Climb rate down">−</button><output id="apVs">1800</output><button type="button" data-ap="vs" data-d="200" aria-label="Climb rate up">+</button></div>
+      <button class="apb" id="apNav" type="button" aria-pressed="false">NAV</button>
+      <button class="apb" id="apApp" type="button" aria-pressed="false">APP</button>
+    </div>
+    <button class="pushbtn" id="pushBtn" type="button" hidden>Push back</button>
+
     <div class="help" id="help" hidden>
       <h3>Controls</h3>
       <dl class="keys">
@@ -171,6 +198,7 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
         <dt><kbd>V</kbd> · <kbd>G</kbd></dt><dd>Flaps (0, 1, 2) · landing gear</dd>
         <dt><kbd>1</kbd>–<kbd>6</kbd> or <kbd>C</kbd></dt><dd>Camera views (drag to look around in Orbit)</dd>
         <dt><kbd>M</kbd> · <kbd>P</kbd></dt><dd>Map: local, whole world, off · pause</dd>
+        <dt><kbd>U</kbd> · <kbd>K</kbd></dt><dd>Autopilot on/off · push back from the gate</dd>
       </dl>
     </div>
 
@@ -183,6 +211,9 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
         <div class="route">
           <label for="fromSel">Depart from<select id="fromSel"></select></label>
           <label for="toSel">Fly to<select id="toSel"></select></label>
+          <label for="startSel">Start at<select id="startSel"><option value="runway">Runway, ready for takeoff</option><option value="gate">Gate (push back and taxi)</option></select></label>
+          <label for="timeSel">Time of day<select id="timeSel"><option value="day">Day</option><option value="sunset">Sunset</option><option value="night">Night</option></select></label>
+          <label for="wxSel">Weather<select id="wxSel"><option value="clear">Clear</option><option value="cloudy">Cloudy</option><option value="rain">Rain and low cloud</option></select></label>
         </div>
         <p id="briefTip">Throttle up to full, roll down the runway, and gently pull back once you pass the rotate speed shown on the airspeed box.</p>
         <div class="btns">
@@ -205,6 +236,8 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
         <dt><kbd>V</kbd></dt><dd>Flaps: more lift at low speed for takeoff and landing</dd>
         <dt><kbd>G</kbd></dt><dd>Raise or lower the landing gear (every plane except the Skylark)</dd>
         <dt><kbd>1</kbd> Chase · <kbd>2</kbd> Cockpit · <kbd>3</kbd> Wing</dt><dd><kbd>4</kbd> Tower · <kbd>5</kbd> Orbit (drag + scroll) · <kbd>6</kbd> Fly-by</dd>
+        <dt><kbd>U</kbd> Autopilot</dt><dd>Open the panel with the Autopilot button. Set SPD, HDG, ALT and V/S, then press AP. NAV flies to your destination, APP lines up with the runway and lands by itself.</dd>
+        <dt><kbd>K</kbd> Push back</dt><dd>When you start at the gate, push back, then taxi to the runway with gentle throttle and Q/E to steer</dd>
         <dt>Game controller</dt><dd>Left stick flies, triggers set throttle, A brakes, X flaps, B gear, Y camera</dd>
         <dt>Phone / tablet</dt><dd>Left stick flies, orange bar is throttle, buttons for gear, flaps and brake</dd>
       </dl>
@@ -249,23 +282,23 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
   // ================= WORLD DATA =================
   const AIRPORTS = [
     { code: "HBP", name: "Harbor Point Intl", x: -200, z: -1250, hdg: 20, elev: 12, kind: "intl",
-      rwys: [{ off: 0, len: 2400, w: 50, sfx: "R" }, { off: -380, len: 2000, w: 45, sfx: "L" }], stands: ["b777", "b777", "a321", "a321", "a321", "islander", "a321"] },
+      rwys: [{ off: 0, len: 2400, w: 50, sfx: "R" }, { off: -380, len: 2000, w: 45, sfx: "L" }], stands: ["b777", "b777", "a321", "a321", "a321", "islander", "a321", "breeze", "atlas"] },
     { code: "SPT", name: "Southport", x: 3100, z: 1300, hdg: 120, elev: 20, kind: "intl",
-      rwys: [{ off: 0, len: 1900, w: 45, sfx: "" }], stands: ["a321", "b777", "a321", "islander"] },
+      rwys: [{ off: 0, len: 1900, w: 45, sfx: "" }], stands: ["a321", "b777", "a321", "islander", "swift"] },
     { code: "WFD", name: "Westfield Regional", x: -2900, z: 2350, hdg: 160, elev: 148, kind: "regional",
-      rwys: [{ off: 0, len: 1700, w: 45, sfx: "" }], stands: ["a321", "islander", "trainer"] },
+      rwys: [{ off: 0, len: 1700, w: 45, sfx: "" }], stands: ["a321", "breeze", "islander", "trainer"] },
     { code: "CDR", name: "Cedar Ridge", x: 3100, z: -2900, hdg: 60, elev: 192, kind: "ga",
-      rwys: [{ off: 0, len: 1300, w: 35, sfx: "" }], stands: ["trainer", "aero", "trainer"] },
+      rwys: [{ off: 0, len: 1300, w: 35, sfx: "" }], stands: ["trainer", "aero", "swift", "trainer"] },
     { code: "CRK", name: "Coral Key", x: -2300, z: -3050, hdg: 300, elev: 6, kind: "ga",
       rwys: [{ off: 0, len: 1250, w: 35, sfx: "" }], stands: ["aero", "trainer"] },
     { code: "EGT", name: "Eastgate Intl", x: 6500, z: -6750, hdg: 140, elev: 88, kind: "intl",
-      rwys: [{ off: 0, len: 2600, w: 50, sfx: "" }], stands: ["b777", "a321", "a321", "b777", "islander"] },
+      rwys: [{ off: 0, len: 2600, w: 50, sfx: "" }], stands: ["b777", "a321", "a321", "b777", "islander", "atlas", "breeze"] },
     { code: "SNV", name: "Sunvale Intl", x: 2000, z: 10750, hdg: 90, elev: 126, kind: "intl",
       rwys: [{ off: 0, len: 2400, w: 50, sfx: "" }], stands: ["a321", "b777", "a321", "islander"] },
     { code: "HMR", name: "Highmoor", x: 12500, z: 2500, hdg: 30, elev: 185, kind: "regional",
       rwys: [{ off: 0, len: 1800, w: 45, sfx: "" }], stands: ["a321", "islander", "trainer"] },
     { code: "BYF", name: "Bayford", x: -4250, z: 11500, hdg: 170, elev: 50, kind: "regional",
-      rwys: [{ off: 0, len: 1700, w: 45, sfx: "" }], stands: ["islander", "a321", "aero"] },
+      rwys: [{ off: 0, len: 1700, w: 45, sfx: "" }], stands: ["islander", "a321", "aero", "breeze"] },
     { code: "NCP", name: "Northcape", x: 2500, z: -12750, hdg: 70, elev: 27, kind: "regional",
       rwys: [{ off: 0, len: 1700, w: 45, sfx: "" }], stands: ["a321", "islander"] },
     { code: "PMW", name: "Port Merrow", x: -6000, z: -7250, hdg: 250, elev: 13, kind: "ga",
@@ -274,7 +307,7 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
       rwys: [{ off: 0, len: 1250, w: 35, sfx: "" }], stands: ["aero", "trainer"] },
   ];
   const WORLD = 16000;
-  const DIMS = { trainer: [11, 7.2], aero: [9, 6.4], islander: [33, 30], a321: [35.8, 44.5], b777: [64.8, 73.9] };
+  const DIMS = { trainer: [11, 7.2], aero: [9, 6.4], islander: [33, 30], a321: [35.8, 44.5], b777: [64.8, 73.9], breeze: [27.5, 27], swift: [17.5, 20], atlas: [43, 42], arrow: [10.6, 15.4] };
   const swapLR = (s) => (s === "L" ? "R" : s === "R" ? "L" : "");
   for (const a of AIRPORTS) {
     const t = a.hdg * Math.PI / 180; a.s = Math.sin(t); a.c = Math.cos(t);
@@ -354,9 +387,10 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
   const HORIZON = new THREE.Color(0xd3e6f3);
   scene.fog = new THREE.Fog(HORIZON, 3000, 14000);
   const camera = new THREE.PerspectiveCamera(65, 16 / 9, 0.4, 30000);
-  scene.add(new THREE.HemisphereLight(0xe4f3ff, 0x5a6248, 0.8));
+  const hemi = new THREE.HemisphereLight(0xe4f3ff, 0x5a6248, 0.8); scene.add(hemi);
   const sun = new THREE.DirectionalLight(0xfff0d8, 1.05); sun.position.set(-0.6, 1, 0.45).multiplyScalar(1000); scene.add(sun);
 
+  let sunDisc = null, waterMat = null, towersMat = null;
   // sky dome + environment map for the detailed aircraft
   function skyGeo(r) {
     const g = new THREE.SphereGeometry(r, 32, 16); const p = g.attributes.position; const col = new Float32Array(p.count * 3);
@@ -371,7 +405,7 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
   (function () {
     const m = new THREE.Mesh(skyGeo(16000), new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false }));
     m.renderOrder = -1; scene.add(m); scene.userData.sky = m;
-    const sunDisc = new THREE.Mesh(new THREE.CircleGeometry(320, 24), new THREE.MeshBasicMaterial({ color: 0xfff6dc, fog: false }));
+    sunDisc = new THREE.Mesh(new THREE.CircleGeometry(320, 24), new THREE.MeshBasicMaterial({ color: 0xfff6dc, fog: false }));
     sunDisc.position.copy(sun.position).normalize().multiplyScalar(15000); sunDisc.lookAt(0, 0, 0); m.add(sunDisc);
     try {
       const pm = new THREE.PMREMGenerator(renderer), es = new THREE.Scene();
@@ -492,7 +526,7 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(900, 900); return t;
   })();
   (function () {
-    const water = new THREE.Mesh(new THREE.PlaneGeometry(90000, 90000), new THREE.MeshPhongMaterial({
+    const water = new THREE.Mesh(new THREE.PlaneGeometry(90000, 90000), waterMat = new THREE.MeshPhongMaterial({
       color: 0x1d6c9c, specular: 0xcfeaff, shininess: 120, normalMap: waterNormal, normalScale: new THREE.Vector2(0.5, 0.5), transparent: true, opacity: 0.84,
     }));
     water.rotation.x = -Math.PI / 2; scene.add(water);
@@ -603,7 +637,8 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     for (let y = 4; y < 128; y += 8) for (let x = 3; x < 64; x += 8) { g.fillStyle = hash(x, y) > 0.3 ? "#2a3f55" : "#9fb6c9"; g.fillRect(x, y, 5, 5); }
     const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
     const tg = new THREE.BoxGeometry(1, 1, 1); tg.translate(0, 0.5, 0);
-    const towersM = new THREE.InstancedMesh(tg, new THREE.MeshLambertMaterial({ map: tex }), towerSpots.length);
+    towersMat = new THREE.MeshLambertMaterial({ map: tex, emissiveMap: tex, emissive: 0x000000 });
+    const towersM = new THREE.InstancedMesh(tg, towersMat, towerSpots.length);
     const tint = [0xffffff, 0xe9e3d6, 0xd5e0ea, 0xc8ccd2].map((x) => new THREE.Color(x));
     towerSpots.forEach(([x, z, k], i) => {
       const w = 18 + hash(x, 9) * 22, h = 20 + Math.pow(hash(z, 8), 1.5) * 130 * (0.4 + k);
@@ -627,7 +662,18 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     puffs.forEach((pf, i) => im.setColorAt(i, shades[pf.shade]));
     im.frustumCulled = false; scene.add(im);
     const m4 = new THREE.Matrix4();
-    return { update(q) { puffs.forEach((pf, i) => { m4.compose(pf.p, q, pf.s); im.setMatrixAt(i, m4); }); im.instanceMatrix.needsUpdate = true; } };
+    const order = puffs.map((_, i) => i);
+    return {
+      update(q) { puffs.forEach((pf, i) => { m4.compose(pf.p, q, pf.s); im.setMatrixAt(i, m4); }); im.instanceMatrix.needsUpdate = true; },
+      setWeather(w, night, dusk) {
+        const n = w === "clear" ? Math.round(puffs.length * 0.35) : puffs.length; im.count = n;
+        const base = w === "rain" ? 0x8c949c : w === "cloudy" ? 0xe9edf1 : 0xffffff;
+        const c = new THREE.Color(base); if (night) c.multiplyScalar(0.18); else if (dusk) c.lerp(new THREE.Color(0xffb489), 0.35);
+        im.material.color.copy(c); im.material.opacity = w === "rain" ? 0.95 : 0.86;
+        const yOff = w === "rain" ? -650 : w === "cloudy" ? -250 : 0;
+        puffs.forEach((pf) => { if (pf.y0 === undefined) pf.y0 = pf.p.y; pf.p.y = pf.y0 + yOff; if (w === "rain") pf.s.set(pf.s.x, pf.s.y, 1); });
+      },
+    };
   })();
 
   // ================= MATERIALS =================
@@ -839,11 +885,131 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     return finishModel(root, { prop: null, gear, ail: [wr.pivot, wl.pivot], elev: [sr.pivot, sl.pivot], rud: fin.pivot, strobes, fans, flaps, beacon });
   }
 
+  // ---------- more aircraft (original designs) ----------
+  const at = (m, x, y, z) => { m.position.set(x, y, z); return m; };
+  function nacelle(r, len) { return latheBody([[r * 0.7, -len / 2], [r, -len * 0.3], [r * 0.95, len * 0.25], [r * 0.45, len / 2]], 16, null, std(0xe9edf1, { roughness: 0.4 })); }
+  function mainGear(gear, xs, y0, y1, z, r, n = 1) {
+    for (const sx of xs) {
+      gear.add(strut(sx, y0, z, sx, y1 + r, z, Math.max(0.06, r * 0.18)));
+      for (let k = 0; k < n; k++) { const w = wheel(r, r * 0.55); w.position.set(sx + (n > 1 ? (k - (n - 1) / 2) * r * 1.2 : 0), y1, z); gear.add(w); }
+    }
+  }
+  function tTail(root, z, finH, finRoot, finTip, finSweep, stab, matFin, matStab) {
+    const fin = surface({ root: finRoot, tip: finTip, span: finH, sweep: finSweep, thick: finRoot * 0.08, c0: 0.08, c1: 0.9, cf: 0.3 }, matFin, matStab);
+    fin.g.rotation.z = Math.PI / 2; fin.g.position.set(0, 0.2, z); root.add(fin.g);
+    const sr = surface(stab, matStab, matFin), sl = surface(stab, matStab, matFin);
+    const top = new THREE.Vector3(0, finH + 0.2, z + finSweep - stab.root * 0.2);
+    sr.g.position.set(0.1, top.y, top.z); sl.g.position.set(-0.1, top.y, top.z); sl.g.scale.x = -1; root.add(sr.g, sl.g);
+    return { fin, sr, sl };
+  }
+
+  function buildTurboprop() {
+    const root = new THREE.Group();
+    const white = std(0xf5f7fa, { roughness: 0.4 }), teal = std(0x0f8a8a, { roughness: 0.4 }), wingMat = std(0xd5dbe1, { roughness: 0.45, metalness: 0.25 });
+    const tex = livery({ base: "#f5f7fa", belly: "#dfe4e8", stripe: "#0f8a8a", stripe2: "#f2b134", windows: [0.3, 0.74, 17], cockpit: [0.86, 0.9], reg: "BREEZE 72", regV: 0.52, regColor: "#0f8a8a" });
+    root.add(latheBody([[0.12, -13.5], [0.6, -12.3], [1.25, -9.2], [1.42, -6], [1.45, 7], [1.32, 9.6], [0.9, 11.8], [0.25, 13.3]], 24, tex));
+    const wing = { root: 2.5, tip: 1.4, span: 13.1, sweep: 0.3, thick: 0.4, dih: 0.15, c0: 0.62, c1: 0.95, cf: 0.25 };
+    const wr = surface(wing, wingMat, white), wl = surface(wing, wingMat, white);
+    wr.g.position.set(0.6, 1.45, -0.6); wl.g.position.set(-0.6, 1.45, -0.6); wl.g.scale.x = -1; root.add(wr.g, wl.g);
+    root.add(at(new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.4, 2.5), wingMat), 0, 1.45, -0.6));
+    const props = [];
+    for (const sx of [4.1, -4.1]) {
+      const n = nacelle(0.62, 5); n.position.set(sx, 1.05, -1.0); root.add(n);
+      const pr = propeller(6, 1.95, 0.32, M.dark, teal, 0.36); pr.position.set(sx, 1.05, -3.75); root.add(pr); props.push(pr);
+    }
+    const tt = tTail(root, 9.6, 4.6, 3.6, 2.2, 2.6, { root: 1.9, tip: 1.1, span: 3.8, sweep: 0.8, thick: 0.18, c0: 0.05, c1: 0.95, cf: 0.35 }, teal, white);
+    const gear = new THREE.Group(); root.add(gear);
+    mainGear(gear, [1.5, -1.5], -1.0, -1.85, 0.6, 0.45, 2);
+    for (const sx of [1.5, -1.5]) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 3.2), white); sp.position.set(sx * 0.95, -0.95, 0.6); root.add(sp); }
+    mainGear(gear, [0], -1.1, -1.9, -10.0, 0.36, 2);
+    const strobes = addLights(root, new THREE.Vector3(13.7, 3.4, -0.3), new THREE.Vector3(-13.7, 3.4, -0.3), new THREE.Vector3(0, 5.2, 13.2));
+    return finishModel(root, { prop: null, props, gear, ail: [wr.pivot, wl.pivot], elev: [tt.sr.pivot, tt.sl.pivot], rud: tt.fin.pivot, strobes, fans: [] });
+  }
+
+  function buildBizjet() {
+    const root = new THREE.Group();
+    const white = std(0xf7f8fa, { roughness: 0.3, metalness: 0.2 }), navy = std(0x1b2c4e, { roughness: 0.35 }), wingMat = std(0xcfd5dc, { roughness: 0.4, metalness: 0.3 });
+    const tex = livery({ base: "#f7f8fa", stripe: "#1b2c4e", stripe2: "#c9a24a", windows: [0.42, 0.7, 7], cockpit: [0.84, 0.88], reg: "SWIFT", regV: 0.28, regColor: "#1b2c4e", belly: "#e3e6ea" });
+    root.add(latheBody([[0.1, -10], [0.5, -9], [0.98, -6.2], [1.12, -3], [1.12, 4], [0.98, 6.4], [0.62, 8.4], [0.12, 9.9]], 24, tex));
+    const wing = { root: 3.3, tip: 1.05, span: 7.6, sweep: 2.7, thick: 0.32, dih: 0.55, c0: 0.6, c1: 0.95, cf: 0.25 };
+    const wr = surface(wing, wingMat, white), wl = surface(wing, wingMat, white);
+    wr.g.position.set(0.7, -0.6, 0.2); wl.g.position.set(-0.7, -0.6, 0.2); wl.g.scale.x = -1; root.add(wr.g, wl.g);
+    root.add(at(new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.32, 3.3), wingMat), 0, -0.6, 0.2));
+    for (const sx of [1, -1]) {
+      const wlt = new THREE.Mesh(panelGeo(1.0, 0.45, 1.3, 0.8, 0.1, 0), navy); wlt.rotation.z = sx * Math.PI / 2 * 0.9; wlt.position.set(sx * 8.3, 0.05, 3.1); root.add(wlt);
+    }
+    const fans = [];
+    for (const sx of [1.75, -1.75]) {
+      const n = nacelle(0.55, 3.2); n.position.set(sx, 0.55, 5.4); root.add(n);
+      const py = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.18, 1.4), white); py.position.set(sx * 0.62, 0.5, 5.4); root.add(py);
+      const fan = new THREE.Group(); fan.position.set(sx, 0.55, 3.85);
+      for (let i = 0; i < 10; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.42, 0.03), M.metal); b.position.y = 0.22; const h = new THREE.Group(); h.rotation.z = i / 10 * Math.PI * 2; h.add(b); fan.add(h); }
+      root.add(fan); fans.push(fan);
+    }
+    const tt = tTail(root, 6.6, 2.6, 2.6, 1.6, 2.2, { root: 1.5, tip: 0.8, span: 3.0, sweep: 1.0, thick: 0.14, dih: 0.1, c0: 0.05, c1: 0.95, cf: 0.35 }, navy, white);
+    const gear = new THREE.Group(); root.add(gear);
+    mainGear(gear, [2.0, -2.0], -0.6, -1.65, 1.6, 0.34);
+    mainGear(gear, [0], -0.9, -1.72, -7.2, 0.26);
+    const strobes = addLights(root, new THREE.Vector3(8.4, 1.2, 3.5), new THREE.Vector3(-8.4, 1.2, 3.5), new THREE.Vector3(0, 2.9, 9.4));
+    return finishModel(root, { prop: null, gear, ail: [wr.pivot, wl.pivot], elev: [tt.sr.pivot, tt.sl.pivot], rud: tt.fin.pivot, strobes, fans });
+  }
+
+  function buildCargo() {
+    const root = new THREE.Group();
+    const grey = std(0x8d97a3, { roughness: 0.6 }), dark = std(0x5e6874, { roughness: 0.6 }), wingMat = std(0x8a949f, { roughness: 0.55 });
+    const tex = livery({ base: "#8d97a3", belly: "#7c8692", stripe: "#5e6874", cockpit: [0.9, 0.93], reg: "ATLAS 400", regV: 0.45, regColor: "#e8edf2" });
+    root.add(latheBody([[0.35, -21.5], [1.3, -20], [2.3, -16.5], [2.85, -12], [2.9, 10], [2.6, 14.5], [1.8, 18], [0.5, 20.6]], 28, tex));
+    const wing = { root: 6.6, tip: 2.6, span: 19.5, sweep: 3.4, thick: 0.9, dih: -0.6, c0: 0.62, c1: 0.95, cf: 0.25 };
+    const wr = surface(wing, wingMat, grey), wl = surface(wing, wingMat, grey);
+    wr.g.position.set(1.6, 2.7, -1.2); wl.g.position.set(-1.6, 2.7, -1.2); wl.g.scale.x = -1; root.add(wr.g, wl.g);
+    root.add(at(new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.9, 6.6), wingMat), 0, 2.7, -1.2));
+    const props = [];
+    for (const sx of [6.5, -6.5, 12.6, -12.6]) {
+      const n = nacelle(0.85, 6.2); n.position.set(sx, 2.1, -1.4 + Math.abs(sx) * 0.12); root.add(n);
+      const pr = propeller(8, 2.6, 0.4, M.dark, dark, 0.45); pr.position.set(sx, 2.1, -4.7 + Math.abs(sx) * 0.12); root.add(pr); props.push(pr);
+    }
+    const tt = tTail(root, 13.5, 8.4, 7.5, 3.6, 5.2, { root: 4.2, tip: 2.0, span: 8.6, sweep: 2.2, thick: 0.4, c0: 0.05, c1: 0.95, cf: 0.3 }, dark, grey);
+    const gear = new THREE.Group(); root.add(gear);
+    for (const sx of [1, -1]) { const sp = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.8, 9), grey); sp.position.set(sx * 2.85, -2.1, 0.5); root.add(sp); }
+    for (const z of [-1.6, 1.4]) mainGear(gear, [2.9, -2.9], -2.6, -3.3, z, 0.62, 2);
+    mainGear(gear, [0], -2.6, -3.35, -16.5, 0.5, 2);
+    const strobes = addLights(root, new THREE.Vector3(21.1, 1.9, 2.2), new THREE.Vector3(-21.1, 1.9, 2.2), new THREE.Vector3(0, 9.8, 20.4));
+    const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 6), M.red); beacon.position.set(0, 3.0, -4); root.add(beacon);
+    return finishModel(root, { prop: null, props, gear, ail: [wr.pivot, wl.pivot], elev: [tt.sr.pivot, tt.sl.pivot], rud: tt.fin.pivot, strobes, fans: [], beacon });
+  }
+
+  function buildFighter() {
+    const root = new THREE.Group();
+    const camo = std(0x6f7c86, { roughness: 0.55 }), dark = std(0x3f4850, { roughness: 0.5 }), red = std(0xc4372b, { roughness: 0.4 });
+    const tex = livery({ base: "#6f7c86", belly: "#9aa5ae", stripe: "#c4372b", reg: "ARROW F2", regV: 0.45, regColor: "#e8edf2" });
+    root.add(latheBody([[0.45, -7.4], [0.62, -6], [0.8, -3], [0.82, 1.2], [0.62, 4.4], [0.3, 6.9], [0.04, 7.8]], 20, tex));
+    const can = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), M.glass); can.scale.set(0.5, 0.55, 1.6); can.position.set(0, 0.55, -3.6); root.add(can);
+    const wing = { root: 7.6, tip: 0.7, span: 4.6, sweep: 5.6, thick: 0.28, dih: -0.1, c0: 0.1, c1: 0.85, cf: 0.18 };
+    const wr = surface(wing, camo, dark), wl = surface(wing, camo, dark);
+    wr.g.position.set(0.7, -0.25, 1.6); wl.g.position.set(-0.7, -0.25, 1.6); wl.g.scale.x = -1; root.add(wr.g, wl.g);
+    root.add(at(new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.28, 7.6), camo), 0, -0.25, 1.6));
+    for (const sx of [1, -1]) { const ink = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.9, 4.5), dark); ink.position.set(sx * 0.95, -0.35, -0.6); root.add(ink); }
+    const fin = surface({ root: 3.6, tip: 1.1, span: 3.2, sweep: 2.8, thick: 0.2, c0: 0.1, c1: 0.9, cf: 0.3 }, camo, red);
+    fin.g.rotation.z = Math.PI / 2; fin.g.position.set(0, 0.6, 3.6); root.add(fin.g);
+    const glow = new THREE.Mesh(new THREE.ConeGeometry(0.45, 3.4, 14), new THREE.MeshBasicMaterial({ color: 0xffa23a, transparent: true, opacity: 0.85 }));
+    glow.geometry.rotateX(Math.PI / 2); glow.geometry.translate(0, 0, 1.7); glow.position.set(0, 0, 7.6); root.add(glow);
+    const gear = new THREE.Group(); root.add(gear);
+    mainGear(gear, [1.6, -1.6], -0.4, -1.4, 1.8, 0.32);
+    mainGear(gear, [0], -0.7, -1.45, -4.8, 0.24);
+    const strobes = addLights(root, new THREE.Vector3(5.3, -0.35, 7.3), new THREE.Vector3(-5.3, -0.35, 7.3), new THREE.Vector3(0, 3.8, 6.8));
+    const dummy = new THREE.Object3D();
+    return finishModel(root, { prop: null, gear, ail: [wr.pivot, wl.pivot], elev: [dummy], rud: fin.pivot, strobes, fans: [], glow });
+  }
+
   const PLANES = {
     trainer: { name: "Skylark 140", type: "High-wing trainer · fixed gear", build: buildTrainer, thrust: 7.5, vmax: 64, stall: 21, roll: 1.5, pitch: 1.0, yaw: 0.5, turn: 0.85, gearH: 1.82, retract: false, cam: [17, 5], cock: [0.5, -0.4], wingX: 5.2, brake: 6, shadow: 6, stats: [0.35, 0.45, 0.95] },
     aero: { name: "Falcon X7", type: "Aerobatic · retractable gear", build: buildAero, thrust: 13, vmax: 98, stall: 25, roll: 3.3, pitch: 1.6, yaw: 0.8, turn: 0.95, gearH: 1.75, retract: true, cam: [14, 4], cock: [0.62, -0.15], wingX: 4.0, brake: 6, shadow: 5, stats: [0.55, 1, 0.65] },
     islander: { name: "Islander 220", type: "Twin-jet regional · 150 seats", build: buildJet, thrust: 7.0, vmax: 128, stall: 46, roll: 0.8, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 5.0, retract: true, cam: [58, 13], cock: [1.0, -12.4], wingX: 15.2, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.3, 0.35] },
     a321: { name: "Airbus A321", type: "Narrow-body airliner · 3D model", glb: "models/a321.json", length: 44.5, thrust: 6.8, vmax: 135, stall: 49, roll: 0.75, pitch: 0.48, yaw: 0.22, turn: 0.72, gearH: 3.9, retract: true, cam: [72, 15], cock: [1.0, 0], wingX: 16.5, brake: 4.2, shadow: 20, big: true, stats: [0.85, 0.28, 0.3] },
+    breeze: { name: "Breeze 72", type: "Twin turboprop · 70 seats", build: buildTurboprop, thrust: 6.6, vmax: 118, stall: 38, roll: 1.0, pitch: 0.65, yaw: 0.3, turn: 0.8, gearH: 2.35, retract: true, cam: [44, 10], cock: [0.75, -12.2], wingX: 13.5, brake: 5, shadow: 13, big: true, stats: [0.6, 0.45, 0.55] },
+    swift: { name: "Swift 600", type: "Business jet · 9 seats", build: buildBizjet, thrust: 9.5, vmax: 165, stall: 40, roll: 1.6, pitch: 0.85, yaw: 0.35, turn: 0.85, gearH: 1.98, retract: true, cam: [30, 7], cock: [0.55, -8.3], wingX: 8.6, brake: 5.5, shadow: 9, jetSound: true, stats: [0.9, 0.6, 0.5] },
+    atlas: { name: "Atlas 400", type: "Four-prop cargo lifter", build: buildCargo, thrust: 5.4, vmax: 122, stall: 40, roll: 0.55, pitch: 0.4, yaw: 0.18, turn: 0.65, gearH: 3.95, retract: true, cam: [95, 22], cock: [1.5, -19.4], wingX: 21, brake: 4, shadow: 30, big: true, stats: [0.6, 0.2, 0.4] },
+    arrow: { name: "Arrow F2", type: "Delta-wing jet · afterburner", build: buildFighter, thrust: 24, vmax: 270, stall: 52, roll: 4.6, pitch: 2.0, yaw: 0.6, turn: 1.0, gearH: 1.77, retract: true, cam: [22, 5], cock: [0.85, -4.4], wingX: 5.3, brake: 6, shadow: 7, jetSound: true, stats: [1, 1, 0.3] },
     b777: { name: "Boeing 777", type: "Wide-body airliner · 3D model", glb: "models/b777.json", length: 73.9, thrust: 6.4, vmax: 142, stall: 52, roll: 0.62, pitch: 0.42, yaw: 0.2, turn: 0.68, gearH: 5.6, retract: true, cam: [112, 23], cock: [1.3, 0], wingX: 30, brake: 4.0, shadow: 34, big: true, stats: [1, 0.2, 0.25] },
   };
   for (const k of Object.keys(PLANES)) PLANES[k].kind = k;
@@ -1032,11 +1198,11 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     // apron with stand markings
     flat(grp, a.apD, a.apL, MAT.apron, a.apX0 + a.apD / 2, 0.04, 0);
     flat(grp, 14, a.apL * 0.9, MAT.taxi, a.apX0 - 4, 0.05, 0);
-    let z = -a.apL / 2 + 50;
+    let z = -a.apL / 2 + 50; a.gates = [];
     const stands = [];
     for (const kind of a.stands) {
       const [span, len] = DIMS[kind]; z += span / 2 + 8;
-      stands.push({ kind, z, len });
+      stands.push({ kind, z, len }); a.gates.push(stands[stands.length - 1]);
       flat(grp, a.apD - 6, 0.45, MAT.yellow, a.apX0 + a.apD / 2 + 3, 0.09, z);
       flat(grp, 0.45, 8, MAT.yellow, a.termX0 - 9, 0.09, z);
       z += span / 2 + 8;
@@ -1053,8 +1219,11 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     for (const st of stands) {
       const sp = PLANES[st.kind];
       const placeAt = (mdl) => {
+        st.model = mdl;
         mdl.rotation.y = -Math.PI / 2; mdl.position.set(a.termX0 - 9 - st.len / 2, sp.gearH + 0.05, st.z);
         if (mdl.userData.prop) mdl.userData.prop.userData.disc.visible = false;
+        (mdl.userData.props || []).forEach((pp) => (pp.userData.disc.visible = false));
+        if (mdl.userData.glow) mdl.userData.glow.visible = false;
         mdl.userData.strobes.forEach((s) => (s.visible = false)); grp.add(mdl);
       };
       if (sp.glb) parkedQueue.push({ kind: st.kind, place: () => { const m = buildPlane(st.kind); if (m) placeAt(m); } });
@@ -1139,7 +1308,8 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     const [x, z] = toWorld(at, along, 0);
     S.pos.set(x, at.elev + 0.05 + spec.gearH, z);
     S.q.setFromAxisAngle(AY, -at.hdg * Math.PI / 180);
-    Object.assign(S, { speed: 0, sink: 0, throttle: 0, grounded: true, crashed: false, flaps: 1, gearDown: true, gearPos: 1, flapPos: 1, flightT: 0, vs: 0, touchFpm: null, landedAt: null, boomT: 0, started: false });
+    Object.assign(S, { speed: 0, sink: 0, throttle: 0, grounded: true, crashed: false, flaps: 1, gearDown: true, gearPos: 1, flapPos: 1, flightT: 0, vs: 0, touchFpm: null, landedAt: null, boomT: 0, started: false, gate: null, push: null, taxiOut: false });
+    if (typeof AP !== "undefined") { AP.on = false; AP.athr = false; AP.app = false; AP.lat = "HDG"; AP.flare = false; apSync(); pushBtn.hidden = true; }
     boom.visible = false; model.visible = true; flyby.set = false;
   }
   function flash(t, s = 2.4) { S.msg = t; S.msgT = s; }
@@ -1200,6 +1370,8 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     if (k === "KeyC") cycleCam();
     if (k === "KeyG" && S.mode === "fly") toggleGear();
     if (k === "KeyV" && S.mode === "fly") cycleFlaps();
+    if (k === "KeyU" && S.mode === "fly") apEngage(!AP.on);
+    if (k === "KeyK" && S.mode === "fly") startPushback();
     if (k === "KeyM") showMap = (showMap + 1) % 3;
     if (k === "KeyH") toggleHelp();
     if (k === "KeyP" || k === "Escape") { if (S.mode === "fly") pause(); else if (S.mode === "paused") resume(); }
@@ -1348,7 +1520,10 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     if (!model || model.userData.kind !== chosen) {
       if (!setPlane(chosen)) { briefTip.textContent = `${PLANES[chosen].name} isn't ready yet. Pick another aircraft or try again.`; return; }
     }
-    spawn(S.from); S.mode = "fly"; brief.hidden = true;
+    spawn(S.from);
+    applyEnv($("timeSel").value, $("wxSel").value);
+    if ($("startSel").value === "gate") spawnAtGate(S.from); else if (hiddenParked) { hiddenParked.visible = true; hiddenParked = null; }
+    S.mode = "fly"; brief.hidden = true;
     const rot = Math.round(spec.stall * 1.05 * 0.9 * MS2KT);
     flash(S.to ? `Cleared for takeoff, runway ${S.from.label}. Destination ${S.to.code}.` : `Cleared for takeoff. Rotate at ${rot} knots.`, 4);
     if (soundOn) initAudio();
@@ -1376,11 +1551,17 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     const pad = readPad(); let brake = keys.has("Space") || keys.has("KeyB") || touchBrake;
     if (pad) { pitch += invert ? -pad.pitch : pad.pitch; roll += pad.roll; yaw += pad.yaw; if (pad.thr) S.throttle = clamp(S.throttle + pad.thr * dt * 0.8, 0, 1); brake = brake || pad.brake; }
     pitch = clamp(pitch, -1, 1); roll = clamp(roll, -1, 1); yaw = clamp(yaw, -1, 1);
+    if (AP.on) {
+      if (Math.abs(pitch) > 0.4 || Math.abs(roll) > 0.4) apEngage(false);
+      else { const c = apControl(dt, fwd, right); if (c) { pitch = c.pitch; roll = c.roll; } }
+    }
     S.inputs.pitch = lerp(S.inputs.pitch, pitch, Math.min(1, dt * 8)); S.inputs.roll = lerp(S.inputs.roll, roll, Math.min(1, dt * 8)); S.inputs.yaw = lerp(S.inputs.yaw, yaw, Math.min(1, dt * 8));
     if (keys.has("KeyR") || keys.has("ShiftLeft") || keys.has("ShiftRight") || keys.has("Equal")) S.throttle = clamp(S.throttle + dt * 0.9, 0, 1);
     if (keys.has("KeyF") || keys.has("KeyZ") || keys.has("Minus")) S.throttle = clamp(S.throttle - dt * 0.9, 0, 1);
+    apThrottle(dt);
     S.brake = brake;
     if (S.throttle > 0.05) S.started = true;
+    if (stepPushback(dt)) return;
 
     S.gearPos = clamp(S.gearPos + (S.gearDown ? 1 : -1) * dt * 0.5, 0, 1);
     S.flapPos = lerp(S.flapPos, S.flaps / 2, Math.min(1, dt * 1.2));
@@ -1407,6 +1588,7 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
         if (sl > 4) { crash("You ran off the runway into rough ground."); return; }
       }
       if (S.landedAt && S.speed < 1.5) completeLanding();
+      if (S.taxiOut && runwayAt(S.pos.x, S.pos.z) === S.from) { S.taxiOut = false; RADIO.push({ text: `${S.from.name} Tower: runway ${S.from.label}, cleared for takeoff.`, t: 10 }); flash("Lined up. Full throttle and go!", 3); }
     } else {
       const auth = clamp(S.speed / (spec.stall * 1.6), 0.2, 1.1);
       S.q.multiply(tmpQ.setFromAxisAngle(AX, S.inputs.pitch * spec.pitch * auth * dt));
@@ -1432,6 +1614,7 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
         if (!rw && am < 0.97) { crash("That wasn't a runway. Land on one of the four airports."); return; }
         S.grounded = true; S.sink = 0; S.pos.y = gy + spec.gearH;
         S.touchFpm = Math.round(-S.vs * M2FT * 60); S.landedAt = rw || airportMask(S.pos.x, S.pos.z)[1];
+        if (AP.on) { const auto = AP.lat === "LOC"; AP.on = false; AP.athr = false; AP.app = false; AP.lat = "HDG"; apSync(); if (auto) RADIO.push({ text: "Autoland complete. Hold Space to brake.", t: 8 }); }
         flash(`Touchdown at ${S.landedAt.code}: ${S.touchFpm} ft/min. Hold Space to brake.`, 3.5); chime(520);
       }
     }
@@ -1503,6 +1686,8 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     model.position.copy(S.pos); model.quaternion.copy(S.q);
     if (u.prop) { u.prop.rotation.z += dt * (8 + S.throttle * 70); u.prop.userData.disc.material.opacity = 0.05 + S.throttle * 0.18; }
     u.fans.forEach((f) => (f.rotation.z += dt * (6 + S.throttle * 40)));
+    (u.props || []).forEach((pp) => { pp.rotation.z += dt * (8 + S.throttle * 60); pp.userData.disc.material.opacity = 0.05 + S.throttle * 0.18; });
+    if (u.glow) { u.glow.visible = S.throttle > 0.55; u.glow.scale.set(1, 1, 0.4 + (S.throttle - 0.55) * 2.6); u.glow.material.opacity = 0.5 + Math.random() * 0.4; }
     u.ail[0].rotation.x = -S.inputs.roll * 0.35; u.ail[1].rotation.x = S.inputs.roll * 0.35;
     u.elev.forEach((e) => (e.rotation.x = -S.inputs.pitch * 0.35));
     u.rud.rotation.x = S.inputs.yaw * 0.4;
@@ -1587,6 +1772,22 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     hud.beginPath(); hud.moveTo(cx, ty + 16); hud.lineTo(cx - 6, ty + 24); hud.lineTo(cx + 6, ty + 24); hud.closePath(); hud.fill();
     hud.textAlign = "center"; hud.font = `${Math.round(fs * 0.8)}px ${MONO}`; hud.fillText(String(Math.round(hdg) % 360).padStart(3, "0"), cx, ty + 24 + fs * 0.8);
 
+    // autopilot mode annunciator
+    {
+      const modes = AP.on ? [`AP`, AP.athr ? `SPD ${AP.spd}` : "", AP.lat === "LOC" ? (AP.flare ? "FLARE" : "LOC · G/S") : AP.lat === "NAV" ? `NAV ${S.to ? S.to.code : ""}${AP.app ? " · APP ARM" : ""}` : `HDG ${String(Math.round(AP.hdg) % 360).padStart(3, "0")}`, AP.lat === "LOC" ? "" : `ALT ${AP.alt}`].filter(Boolean).join("  ·  ") : AP.athr ? `A/THR  ·  SPD ${AP.spd}` : "";
+      if (modes) { hud.font = `${Math.round(fs * 0.8)}px ${MONO}`; hud.textAlign = "center"; hud.fillStyle = "rgba(8,14,20,0.55)"; const mw = hud.measureText(modes).width + 20; hud.fillRect(cx - mw / 2, ty - fs * 2.6, mw, fs * 1.4); hud.fillStyle = HC.hud; hud.fillText(modes, cx, ty - fs * 1.9); }
+    }
+    // taxi guidance from the gate
+    if (S.grounded && S.taxiOut && !S.push) {
+      const [gx, gz] = taxiTarget(); proj.set(gx, S.from.elev + 3, gz).project(camera);
+      const dist = Math.hypot(gx - S.pos.x, gz - S.pos.z);
+      hud.fillStyle = HC.amber; hud.font = `${Math.round(fs * 0.85)}px ${MONO}`; hud.textAlign = "center";
+      hud.fillText(`TAXI TO RWY ${S.from.label} · ${Math.round(dist)} m`, cx, ty + 24 + fs * 3.2);
+      if (proj.z < 1 && Math.abs(proj.x) < 1 && Math.abs(proj.y) < 1) {
+        const sx = (proj.x + 1) / 2 * w, sy = (1 - proj.y) / 2 * (h - dashH);
+        hud.strokeStyle = HC.amber; hud.lineWidth = 2; hud.beginPath(); hud.moveTo(sx, sy - 14); hud.lineTo(sx + 10, sy); hud.lineTo(sx, sy + 14); hud.lineTo(sx - 10, sy); hud.closePath(); hud.stroke();
+      }
+    }
     // destination
     if (S.to) {
       const [tx, tz] = toWorld(S.to, -S.to.len / 2, 0);
@@ -1662,6 +1863,10 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
         hud.strokeStyle = a === S.to ? HC.amber : "#ffffff"; hud.lineWidth = 3; hud.beginPath(); hud.moveTo(...p1); hud.lineTo(...p2); hud.stroke();
         hud.fillStyle = a === S.to ? HC.amber : "#ffffff"; hud.font = `${Math.max(9, Math.round(ms / 16))}px ${MONO}`; hud.textAlign = "center"; hud.fillText(a.code, (p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2 - 8);
       }
+      if (S.to) {
+        const r = S.to.rwys[0], [fx, fz] = toWorld(S.to, -r.len / 2 - FIX_DIST, r.off), [tx2, tz2] = toWorld(S.to, -r.len / 2, r.off);
+        hud.save(); hud.strokeStyle = "#ff3df2"; hud.lineWidth = 2; hud.setLineDash([5, 4]); hud.beginPath(); hud.moveTo(...P(S.pos.x, S.pos.z)); hud.lineTo(...P(fx, fz)); hud.lineTo(...P(tx2, tz2)); hud.stroke(); hud.restore();
+      }
       for (const ai of AI) {
         if (!ai.model.visible) continue; const [ax, az] = P(ai.pos.x, ai.pos.z);
         hud.save(); hud.translate(ax, az); hud.rotate(ai.hdg); hud.fillStyle = ai.phase === "hold" || ai.phase === "taxi" ? "#9fb0c0" : "#ffffff";
@@ -1717,7 +1922,8 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
   const AI = [], RADIO = [];
   const TAN3 = Math.tan(3 * Math.PI / 180);
   const AI_FLEET = [["a321", "OCEANA 301"], ["b777", "OCEANA 88"], ["a321", "ISLA 214"], ["islander", "ISLANDER 52"], ["a321", "SOUTHWIND 640"], ["islander", "ISLANDER 17"], ["trainer", "SKYLARK 42"], ["aero", "FALCON 7"], ["b777", "PACIFICA 12"],
-    ["a321", "EASTGATE 410"], ["b777", "SUNVALE 9"], ["a321", "NORTHCAPE 77"], ["islander", "ISLANDER 63"], ["a321", "OCEANA 515"], ["trainer", "SKYLARK 18"], ["aero", "FALCON 22"]];
+    ["a321", "EASTGATE 410"], ["b777", "SUNVALE 9"], ["a321", "NORTHCAPE 77"], ["islander", "ISLANDER 63"], ["a321", "OCEANA 515"], ["trainer", "SKYLARK 18"], ["aero", "FALCON 22"],
+    ["breeze", "BREEZE 301"], ["breeze", "BREEZE 88"], ["swift", "SWIFT 6"], ["atlas", "ATLAS 4"], ["arrow", "ARROW 1"]];
   const wrapA = (a) => { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; };
   function radio(text, where) { if (S.mode !== "fly" || where.distanceTo(S.pos) > 7000) return; RADIO.push({ text, t: 10 }); if (RADIO.length > 4) RADIO.shift(); }
   const aiPorts = (kind) => AIRPORTS.filter((a) => (PLANES[kind].big ? a.kind !== "ga" : true));
@@ -1822,6 +2028,8 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     m.position.copy(ai.pos); m.rotation.set(ai.pitch, -ai.hdg, -ai.bank, "YXZ");
     if (u.gear) { u.gear.scale.y = Math.max(0.02, ai.gear); u.gear.visible = ai.gear > 0.03 || !PLANES[ai.kind].retract; }
     if (u.prop) u.prop.rotation.z += dt * (20 + ai.v);
+    (u.props || []).forEach((pp) => (pp.rotation.z += dt * (20 + ai.v)));
+    if (u.glow) u.glow.visible = ai.phase === "roll" || ai.phase === "climb";
     u.fans.forEach((f) => (f.rotation.z += dt * 30));
     const blink = ((now + ai.cs.length * 137) % 1200) < 80; u.strobes.forEach((s) => (s.visible = blink));
     if (u.beacon) u.beacon.visible = ((now + ai.cs.length * 211) % 1000) < 500;
@@ -1860,6 +2068,189 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     carMesh.instanceMatrix.needsUpdate = true;
   }
 
+  // ================= TIME OF DAY & WEATHER =================
+  const ENV = { time: "day", weather: "clear" };
+  const stars = (function () {
+    const n = 1400, pos = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { const u = hash(i, 1) * 2 - 1, th = hash(2, i) * Math.PI * 2, r = Math.sqrt(1 - u * u); pos.set([Math.cos(th) * r * 15000, Math.abs(u) * 15000 + 300, Math.sin(th) * r * 15000], i * 3); }
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    const p = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffffff, size: 2, sizeAttenuation: false, fog: false, transparent: true, opacity: 0.85 }));
+    p.visible = false; scene.userData.sky.add(p); return p;
+  })();
+  const rain = (function () {
+    const n = 1500, pos = new Float32Array(n * 6);
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0xaab8c6, transparent: true, opacity: 0.55 }));
+    l.frustumCulled = false; l.visible = false; scene.add(l);
+    const drops = []; for (let i = 0; i < n; i++) drops.push([(hash(i, 3) - 0.5) * 160, hash(i, 4) * 120 - 40, (hash(5, i) - 0.5) * 160]);
+    return { l, drops, update(dt, cam) {
+      if (!l.visible) return;
+      const a = g.attributes.position;
+      drops.forEach((d, i) => {
+        d[1] -= dt * 38; if (d[1] < -50) d[1] += 120;
+        const x = cam.x + d[0], y = cam.y + d[1], z = cam.z + d[2];
+        a.setXYZ(i * 2, x, y, z); a.setXYZ(i * 2 + 1, x + 0.3, y - 2.2, z);
+      });
+      a.needsUpdate = true;
+    } };
+  })();
+  function recolorSky(top, horizon, below) {
+    for (const m of [scene.userData.sky]) {
+      const g = m.geometry, p = g.attributes.position, col = g.attributes.color, r = 16000, c = new THREE.Color();
+      for (let i = 0; i < p.count; i++) {
+        const t = p.getY(i) / r;
+        if (t >= 0) c.copy(horizon).lerp(top, Math.pow(t, 0.55)); else c.copy(horizon).lerp(below, Math.min(1, -t * 3));
+        col.setXYZ(i, c.r, c.g, c.b);
+      }
+      col.needsUpdate = true;
+    }
+  }
+  function applyEnv(time, weather) {
+    ENV.time = time; ENV.weather = weather;
+    const night = time === "night", dusk = time === "sunset", wet = weather === "rain", cloudy = weather !== "clear";
+    const top = new THREE.Color(night ? 0x050b1a : dusk ? 0x2f4f8f : 0x2c6fc6);
+    const hor = new THREE.Color(night ? 0x16223a : dusk ? 0xf0a26a : 0xd3e6f3);
+    if (wet) { top.lerp(new THREE.Color(0x6b7681), 0.75); hor.lerp(new THREE.Color(0x9aa3ab), 0.7); if (night) { top.multiplyScalar(0.25); hor.multiplyScalar(0.3); } }
+    else if (weather === "cloudy") { top.lerp(new THREE.Color(0x8fa3b8), 0.35); hor.lerp(new THREE.Color(0xc5ced6), 0.3); }
+    recolorSky(top, hor, new THREE.Color(night ? 0x0a0f18 : 0x6f7f8c));
+    scene.fog.color.copy(hor);
+    scene.fog.near = wet ? 400 : cloudy ? 2500 : 3000; scene.fog.far = wet ? 4500 : cloudy ? 11000 : 14000;
+    hemi.intensity = night ? 0.16 : dusk ? 0.55 : wet ? 0.6 : 0.8;
+    hemi.color.set(night ? 0x6f86b3 : dusk ? 0xffd2b0 : 0xe4f3ff);
+    sun.intensity = night ? 0.08 : dusk ? 0.75 : wet ? 0.35 : cloudy ? 0.8 : 1.05;
+    sun.color.set(night ? 0x8ea6d6 : dusk ? 0xffa060 : 0xfff0d8);
+    sun.position.set(-0.6, night ? 0.8 : dusk ? 0.12 : 1, 0.45).normalize().multiplyScalar(1000);
+    sunDisc.visible = !night && !wet; sunDisc.material.color.set(dusk ? 0xffb070 : 0xfff6dc);
+    sunDisc.position.copy(sun.position).normalize().multiplyScalar(15000); sunDisc.lookAt(0, 0, 0);
+    stars.visible = night && !wet;
+    rain.l.visible = wet;
+    clouds.setWeather(weather, night, dusk);
+    waterMat.color.set(night ? 0x0b2233 : wet ? 0x2b5470 : 0x1d6c9c);
+    if (towersMat) { towersMat.emissive.set(night ? 0xffe2a8 : 0x000000); towersMat.emissiveIntensity = night ? 0.6 : 0; }
+    renderer.toneMappingExposure = 1;
+  }
+
+  // ================= AUTOPILOT =================
+  const AP = { on: false, athr: false, lat: "HDG", app: false, hdg: 0, alt: 3000, spd: 250, vs: 1800, flare: false };
+  const apEls = { panel: $("apPanel"), on: $("apOn"), thr: $("apThr"), nav: $("apNav"), app: $("apApp"), spd: $("apSpd"), hdg: $("apHdg"), alt: $("apAlt"), vs: $("apVs") };
+  function apSync() {
+    apEls.on.setAttribute("aria-pressed", String(AP.on)); apEls.thr.setAttribute("aria-pressed", String(AP.athr));
+    apEls.nav.setAttribute("aria-pressed", String(AP.lat !== "HDG")); apEls.app.setAttribute("aria-pressed", String(AP.app));
+    apEls.spd.textContent = String(AP.spd); apEls.hdg.textContent = String(Math.round(AP.hdg) % 360).padStart(3, "0");
+    apEls.alt.textContent = String(AP.alt); apEls.vs.textContent = String(AP.vs);
+  }
+  function curHdgDeg() { const f = V.fwd.set(0, 0, -1).applyQuaternion(S.q); return ((Math.atan2(f.x, -f.z) * 57.3) + 360) % 360; }
+  function apEngage(on) {
+    if (on && (S.grounded || S.mode !== "fly")) { flash("Take off first, then switch on the autopilot", 2); return; }
+    AP.on = on; AP.flare = false;
+    if (on) {
+      AP.hdg = Math.round(curHdgDeg()); AP.alt = Math.max(1000, Math.round(S.pos.y * M2FT / 100) * 100);
+      if (!AP.athr) { AP.athr = true; AP.spd = Math.max(Math.round(spec.stall * 1.45 * MS2KT / 5) * 5, Math.round(S.speed * MS2KT / 5) * 5); }
+      flash("Autopilot on", 1.4); chime(880, 0.15);
+    } else { AP.app = false; AP.lat = "HDG"; flash("Autopilot off", 1.4); chime(330, 0.3); }
+    apSync();
+  }
+  $("apToggle").addEventListener("click", () => { apEls.panel.hidden = !apEls.panel.hidden; $("apToggle").setAttribute("aria-pressed", String(!apEls.panel.hidden)); });
+  apEls.on.addEventListener("click", () => apEngage(!AP.on));
+  apEls.thr.addEventListener("click", () => { AP.athr = !AP.athr; if (AP.athr) AP.spd = Math.round(S.speed * MS2KT / 5) * 5 || AP.spd; apSync(); });
+  apEls.nav.addEventListener("click", () => {
+    if (!S.to) { flash("Pick a destination in the briefing to use NAV", 2); return; }
+    AP.lat = AP.lat === "HDG" ? "NAV" : "HDG"; if (AP.lat === "HDG") AP.app = false; apSync();
+  });
+  apEls.app.addEventListener("click", () => {
+    if (!S.to) { flash("Pick a destination in the briefing to use APP", 2); return; }
+    AP.app = !AP.app; if (AP.app && AP.lat === "HDG") AP.lat = "NAV"; if (!AP.app && AP.lat === "LOC") AP.lat = "NAV"; apSync();
+    if (AP.app) flash(`Approach armed: ${S.to.code} runway ${S.to.label}`, 2);
+  });
+  apEls.panel.querySelectorAll("button[data-ap]").forEach((b) => b.addEventListener("click", () => {
+    const k = b.dataset.ap, d = +b.dataset.d;
+    if (k === "hdg") { AP.hdg = (AP.hdg + d + 360) % 360; if (AP.lat !== "HDG") { AP.lat = "HDG"; AP.app = false; } }
+    else if (k === "alt") AP.alt = clamp(AP.alt + d, 500, 20000);
+    else if (k === "spd") AP.spd = clamp(AP.spd + d, 60, 520);
+    else if (k === "vs") AP.vs = clamp(AP.vs + d, 400, 4000);
+    apSync();
+  }));
+  apSync();
+  const FIX_DIST = 9000;
+  function apControl(dt, fwd, right) {
+    // returns {pitch, roll} commands, or null if the autopilot is not flying
+    if (!AP.on) return null;
+    const auth = clamp(S.speed / (spec.stall * 1.6), 0.2, 1.1);
+    const hdgNow = Math.atan2(fwd.x, -fwd.z), bank = Math.asin(clamp(-right.y, -1, 1)), pitchNow = Math.asin(clamp(fwd.y, -1, 1));
+    let hdgT = AP.hdg * Math.PI / 180, altT = AP.alt / M2FT, vsT = null;
+    const agl = S.pos.y - spec.gearH - Math.max(0, groundY(S.pos.x, S.pos.z));
+    if (S.to && AP.lat !== "HDG") {
+      const a = S.to, r = a.rwys[0], [al, ac] = local(a, S.pos.x, S.pos.z), rwyH = a.hdg * Math.PI / 180;
+      const [fx, fz] = toWorld(a, -r.len / 2 - FIX_DIST, r.off), fixAlt = a.elev + FIX_DIST * TAN3 + spec.gearH;
+      const dFix = Math.hypot(fx - S.pos.x, fz - S.pos.z);
+      if (AP.lat === "NAV") {
+        hdgT = Math.atan2(fx - S.pos.x, -(fz - S.pos.z));
+        if (AP.app && dFix < 22000) altT = Math.min(altT, fixAlt);
+        if (AP.app && (dFix < 1800 || (al < -r.len / 2 && al > -r.len / 2 - FIX_DIST - 3000 && Math.abs(ac - r.off) < 2500 && Math.abs(wrapA(hdgNow - rwyH)) < 1.2))) {
+          AP.lat = "LOC"; flash(`Localizer captured, runway ${a.label}`, 2); apSync();
+        }
+      }
+      if (AP.lat === "LOC") {
+        hdgT = rwyH + clamp(-(ac - r.off) / 350, -0.55, 0.55);
+        const toTd = (-r.len / 2 + 300) - al, glide = a.elev + spec.gearH + Math.max(0, toTd) * TAN3;
+        if (S.pos.y < glide + 60 || toTd < FIX_DIST + 500) vsT = clamp((glide - S.pos.y) * 0.3 - (toTd > 0 ? S.speed * TAN3 : 0), -12, 4);
+        if (agl < 14) { AP.flare = true; vsT = -1.1; }
+        if (AP.athr) AP.spd = Math.round(spec.stall * (1 - 0.28 * S.flapPos) * 1.3 * MS2KT);
+        if (agl < 15) S.throttle = Math.max(0, S.throttle - dt * 0.8);
+      }
+    }
+    if (vsT === null) vsT = clamp((altT - S.pos.y) * 0.12, -AP.vs / M2FT / 60, AP.vs / M2FT / 60);
+    const pitchT = Math.asin(clamp((vsT - S.sink) / Math.max(S.speed, 20), -0.3, 0.3));
+    const bankT = clamp(wrapA(hdgT - hdgNow) * 2, -0.44, 0.44);
+    return {
+      pitch: clamp((pitchT - pitchNow) * 1.8 / (spec.pitch * auth), -1, 1),
+      roll: clamp((bankT - bank) * 2.2 / (spec.roll * auth), -1, 1),
+    };
+  }
+  function apThrottle(dt) {
+    if (!AP.athr || S.grounded || (AP.flare && AP.on)) return;
+    const err = AP.spd / MS2KT - S.speed;
+    S.throttle = clamp(S.throttle + clamp(err * 0.05, -0.6, 0.6) * dt, 0, 1);
+  }
+
+  // ================= GATES, PUSHBACK & TAXI =================
+  let hiddenParked = null;
+  const pushBtn = $("pushBtn");
+  function spawnAtGate(a) {
+    const want = DIMS[spec.kind][0];
+    const gates = a.gates.slice().sort((g1, g2) => Math.abs(DIMS[g1.kind][0] - want) - Math.abs(DIMS[g2.kind][0] - want));
+    const g = gates[0]; if (!g) return false;
+    if (hiddenParked) hiddenParked.visible = true;
+    if (g.model) { g.model.visible = false; hiddenParked = g.model; } else hiddenParked = null;
+    const len = DIMS[spec.kind][1], [x, z] = toWorld(a, -g.z, a.termX0 - 9 - len / 2);
+    S.pos.set(x, a.elev + 0.05 + spec.gearH, z);
+    S.q.setFromAxisAngle(AY, -(a.hdg + 90) * Math.PI / 180);
+    S.gate = { a, g, len }; S.taxiOut = true; S.push = null;
+    pushBtn.hidden = false;
+    RADIO.push({ text: `${a.name} Ground: ${PLANES[spec.kind].name}, at gate. Push back when ready, then taxi to runway ${a.label}.`, t: 12 });
+    return true;
+  }
+  function startPushback() {
+    if (!S.gate || S.push || S.mode !== "fly") return;
+    S.push = { d: 0, D: S.gate.len * 0.55 + 28, h0: Math.atan2(-V.fwd.set(0, 0, -1).applyQuaternion(S.q).x, -V.fwd.z) };
+    pushBtn.hidden = true; chime(440, 0.2);
+    RADIO.push({ text: `${S.gate.a.name} Ground: pushback approved.`, t: 8 });
+  }
+  pushBtn.addEventListener("click", startPushback);
+  function stepPushback(dt) {
+    const p = S.push; if (!p) return false;
+    const v = 2.2, k = Math.min(1, (p.d + v * dt) / p.D); p.d += v * dt;
+    const yaw = p.h0 - (Math.PI / 2) * k * k * (3 - 2 * k);
+    S.q.setFromAxisAngle(AY, yaw);
+    const fwd = V.fwd.set(0, 0, -1).applyQuaternion(S.q);
+    S.pos.x -= fwd.x * v * dt; S.pos.z -= fwd.z * v * dt; S.pos.y = groundY(S.pos.x, S.pos.z) + spec.gearH; S.speed = 0;
+    if (k >= 1) { S.push = null; S.gate = null; flash(`Pushback complete. Taxi to runway ${S.from.label}: follow the amber marker.`, 4); }
+    return true;
+  }
+  function taxiTarget() {
+    const a = S.from, r = a.rwys[0]; const [x, z] = toWorld(a, -r.len / 2 + 30, r.off); return [x, z];
+  }
+
   // ================= LOOP =================
   function resize() {
     const r = stage.getBoundingClientRect(), w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
@@ -1869,6 +2260,8 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
   }
   new ResizeObserver(resize).observe(stage);
   if (!setPlane(chosen)) setPlane("trainer"); spawn(S.from); resize();
+  applyEnv("day", "clear");
+  for (const id of ["timeSel", "wxSel"]) $(id).addEventListener("change", () => applyEnv($("timeSel").value, $("wxSel").value));
 
   let last = performance.now();
   function frame(now) {
@@ -1882,11 +2275,11 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
     beacons.forEach((b) => (b.rotation.y += dt * 3));
     if (S.mode !== "paused") updateCamera(dt, now);
     scene.userData.sky.position.copy(camera.position);
-    updateTiles(camera.position); clouds.update(camera.quaternion);
+    updateTiles(camera.position); clouds.update(camera.quaternion); rain.update(dt, camera.position);
     waterNormal.offset.x += dt * 0.0025; waterNormal.offset.y += dt * 0.0012;
     if (engGain && ac) {
       engGain.gain.setTargetAtTime(soundOn && S.mode === "fly" && !S.crashed ? 0.02 + S.throttle * 0.05 : 0, ac.currentTime, 0.15);
-      eng.frequency.setTargetAtTime((spec.big ? 90 : 50) + S.throttle * (spec.big ? 140 : 70), ac.currentTime, 0.2);
+      eng.frequency.setTargetAtTime((spec.big || spec.jetSound ? 90 : 50) + S.throttle * (spec.big || spec.jetSound ? 140 : 70), ac.currentTime, 0.2);
     }
     renderer.render(scene, camera); drawHud(now);
     requestAnimationFrame(frame);
