@@ -240,6 +240,7 @@ body { font-family: var(--font-body); padding-block: 18px 48px; background-image
 .seg-btn[aria-pressed="true"], .bbtn[aria-pressed="true"] { color: var(--champ); background: rgba(214,191,150,0.1); border-color: rgba(214,191,150,0.45); }
 .bbtn:disabled { opacity: 0.25; cursor: default; }
 .conds { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px 30px; }
+.livs { margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--hair); }
 .seg > span { flex-basis: 100%; font: 500 11px var(--font-body); letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg-3); margin: 0 0 4px 14px; }
 
 .planes { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
@@ -396,6 +397,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
             <button type="button" class="seg-btn" data-cat="special" aria-pressed="false">Cargo &amp; fast jets</button>
           </div>
           <div class="planes" id="planes" role="radiogroup" aria-label="Aircraft"></div>
+          <div class="seg livs" id="livRow" role="group" aria-label="Livery" hidden></div>
         </section>
         <section class="step" aria-labelledby="stepRoute">
           <h3 id="stepRoute"><span class="num">2</span>Departures</h3>
@@ -974,9 +976,10 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     const Y = (v) => (1 - v) * 1024, U = (u) => u * 512;
     g.fillStyle = o.base; g.fillRect(0, 0, 512, 1024);
     if (o.belly) { g.fillStyle = o.belly; g.fillRect(U(0.34), 0, U(0.32), 1024); }
+    if (o.upper) { g.fillStyle = o.upper; g.fillRect(0, 0, U(0.235), 1024); g.fillRect(U(0.765), 0, U(0.235), 1024); }
     if (o.top) { g.fillStyle = o.top; g.fillRect(0, Y(o.topV1 ?? 1), U(0.12), Y(o.topV0 ?? 0) - Y(o.topV1 ?? 1)); g.fillRect(U(0.88), Y(o.topV1 ?? 1), U(0.12), Y(o.topV0 ?? 0) - Y(o.topV1 ?? 1)); }
-    if (o.stripe) { g.fillStyle = o.stripe; for (const u of [0.262, 0.708]) g.fillRect(U(u), 0, U(0.03), 1024); }
-    if (o.stripe2) { g.fillStyle = o.stripe2; for (const u of [0.295, 0.675]) g.fillRect(U(u), 0, U(0.015), 1024); }
+    if (o.stripe && o.cheat !== false) { g.fillStyle = o.stripe; for (const u of [0.262, 0.708]) g.fillRect(U(u), 0, U(0.03), 1024); }
+    if (o.stripe2 && o.cheat !== false) { g.fillStyle = o.stripe2; for (const u of [0.295, 0.675]) g.fillRect(U(u), 0, U(0.015), 1024); }
     if (o.checks) { for (let i = 0; i < 16; i++) for (let j = 0; j < 4; j++) { if ((i + j) % 2) continue; g.fillStyle = o.checks; g.fillRect(i * 32, Y(1) + j * 28, 32, 28); } }
     g.fillStyle = "#0f1e30";
     if (o.windows) {
@@ -996,6 +999,14 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       g.beginPath(); g.roundRect(U(0.15), Y(v1), U(0.09), Y(v0) - Y(v1), 6); g.fill();
       g.beginPath(); g.roundRect(U(0.76), Y(v1), U(0.09), Y(v0) - Y(v1), 6); g.fill();
       g.fillRect(0, Y(v1), U(0.06), Y(v0) - Y(v1)); g.fillRect(U(0.94), Y(v1), U(0.06), Y(v0) - Y(v1));
+    }
+    if (o.title) {
+      // the airline's name in plain lettering above the windows, reading nose-to-tail on both sides
+      const fs = Math.min(64, 900 / Math.max(4, o.title.length));
+      for (const [u, rot] of [[0.165, Math.PI / 2], [0.835, -Math.PI / 2]]) {
+        g.save(); g.fillStyle = o.titleColor || "#1b2a3a"; g.font = `bold ${fs}px "Helvetica Neue", Arial, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
+        g.translate(U(u), Y(o.titleV ?? 0.66)); g.rotate(rot); g.fillText(o.title, 0, 0); g.restore();
+      }
     }
     if (o.reg) {
       g.save(); g.fillStyle = o.regColor || "#1b2a3a"; g.font = "bold 44px sans-serif"; g.textAlign = "center";
@@ -1142,10 +1153,10 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     return { fin, sr, sl };
   }
 
-  function buildTurboprop() {
-    const root = new THREE.Group();
-    const white = std(0xf5f7fa, { roughness: 0.4 }), teal = std(0x0f8a8a, { roughness: 0.4 }), wingMat = std(0xd5dbe1, { roughness: 0.45, metalness: 0.25 });
-    const tex = livery({ base: "#f5f7fa", belly: "#dfe4e8", stripe: "#0f8a8a", stripe2: "#f2b134", windows: [0.3, 0.74, 17], cockpit: [0.86, 0.9], reg: "BREEZE 72", regV: 0.52, regColor: "#0f8a8a" });
+  function buildTurboprop(liv) {
+    const L2 = liv || {}, root = new THREE.Group();
+    const white = std(0xf5f7fa, { roughness: 0.4 }), teal = std(L2.accent ?? 0x0f8a8a, { roughness: 0.4 }), wingMat = std(0xd5dbe1, { roughness: 0.45, metalness: 0.25 });
+    const tex = livery({ base: "#f5f7fa", belly: L2.bellyCss || "#dfe4e8", upper: L2.upperCss, stripe: L2.accentCss || "#0f8a8a", stripe2: L2.stripe2Css || "#f2b134", cheat: L2.cheat, windows: [0.3, 0.74, 17], cockpit: [0.86, 0.9], reg: L2.reg || "SKY-ATR", regV: 0.36, regColor: L2.regColor || L2.accentCss || "#0f8a8a", title: L2.title, titleColor: L2.titleColor, titleV: 0.66 });
     root.add(latheBody([[0.12, -13.5], [0.6, -12.3], [1.25, -9.2], [1.42, -6], [1.45, 7], [1.32, 9.6], [0.9, 11.8], [0.25, 13.3]], 24, tex));
     const wing = { root: 2.5, tip: 1.4, span: 13.1, sweep: 0.3, thick: 0.4, dih: 0.15, c0: 0.62, c1: 0.95, cf: 0.25 };
     const wr = surface(wing, wingMat, white), wl = surface(wing, wingMat, white);
@@ -1245,7 +1256,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     const root = new THREE.Group(), L = o.len, R = o.r;
     const base = std(o.base, { roughness: 0.34, metalness: 0.12 }), accent = std(o.accent, { roughness: 0.38 }), wingMat = std(0xc9d0d8, { roughness: 0.42, metalness: 0.35 });
     const dark = std(0x2a3038, { roughness: 0.6 });
-    const tex = livery({ base: o.baseCss, belly: o.bellyCss, stripe: o.accentCss, stripe2: o.stripe2Css, windows: [0.22, 0.8, o.windows], cockpit: [0.88, 0.915], reg: o.reg, regV: 0.5, regColor: o.accentCss, top: o.accentCss, topV0: 0, topV1: 0.08, doors: o.doors || [0.2, 0.83] });
+    const tex = livery({ base: o.baseCss, belly: o.bellyCss, upper: o.upperCss, stripe: o.accentCss, stripe2: o.stripe2Css, cheat: o.cheat, windows: [0.22, 0.8, o.windows], cockpit: [0.88, 0.915], reg: o.reg, regV: 0.38, regColor: o.regColor || o.accentCss, top: o.tailCss || o.accentCss, topV0: 0, topV1: 0.08, doors: o.doors || [0.2, 0.83], title: o.title, titleColor: o.titleColor, titleV: 0.7 });
     // fuselage: round section, drooped nose, upswept tail cone
     const fus = latheBody([[0.06 * R, -L / 2], [0.42 * R, -L / 2 + 0.035 * L], [0.8 * R, -L / 2 + 0.11 * L], [R, -L / 2 + 0.2 * L], [R, L / 2 - 0.3 * L], [0.94 * R, L / 2 - 0.2 * L], [0.7 * R, L / 2 - 0.1 * L], [0.36 * R, L / 2 - 0.03 * L], [0.12 * R, L / 2]], 32, tex);
     { const pa = fus.geometry.attributes.position, zN = -L / 2 + 0.2 * L, zT = L / 2 - 0.3 * L;
@@ -1259,7 +1270,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     if (o.hump) {
       const hl = L * o.hump, hump = latheBody([[0.12 * R, -hl / 2], [0.5 * R, -hl / 2 + hl * 0.12], [0.72 * R, -hl / 2 + hl * 0.32], [0.72 * R, hl / 2 - hl * 0.28], [0.5 * R, hl / 2 - hl * 0.08], [0.1 * R, hl / 2]], 22, null, base);
       hump.scale.set(1, 0.78, 1); hump.position.set(0, R * 0.52, -L / 2 + hl / 2 + L * 0.03); root.add(hump);
-      hump.material = std(0xffffff, { map: livery({ base: o.baseCss, windows: [0.14, 0.78, Math.round(o.windows * 0.32)], cockpit: [0.9, 0.95] }), roughness: 0.34 });
+      hump.material = std(0xffffff, { map: livery({ base: o.baseCss, upper: o.upperCss, windows: [0.14, 0.78, Math.round(o.windows * 0.32)], cockpit: [0.9, 0.95] }), roughness: 0.34 });
     }
     const wy = -R * 0.55, wz = o.wingZ ?? L * 0.03, dih = o.span * (o.dihedral ?? 0.08);
     // belly fairing where the wing meets the body
@@ -1332,17 +1343,42 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 6), M.red); beacon.position.set(0, R + 0.1, 0); root.add(beacon);
     return finishModel(root, { prop: null, props, gear, ail: [wr.pivot, wl.pivot], elev: [sr.pivot, sl.pivot], rud: fin.pivot, strobes, fans, beacon });
   }
-  const build737 = () => buildAirliner({ len: 39.5, r: 1.9, span: 16.5, wRoot: 6.6, wTip: 1.4, sweep: 7.3, engines: [4.9], engR: 0.98, engLen: 4.3, engFlat: true, gearH: 3.0, gearX: 2.85, winglet: "split", finH: 2.7,
-    base: 0xf6f7f9, accent: 0x1f4e9a, baseCss: "#f6f7f9", bellyCss: "#e4e8ee", accentCss: "#1f4e9a", stripe2Css: "#e0a526", windows: 30, doors: [0.2, 0.84], reg: "SKY-738" });
-  const buildRegio = () => buildAirliner({ len: 36.2, r: 1.5, span: 13.3, wRoot: 5.0, wTip: 1.3, sweep: 5.2, engines: [4.4], engR: 0.9, engLen: 3.7, gearH: 3.2, gearX: 2.6, winglet: "canted", finH: 2.9,
-    base: 0xf6f7f9, accent: 0x0f7a6b, baseCss: "#f6f7f9", bellyCss: "#e2ebe9", accentCss: "#0f7a6b", stripe2Css: "#9bd1c6", windows: 26, doors: [0.2, 0.84], reg: "SKY-E190" });
-  const buildSkyliner = () => buildAirliner({ len: 62.8, r: 2.95, span: 28, wRoot: 10.5, wTip: 1.6, sweep: 13.8, dihedral: 0.1, engines: [9.8], engR: 1.78, engLen: 6.6, gearH: 5.2, gearX: 4.8, bogie: true, winglet: "raked", finH: 2.6,
-    base: 0xf6f7f9, accent: 0x14284b, nacelle: 0x14284b, baseCss: "#f6f7f9", bellyCss: "#e6e9ef", accentCss: "#14284b", stripe2Css: "#7fb3e6", windows: 40, doors: [0.17, 0.42, 0.66, 0.86], reg: "SKY-789" });
-  const buildJumbo = () => buildAirliner({ len: 70.7, r: 3.25, hump: 0.34, span: 29.9, wRoot: 12, wTip: 3, sweep: 15.5, engines: [11.5, 20.5], engR: 1.45, engLen: 5.4, gearH: 5.8, gearX: 4.9, bogie: true, bodyGear: true, winglet: "canted", finH: 2.75,
-    base: 0xf6f7f9, accent: 0x9c1b2e, baseCss: "#f6f7f9", bellyCss: "#e7e9ec", accentCss: "#9c1b2e", stripe2Css: "#d4a94e", windows: 46, doors: [0.15, 0.36, 0.55, 0.73, 0.87], reg: "SKY-744" });
-  const buildCommuter = () => buildAirliner({ len: 17.6, r: 0.95, span: 8.2, wRoot: 2.2, wTip: 1.1, sweep: 0.3, engines: [3.1], engR: 0.5, engLen: 3.2, gearH: 2.0, gearX: 3.1, props: true, blades: 4, tTail: true, winglet: "none", finH: 2.4,
-    base: 0xf6f7f9, accent: 0x1e5b3a, baseCss: "#f6f7f9", bellyCss: "#dfe7e2", accentCss: "#1e5b3a", stripe2Css: "#c8a24a", windows: 9, doors: [0.3, 0.72], reg: "SKY-190D" });
+  const build737 = (liv) => buildAirliner(Object.assign({ len: 39.5, r: 1.9, span: 16.5, wRoot: 6.6, wTip: 1.4, sweep: 7.3, engines: [4.9], engR: 0.98, engLen: 4.3, engFlat: true, gearH: 3.0, gearX: 2.85, winglet: "split", finH: 2.7,
+    base: 0xf6f7f9, accent: 0x1f4e9a, baseCss: "#f6f7f9", bellyCss: "#e4e8ee", accentCss: "#1f4e9a", stripe2Css: "#e0a526", windows: 30, doors: [0.2, 0.84], reg: "SKY-738" }, liv || {}));
+  const buildRegio = (liv) => buildAirliner(Object.assign({ len: 36.2, r: 1.5, span: 13.3, wRoot: 5.0, wTip: 1.3, sweep: 5.2, engines: [4.4], engR: 0.9, engLen: 3.7, gearH: 3.2, gearX: 2.6, winglet: "canted", finH: 2.9,
+    base: 0xf6f7f9, accent: 0x0f7a6b, baseCss: "#f6f7f9", bellyCss: "#e2ebe9", accentCss: "#0f7a6b", stripe2Css: "#9bd1c6", windows: 26, doors: [0.2, 0.84], reg: "SKY-E190" }, liv || {}));
+  const buildSkyliner = (liv) => buildAirliner(Object.assign({ len: 62.8, r: 2.95, span: 28, wRoot: 10.5, wTip: 1.6, sweep: 13.8, dihedral: 0.1, engines: [9.8], engR: 1.78, engLen: 6.6, gearH: 5.2, gearX: 4.8, bogie: true, winglet: "raked", finH: 2.6,
+    base: 0xf6f7f9, accent: 0x14284b, nacelle: 0x14284b, baseCss: "#f6f7f9", bellyCss: "#e6e9ef", accentCss: "#14284b", stripe2Css: "#7fb3e6", windows: 40, doors: [0.17, 0.42, 0.66, 0.86], reg: "SKY-789" }, liv || {}));
+  const buildJumbo = (liv) => buildAirliner(Object.assign({ len: 70.7, r: 3.25, hump: 0.34, span: 29.9, wRoot: 12, wTip: 3, sweep: 15.5, engines: [11.5, 20.5], engR: 1.45, engLen: 5.4, gearH: 5.8, gearX: 4.9, bogie: true, bodyGear: true, winglet: "canted", finH: 2.75,
+    base: 0xf6f7f9, accent: 0x9c1b2e, baseCss: "#f6f7f9", bellyCss: "#e7e9ec", accentCss: "#9c1b2e", stripe2Css: "#d4a94e", windows: 46, doors: [0.15, 0.36, 0.55, 0.73, 0.87], reg: "SKY-744" }, liv || {}));
+  const buildCommuter = (liv) => buildAirliner(Object.assign({ len: 17.6, r: 0.95, span: 8.2, wRoot: 2.2, wTip: 1.1, sweep: 0.3, engines: [3.1], engR: 0.5, engLen: 3.2, gearH: 2.0, gearX: 3.1, props: true, blades: 4, tTail: true, winglet: "none", finH: 2.4,
+    base: 0xf6f7f9, accent: 0x1e5b3a, baseCss: "#f6f7f9", bellyCss: "#dfe7e2", accentCss: "#1e5b3a", stripe2Css: "#c8a24a", windows: 9, doors: [0.3, 0.72], reg: "SKY-190D" }, liv || {}));
 
+  // Liveries in the colours of real airlines. Only colours and the airline name in plain type: no logos or emblems.
+  const W = { base: 0xf4f6f8, baseCss: "#f4f6f8" };
+  const LIV = {
+    ryanair:   Object.assign({ name: "Ryanair", bellyCss: "#073590", accent: 0x073590, accentCss: "#073590", stripe2Css: "#f1c933", nacelle: 0x073590, title: "RYANAIR", titleColor: "#073590", reg: "EI-SKY" }, W),
+    klm:       Object.assign({ name: "KLM", upperCss: "#00a1de", bellyCss: "#f4f6f8", accent: 0x00a1de, accentCss: "#0b3d91", stripe2Css: "#00a1de", nacelle: 0x00a1de, title: "KLM", titleColor: "#ffffff", reg: "PH-SKY" }, W),
+    klmch:     Object.assign({ name: "KLM Cityhopper", upperCss: "#00a1de", bellyCss: "#f4f6f8", accent: 0x00a1de, accentCss: "#0b3d91", stripe2Css: "#00a1de", nacelle: 0x00a1de, title: "KLM Cityhopper", titleColor: "#ffffff", reg: "PH-EZK" }, W),
+    turkish:   Object.assign({ name: "Turkish Airlines", bellyCss: "#e9ebee", accent: 0xc8102e, accentCss: "#c8102e", cheat: false, tailCss: "#c8102e", title: "TURKISH AIRLINES", titleColor: "#1c2f5e", reg: "TC-SKY" }, W),
+    qantas:    Object.assign({ name: "Qantas", bellyCss: "#e9ebee", accent: 0xe0001b, accentCss: "#e0001b", cheat: false, tailCss: "#e0001b", title: "QANTAS", titleColor: "#e0001b", reg: "VH-SKY" }, W),
+    lufthansa: Object.assign({ name: "Lufthansa", bellyCss: "#f4f6f8", accent: 0x0a1d3d, accentCss: "#0a1d3d", cheat: false, nacelle: 0x0a1d3d, tailCss: "#0a1d3d", title: "Lufthansa", titleColor: "#0a1d3d", reg: "D-ASKY" }, W),
+    ba:        Object.assign({ name: "British Airways", bellyCss: "#1b2a4a", accent: 0x1b2a4a, accentCss: "#c8102e", stripe2Css: "#1b2a4a", tailCss: "#1b2a4a", title: "BRITISH AIRWAYS", titleColor: "#1b2a4a", regColor: "#1b2a4a", reg: "G-SKYB" }, W),
+    ana:       Object.assign({ name: "ANA", bellyCss: "#e9ebee", accent: 0x0b3b8c, accentCss: "#0b3b8c", stripe2Css: "#29a3dc", tailCss: "#0b3b8c", title: "ANA", titleColor: "#0b3b8c", reg: "JA8SKY" }, W),
+    airnz:     Object.assign({ name: "Air New Zealand", bellyCss: "#f4f6f8", accent: 0x111214, accentCss: "#111214", cheat: false, nacelle: 0x111214, tailCss: "#111214", title: "Air New Zealand", titleColor: "#111214", reg: "ZK-SKY" }, W),
+    jetblue:   Object.assign({ name: "JetBlue", bellyCss: "#0b2265", accent: 0x0b2265, accentCss: "#0b2265", cheat: false, nacelle: 0x0b2265, tailCss: "#0b2265", title: "jetBlue", titleColor: "#0b2265", reg: "N190SK" }, W),
+    azul:      Object.assign({ name: "Azul", bellyCss: "#f4f6f8", accent: 0x1a4aa0, accentCss: "#1a4aa0", cheat: false, tailCss: "#1a4aa0", title: "AZUL", titleColor: "#1a4aa0", reg: "PR-SKY" }, W),
+  };
+  const LIVERIES = {
+    islander: ["ryanair", "klm", "turkish", "qantas", "lufthansa"],
+    regio: ["klmch", "jetblue", "azul"],
+    skyliner: ["ba", "qantas", "ana", "turkish", "airnz"],
+    jumbo: ["ba", "lufthansa", "klm", "qantas"],
+    breeze: ["azul", "airnz"],
+  };
+  const livOf = (kind, id) => (id && id !== "house" && (LIVERIES[kind] || []).includes(id) ? LIV[id] : undefined);
+  const randomLiv = (kind) => { const l = LIVERIES[kind]; return l && Math.random() < 0.85 ? l[Math.floor(Math.random() * l.length)] : "house"; };
+  let chosenLiv = {}; try { chosenLiv = JSON.parse(load("sw-liv") || "{}") || {}; } catch { chosenLiv = {}; }
   const PLANES = {
     trainer: { name: "Cessna 172 Skyhawk", type: "Four-seat high-wing trainer", build: buildTrainer, thrust: 7.5, vmax: 64, stall: 21, roll: 1.5, pitch: 1.0, yaw: 0.5, turn: 0.85, gearH: 1.82, retract: false, cam: [17, 5], cock: [0.5, -0.4], wingX: 5.2, brake: 6, shadow: 6, stats: [0.35, 0.45, 0.95] },
     aero: { name: "Extra 330", type: "Two-seat aerobatic monoplane", build: buildAero, thrust: 13, vmax: 98, stall: 25, roll: 3.3, pitch: 1.6, yaw: 0.8, turn: 0.95, gearH: 1.75, retract: true, cam: [14, 4], cock: [0.62, -0.15], wingX: 4.0, brake: 6, shadow: 5, stats: [0.55, 1, 0.65] },
@@ -1366,7 +1402,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       box.getSize(size);
       const f = DIMS[k][1] / Math.max(size.z, 0.1);
       if (Math.abs(f - 1) < 0.03) continue;
-      const orig = sp.build; sp.build = () => { const mm = orig(); mm.scale.setScalar(f); return mm; };
+      const orig = sp.build; sp.build = (liv) => { const mm = orig(liv); mm.scale.setScalar(f); return mm; };
       sp.gearH *= f; sp.wingX *= f; sp.shadow *= f; sp.cam = sp.cam.map((v) => v * f); sp.cock = sp.cock.map((v) => v * f);
     }
   })();
@@ -1457,10 +1493,10 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       return pump();
     }).finally(() => clearTimeout(timer));
   }
-  function buildPlane(kind) {
+  function buildPlane(kind, livId) {
     const sp = PLANES[kind];
     if (sp.glb) return GLB[kind] && GLB[kind].status === "ready" ? GLB[kind].make() : null;
-    return sp.build();
+    return sp.build(livOf(kind, livId));
   }
 
   // ================= AIRPORTS =================
@@ -1588,7 +1624,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
         mdl.userData.strobes.forEach((s) => (s.visible = false)); grp.add(mdl);
       };
       if (sp.glb) parkedQueue.push({ kind: st.kind, place: () => { const m = buildPlane(st.kind); if (m) placeAt(m); } });
-      else placeAt(sp.build());
+      else placeAt(sp.build(livOf(st.kind, randomLiv(st.kind))));
       if (sp.big) {
         const bl = 14, bx = a.termX0 - bl / 2 - 0.5;
         const br = new THREE.Mesh(new THREE.BoxGeometry(bl, 3.2, 3.2), MAT.wall2); br.position.set(bx, 5.2, st.z - 4.2); grp.add(br);
@@ -1646,7 +1682,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
   const boom = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0xff8a3d, transparent: true, opacity: 0.9 }));
   boom.visible = false; scene.add(boom);
   function setPlane(kind) {
-    const m = buildPlane(kind);
+    const m = buildPlane(kind, chosenLiv[kind]);
     if (!m) return false;
     spec = PLANES[kind];
     if (model) scene.remove(model);
@@ -1838,9 +1874,9 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       cam = new THREE.PerspectiveCamera(28, 16 / 9, 0.1, 5000);
       return true;
     }
-    function shoot(kind) {
+    function shoot(kind, livId) {
       if (!ensure()) return null;
-      const m = buildPlane(kind); if (!m) return null;
+      const m = buildPlane(kind, livId); if (!m) return null;
       if (m.userData.prop) m.userData.prop.userData.disc.visible = false;
       (m.userData.props || []).forEach((p) => (p.userData.disc.visible = false));
       if (m.userData.glow) m.userData.glow.visible = false;
@@ -1858,10 +1894,10 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     return { shoot, done() { if (r) { r.dispose(); try { r.forceContextLoss(); } catch {} r = null; } } };
   })();
   const photoQueue = [];
-  function queuePhoto(kind, img) { photoQueue.push({ kind, img }); if (photoQueue.length === 1) setTimeout(nextPhoto, 50); }
+  function queuePhoto(kind, img, livId) { photoQueue.push({ kind, img, livId: livId ?? chosenLiv[kind] }); if (photoQueue.length === 1) setTimeout(nextPhoto, 50); }
   function nextPhoto() {
     const job = photoQueue[0]; if (!job) return;
-    const url = PHOTO.shoot(job.kind);
+    const url = PHOTO.shoot(job.kind, job.livId);
     if (url) { job.img.src = url; job.img.closest(".plane-card")?.classList.add("has-photo"); }
     photoQueue.shift();
     if (photoQueue.length) setTimeout(nextPhoto, 30);
@@ -1909,7 +1945,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
         if (GLB[id] && GLB[id].status === "failed") startLoad();
         briefTip.textContent = `${p.name} is loading. Press Take off and you'll start as soon as it's ready.`; return;
       }
-      setPlane(id); spawn(S.from); updateSummary();
+      setPlane(id); spawn(S.from); updateSummary(); renderLiveries();
       briefTip.textContent = p.big ? `Airliner tips: hold R until the throttle shows 100%, set flaps 2 with V, and pull back at ${Math.round(p.stall * 0.72 * MS2KT)} knots.` : "Throttle up to full, roll down the runway, and gently pull back once you pass the rotate speed.";
     });
     if (p.glb) startLoad(); else queuePhoto(id, img);
@@ -1957,12 +1993,31 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     grp.querySelectorAll("button").forEach((btn) => btn.addEventListener("click", () => { sel.value = btn.dataset.v; sel.dispatchEvent(new Event("change")); sync(); updateSummary(); }));
     sync();
   });
+  function renderLiveries() {
+    const row = $("livRow"), list = LIVERIES[chosen];
+    row.replaceChildren(); row.hidden = !list;
+    if (!list) return;
+    const lab = document.createElement("span"); lab.textContent = `Livery · ${PLANES[chosen].name}`; row.append(lab);
+    for (const id of ["house"].concat(list)) {
+      const b = document.createElement("button"); b.type = "button"; b.className = "seg-btn";
+      b.textContent = id === "house" ? "Skyways" : LIV[id].name;
+      b.setAttribute("aria-pressed", String((chosenLiv[chosen] || "house") === id));
+      b.addEventListener("click", () => {
+        chosenLiv[chosen] = id; save("sw-liv", JSON.stringify(chosenLiv));
+        setPlane(chosen); spawn(S.from); renderLiveries(); updateSummary();
+        const img = planesEl.querySelector(`input[value="${chosen}"]`)?.closest(".plane-card")?.querySelector("img");
+        if (img) queuePhoto(chosen, img, id);
+      });
+      row.append(b);
+    }
+  }
   function updateSummary() {
     const f = AIRPORTS[+fromSel.value], t = toSel.value === "-1" ? null : AIRPORTS[+toSel.value];
     const opt = (id) => $(id).selectedOptions[0].textContent;
-    $("briefSummary").textContent = `${PLANES[chosen].name}  ·  ${f.code} → ${t ? t.code : "free flight"}  ·  ${opt("startSel")}  ·  ${opt("timeSel")}  ·  ${opt("wxSel")}  ·  ${opt("modelSel")}`;
+    const lv = livOf(chosen, chosenLiv[chosen]);
+    $("briefSummary").textContent = `${PLANES[chosen].name}${lv ? " (" + lv.name + ")" : ""}  ·  ${f.code} → ${t ? t.code : "free flight"}  ·  ${opt("startSel")}  ·  ${opt("timeSel")}  ·  ${opt("wxSel")}  ·  ${opt("modelSel")}`;
   }
-  renderBoard(); updateSummary();
+  renderBoard(); updateSummary(); renderLiveries();
 
   const apList = $("apList");
   for (const a of AIRPORTS) {
@@ -2551,7 +2606,8 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     ai.pos.set(x, a.elev + 0.05 + ai.sp.gearH, z); ai.hdg = a.hdg * Math.PI / 180; ai.pitch = 0; ai.bank = 0; ai.v = 0; ai.vs = 0; ai.gear = 1;
   }
   function makeAIModel(ai) {
-    const m = buildPlane(ai.kind) || buildPlane("islander");
+    if (!ai.liv) ai.liv = randomLiv(ai.kind);
+    const m = buildPlane(ai.kind, ai.liv) || buildPlane("islander");
     ai.placeholder = !!PLANES[ai.kind].glb && !(GLB[ai.kind] && GLB[ai.kind].status === "ready");
     if (ai.model) scene.remove(ai.model);
     ai.model = m; scene.add(m);
