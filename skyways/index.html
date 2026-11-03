@@ -1487,29 +1487,52 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
   function loadGLB(kind, onProgress) {
     const sp = PLANES[kind];
     GLB[kind] = { status: "loading" };
-    const attempt = (n) => fetchModel(sp.glb, onProgress).catch((e) => { if (n > 0) return new Promise((r) => setTimeout(r, 1500)).then(() => attempt(n - 1)); throw e; });
-    return attempt(1).then((buf) => new Promise((res, rej) => new THREE.GLTFLoader().parse(buf, "", res, rej)))
+    const tried = [];
+    // Several ways to get the model, tried in order, because the artifact frame's address can make one of them fail.
+    const ways = [
+      () => fetchModel(sp.glb, onProgress),
+      () => fetchModel(new URL(sp.glb, location.href).href, onProgress),
+      () => scriptModel(sp.glb.replace(/\.json$/, ".js"), sp.glb),
+    ];
+    const next = (i) => {
+      if (i >= ways.length) return Promise.reject(new Error(tried.join(" · ")));
+      let run; try { run = ways[i](); } catch (e) { run = Promise.reject(e); }
+      return run.catch((e) => { tried.push(`way ${i + 1}: ${e && e.name === "AbortError" ? "timed out" : (e && e.message) || e}`); return next(i + 1); });
+    };
+    if (!THREE.GLTFLoader) { GLB[kind] = { status: "failed", error: "the 3D model loader didn't load (check your internet)" }; return Promise.resolve(false); }
+    return next(0).then((buf) => new Promise((res, rej) => new THREE.GLTFLoader().parse(buf, "", res, (e) => rej(new Error("model data is damaged: " + ((e && e.message) || e))))))
       .then((gltf) => {
         GLB[kind] = { status: "ready", make: bakeGLB(kind, gltf) };
         for (let i = parkedQueue.length - 1; i >= 0; i--) if (parkedQueue[i].kind === kind) { parkedQueue[i].place(); parkedQueue.splice(i, 1); }
         return true;
       })
-      .catch((e) => { GLB[kind] = { status: "failed", error: e && e.name === "AbortError" ? "it took too long" : String(e && e.message || e) }; return false; });
+      .catch((e) => { GLB[kind] = { status: "failed", error: String((e && e.message) || e) }; try { console.warn("Model load failed:", kind, e); } catch {} return false; });
   }
-  function fetchModel(path, onProgress) {
+  function fetchModel(url, onProgress) {
     const ctl = typeof AbortController === "function" ? new AbortController() : null;
     const timer = ctl ? setTimeout(() => ctl.abort(), 90000) : 0;
-    return fetch(new URL(path, document.baseURI).href, ctl ? { signal: ctl.signal } : {}).then((r) => {
+    return fetch(url, ctl ? { signal: ctl.signal } : {}).then((r) => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const total = +r.headers.get("content-length") || 0;
       if (!r.body || !total) return r.arrayBuffer();
       const reader = r.body.getReader(); const chunks = []; let got = 0;
       const pump = () => reader.read().then(({ done, value }) => {
         if (done) { const out = new Uint8Array(got); let o = 0; for (const c of chunks) { out.set(c, o); o += c.length; } return out.buffer; }
-        chunks.push(value); got += value.length; onProgress(got / total); return pump();
+        chunks.push(value); got += value.length; onProgress(Math.min(1, got / total)); return pump();
       });
       return pump();
     }).finally(() => clearTimeout(timer));
+  }
+  // last resort: the same model shipped as a script file, which loads the same way as the page's own code
+  function scriptModel(src, key) {
+    return new Promise((res, rej) => {
+      const done = () => { const m = window.SKY_MODELS && window.SKY_MODELS[key]; m ? res(typeof m === "string" ? m : JSON.stringify(m)) : rej(new Error("script loaded but had no model")); };
+      if (window.SKY_MODELS && window.SKY_MODELS[key]) return done();
+      const el = document.createElement("script"); el.src = src; el.async = true;
+      el.onload = done; el.onerror = () => rej(new Error("script file didn't load"));
+      document.head.appendChild(el);
+      setTimeout(() => rej(new Error("script timed out")), 120000);
+    });
   }
   function buildPlane(kind, livId) {
     const sp = PLANES[kind];
@@ -1948,7 +1971,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       loadGLB(id, (f) => { ty.textContent = `Loading 3D model… ${Math.round(f * 100)}%`; if (pendingTakeoff === id) goBtn.textContent = `Loading ${p.name}… ${Math.round(f * 100)}%`; }).then((ok) => {
         lab.classList.remove("wait");
         if (!ok) {
-          ty.textContent = `Couldn't load (${GLB[id].error}). Click to try again.`;
+          ty.textContent = `Couldn't load the 3D model: ${GLB[id].error}. Click the card to try again.`;
           if (pendingTakeoff === id) { pendingTakeoff = null; goBtn.textContent = "Take off"; briefTip.textContent = `${p.name} didn't load. Click its card to try again, or pick another plane.`; }
           return;
         }
