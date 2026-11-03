@@ -315,7 +315,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
   <header class="masthead">
     <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="currentColor"/></svg></span>
       <h1>Skyways <span>Flight Sim</span></h1></div>
-    <p class="tagline">11 aircraft · 12 airports · 32 km world · autopilot · day, sunset and night</p>
+    <p class="tagline">12 aircraft · 12 airports · 32 km world · autopilot · day, sunset and night</p>
   </header>
 
   <div class="stage" id="stage">
@@ -492,7 +492,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     { code: "CRK", name: "Coral Key", x: -2300, z: -3050, hdg: 300, elev: 6, kind: "ga",
       rwys: [{ off: 0, len: 1250, w: 35, sfx: "" }], stands: ["aero", "trainer"] },
     { code: "EGT", name: "Eastgate Intl", x: 6500, z: -6750, hdg: 140, elev: 88, kind: "intl",
-      rwys: [{ off: 0, len: 2600, w: 50, sfx: "" }], stands: ["skyliner", "regio", "regio", "skyliner", "islander", "atlas", "breeze"] },
+      rwys: [{ off: 0, len: 2600, w: 50, sfx: "" }], stands: ["b772", "regio", "regio", "skyliner", "islander", "atlas", "breeze"] },
     { code: "SNV", name: "Sunvale Intl", x: 2000, z: 10750, hdg: 90, elev: 126, kind: "intl",
       rwys: [{ off: 0, len: 2400, w: 50, sfx: "" }], stands: ["jumbo", "regio", "regio", "skyliner", "islander"] },
     { code: "HMR", name: "Highmoor", x: 12500, z: 2500, hdg: 30, elev: 185, kind: "regional",
@@ -507,7 +507,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       rwys: [{ off: 0, len: 1250, w: 35, sfx: "" }], stands: ["aero", "commuter", "trainer"] },
   ];
   const WORLD = 16000;
-  const DIMS = { trainer: [11, 8.3], aero: [8, 6.6], islander: [35.8, 39.5], breeze: [27.1, 27.2], swift: [15.5, 17.7], atlas: [42.4, 45.1], arrow: [9.1, 14.4], regio: [28.7, 36.2], skyliner: [60.1, 62.8], jumbo: [64.4, 70.7], commuter: [17.7, 17.6] };
+  const DIMS = { trainer: [11, 8.3], aero: [8, 6.6], islander: [35.8, 39.5], breeze: [27.1, 27.2], swift: [15.5, 17.7], atlas: [42.4, 45.1], arrow: [9.1, 14.4], regio: [28.7, 36.2], skyliner: [60.1, 62.8], jumbo: [64.4, 70.7], commuter: [17.7, 17.6], b772: [60.9, 63.7] };
   const swapLR = (s) => (s === "L" ? "R" : s === "R" ? "L" : "");
   for (const a of AIRPORTS) {
     const t = a.hdg * Math.PI / 180; a.s = Math.sin(t); a.c = Math.cos(t);
@@ -986,7 +986,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       const [v0, v1, n] = o.windows;
       for (let k = 0; k < n; k++) {
         const v = lerp(v0, v1, k / (n - 1));
-        for (const u of [0.218, 0.762]) { g.beginPath(); g.roundRect(U(u), Y(v) - 7, U(0.022), 14, 4); g.fill(); }
+        for (const u of [0.222, 0.762]) { g.beginPath(); g.roundRect(U(u), Y(v) - 5, U(0.016), 10, 3); g.fill(); }
       }
     }
     if (o.doors) {
@@ -995,22 +995,26 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     }
     if (o.cabin) { const [v0, v1] = o.cabin; for (const u of [0.13, 0.75]) { g.beginPath(); g.roundRect(U(u), Y(v1), U(0.12), Y(v0) - Y(v1), 10); g.fill(); } }
     if (o.cockpit) {
-      const [v0, v1] = o.cockpit;
-      g.beginPath(); g.roundRect(U(0.15), Y(v1), U(0.09), Y(v0) - Y(v1), 6); g.fill();
-      g.beginPath(); g.roundRect(U(0.76), Y(v1), U(0.09), Y(v0) - Y(v1), 6); g.fill();
-      g.fillRect(0, Y(v1), U(0.06), Y(v0) - Y(v1)); g.fillRect(U(0.94), Y(v1), U(0.06), Y(v0) - Y(v1));
+      // three side panes per side and two front panes, like a real flight deck
+      const [v0, v1] = o.cockpit, hgt = Y(v0) - Y(v1);
+      for (const [u, dir] of [[0.165, 1], [0.795, -1]]) for (let k = 0; k < 3; k++) {
+        const top = Y(v1) + hgt * 0.15 * k, w = U(0.026), x = dir > 0 ? U(u) + k * U(0.008) : U(u) - k * U(0.008);
+        g.beginPath(); g.moveTo(x, top + hgt * 0.15); g.lineTo(x + w, top); g.lineTo(x + w, top + hgt * 0.8); g.lineTo(x, top + hgt * 0.85); g.closePath(); g.fill();
+      }
+      g.fillRect(0, Y(v1) + hgt * 0.05, U(0.05), hgt * 0.75); g.fillRect(U(0.95), Y(v1) + hgt * 0.05, U(0.05), hgt * 0.75);
     }
     if (o.title) {
       // the airline's name in plain lettering above the windows, reading nose-to-tail on both sides
       const fs = Math.min(64, 900 / Math.max(4, o.title.length));
-      for (const [u, rot] of [[0.165, Math.PI / 2], [0.835, -Math.PI / 2]]) {
+      // both sides of the fuselage texture run the same way, so both sides use the same rotation
+      for (const [u, rot, flip] of [[0.165, -Math.PI / 2, 1], [0.835, -Math.PI / 2, 1]]) {
         g.save(); g.fillStyle = o.titleColor || "#1b2a3a"; g.font = `bold ${fs}px "Helvetica Neue", Arial, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
-        g.translate(U(u), Y(o.titleV ?? 0.66)); g.rotate(rot); g.fillText(o.title, 0, 0); g.restore();
+        g.translate(U(u), Y(o.titleV ?? 0.66)); g.rotate(rot); g.scale(flip, 1); g.fillText(o.title, 0, 0); g.restore();
       }
     }
     if (o.reg) {
       g.save(); g.fillStyle = o.regColor || "#1b2a3a"; g.font = "bold 44px sans-serif"; g.textAlign = "center";
-      g.translate(U(0.25), Y(o.regV)); g.rotate(Math.PI / 2); g.fillText(o.reg, 0, 14); g.restore();
+      g.translate(U(0.25), Y(o.regV)); g.rotate(-Math.PI / 2); g.fillText(o.reg, 0, 14); g.restore();
       g.save(); g.fillStyle = o.regColor || "#1b2a3a"; g.font = "bold 44px sans-serif"; g.textAlign = "center";
       g.translate(U(0.75), Y(o.regV)); g.rotate(-Math.PI / 2); g.fillText(o.reg, 0, 14); g.restore();
     }
@@ -1327,7 +1331,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     // landing gear
     const gear = new THREE.Group(); root.add(gear);
     const gb = -o.gearH, wr2 = Math.max(0.33, o.gearH * 0.11);
-    for (const sx of [1, -1]) for (const dz of (o.bogie ? [-0.6, 0.6] : [0])) {
+    for (const sx of [1, -1]) for (const dz of (o.axles === 3 ? [-1.1, 0, 1.1] : o.bogie ? [-0.6, 0.6] : [0])) {
       gear.add(strut(sx * o.gearX, wy, wz + o.wRoot * 0.3, sx * o.gearX, gb + wr2, wz + o.wRoot * 0.3, 0.13));
       for (const dx of (o.bogie ? [-0.36, 0.36] : [-0.3, 0.3])) { const w = wheel(wr2, wr2 * 0.55); w.position.set(sx * o.gearX + dx * wr2 * 2, gb + wr2, wz + o.wRoot * 0.3 + dz * wr2 * 2); gear.add(w); }
     }
@@ -1344,13 +1348,15 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     return finishModel(root, { prop: null, props, gear, ail: [wr.pivot, wl.pivot], elev: [sr.pivot, sl.pivot], rud: fin.pivot, strobes, fans, beacon });
   }
   const build737 = (liv) => buildAirliner(Object.assign({ len: 39.5, r: 1.9, span: 16.5, wRoot: 6.6, wTip: 1.4, sweep: 7.3, engines: [4.9], engR: 0.98, engLen: 4.3, engFlat: true, gearH: 3.0, gearX: 2.85, winglet: "split", finH: 2.7,
-    base: 0xf6f7f9, accent: 0x1f4e9a, baseCss: "#f6f7f9", bellyCss: "#e4e8ee", accentCss: "#1f4e9a", stripe2Css: "#e0a526", windows: 30, doors: [0.2, 0.84], reg: "SKY-738" }, liv || {}));
+    base: 0xf6f7f9, accent: 0x1f4e9a, baseCss: "#f6f7f9", bellyCss: "#e4e8ee", accentCss: "#1f4e9a", stripe2Css: "#e0a526", windows: 36, doors: [0.2, 0.84], reg: "SKY-738" }, liv || {}));
   const buildRegio = (liv) => buildAirliner(Object.assign({ len: 36.2, r: 1.5, span: 13.3, wRoot: 5.0, wTip: 1.3, sweep: 5.2, engines: [4.4], engR: 0.9, engLen: 3.7, gearH: 3.2, gearX: 2.6, winglet: "canted", finH: 2.9,
-    base: 0xf6f7f9, accent: 0x0f7a6b, baseCss: "#f6f7f9", bellyCss: "#e2ebe9", accentCss: "#0f7a6b", stripe2Css: "#9bd1c6", windows: 26, doors: [0.2, 0.84], reg: "SKY-E190" }, liv || {}));
+    base: 0xf6f7f9, accent: 0x0f7a6b, baseCss: "#f6f7f9", bellyCss: "#e2ebe9", accentCss: "#0f7a6b", stripe2Css: "#9bd1c6", windows: 30, doors: [0.2, 0.84], reg: "SKY-E190" }, liv || {}));
   const buildSkyliner = (liv) => buildAirliner(Object.assign({ len: 62.8, r: 2.95, span: 28, wRoot: 10.5, wTip: 1.6, sweep: 13.8, dihedral: 0.1, engines: [9.8], engR: 1.78, engLen: 6.6, gearH: 5.2, gearX: 4.8, bogie: true, winglet: "raked", finH: 2.6,
-    base: 0xf6f7f9, accent: 0x14284b, nacelle: 0x14284b, baseCss: "#f6f7f9", bellyCss: "#e6e9ef", accentCss: "#14284b", stripe2Css: "#7fb3e6", windows: 40, doors: [0.17, 0.42, 0.66, 0.86], reg: "SKY-789" }, liv || {}));
+    base: 0xf6f7f9, accent: 0x14284b, nacelle: 0x14284b, baseCss: "#f6f7f9", bellyCss: "#e6e9ef", accentCss: "#14284b", stripe2Css: "#7fb3e6", windows: 48, doors: [0.17, 0.42, 0.66, 0.86], reg: "SKY-789" }, liv || {}));
   const buildJumbo = (liv) => buildAirliner(Object.assign({ len: 70.7, r: 3.25, hump: 0.34, span: 29.9, wRoot: 12, wTip: 3, sweep: 15.5, engines: [11.5, 20.5], engR: 1.45, engLen: 5.4, gearH: 5.8, gearX: 4.9, bogie: true, bodyGear: true, winglet: "canted", finH: 2.75,
-    base: 0xf6f7f9, accent: 0x9c1b2e, baseCss: "#f6f7f9", bellyCss: "#e7e9ec", accentCss: "#9c1b2e", stripe2Css: "#d4a94e", windows: 46, doors: [0.15, 0.36, 0.55, 0.73, 0.87], reg: "SKY-744" }, liv || {}));
+    base: 0xf6f7f9, accent: 0x9c1b2e, baseCss: "#f6f7f9", bellyCss: "#e7e9ec", accentCss: "#9c1b2e", stripe2Css: "#d4a94e", windows: 56, doors: [0.15, 0.36, 0.55, 0.73, 0.87], reg: "SKY-744" }, liv || {}));
+  const build772 = (liv) => buildAirliner(Object.assign({ len: 63.7, r: 3.1, span: 28.2, wRoot: 11.6, wTip: 2.2, sweep: 15, dihedral: 0.085, engines: [9.6], engR: 1.78, engLen: 7.4, gearH: 5.6, gearX: 5.5, bogie: true, axles: 3, winglet: "none", finH: 2.8,
+    base: 0xf6f7f9, accent: 0x14284b, baseCss: "#f6f7f9", bellyCss: "#e2e6ec", accentCss: "#14284b", stripe2Css: "#b0912f", windows: 52, doors: [0.16, 0.36, 0.62, 0.87], reg: "SKY-772" }, liv || {}));
   const buildCommuter = (liv) => buildAirliner(Object.assign({ len: 17.6, r: 0.95, span: 8.2, wRoot: 2.2, wTip: 1.1, sweep: 0.3, engines: [3.1], engR: 0.5, engLen: 3.2, gearH: 2.0, gearX: 3.1, props: true, blades: 4, tTail: true, winglet: "none", finH: 2.4,
     base: 0xf6f7f9, accent: 0x1e5b3a, baseCss: "#f6f7f9", bellyCss: "#dfe7e2", accentCss: "#1e5b3a", stripe2Css: "#c8a24a", windows: 9, doors: [0.3, 0.72], reg: "SKY-190D" }, liv || {}));
 
@@ -1367,6 +1373,8 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     ana:       Object.assign({ name: "ANA", bellyCss: "#e9ebee", accent: 0x0b3b8c, accentCss: "#0b3b8c", stripe2Css: "#29a3dc", tailCss: "#0b3b8c", title: "ANA", titleColor: "#0b3b8c", reg: "JA8SKY" }, W),
     airnz:     Object.assign({ name: "Air New Zealand", bellyCss: "#f4f6f8", accent: 0x111214, accentCss: "#111214", cheat: false, nacelle: 0x111214, tailCss: "#111214", title: "Air New Zealand", titleColor: "#111214", reg: "ZK-SKY" }, W),
     jetblue:   Object.assign({ name: "JetBlue", bellyCss: "#0b2265", accent: 0x0b2265, accentCss: "#0b2265", cheat: false, nacelle: 0x0b2265, tailCss: "#0b2265", title: "jetBlue", titleColor: "#0b2265", reg: "N190SK" }, W),
+    united:    Object.assign({ name: "United", bellyCss: "#dfe3e8", accent: 0x0b2d6e, accentCss: "#b0912f", stripe2Css: "#b0912f", tailCss: "#0b2d6e", nacelle: 0xdfe3e8, title: "UNITED", titleColor: "#0b2d6e", regColor: "#0b2d6e", reg: "N772SK" }, W),
+    emirates:  Object.assign({ name: "Emirates", bellyCss: "#f4f6f8", accent: 0xd71921, accentCss: "#d71921", cheat: false, tailCss: "#d71921", title: "Emirates", titleColor: "#d71921", reg: "A6-SKY" }, W),
     azul:      Object.assign({ name: "Azul", bellyCss: "#f4f6f8", accent: 0x1a4aa0, accentCss: "#1a4aa0", cheat: false, tailCss: "#1a4aa0", title: "AZUL", titleColor: "#1a4aa0", reg: "PR-SKY" }, W),
   };
   const LIVERIES = {
@@ -1374,6 +1382,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     regio: ["klmch", "jetblue", "azul"],
     skyliner: ["ba", "qantas", "ana", "turkish", "airnz"],
     jumbo: ["ba", "lufthansa", "klm", "qantas"],
+    b772: ["united", "ba", "emirates", "klm"],
     breeze: ["azul", "airnz"],
   };
   const livOf = (kind, id) => (id && id !== "house" && (LIVERIES[kind] || []).includes(id) ? LIV[id] : undefined);
@@ -1390,6 +1399,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     commuter: { name: "Beechcraft 1900D", type: "Commuter airliner · 2 × PT6A", build: buildCommuter, thrust: 7.6, vmax: 105, stall: 32, roll: 1.3, pitch: 0.8, yaw: 0.4, turn: 0.85, gearH: 2.0, retract: true, cam: [27, 6], cock: [0.45, -7.4], wingX: 8.8, brake: 5.5, shadow: 8, stats: [0.45, 0.6, 0.75] },
     regio: { name: "Embraer E190", type: "Regional jet · 2 × CF34", build: buildRegio, thrust: 6.9, vmax: 132, stall: 45, roll: 0.85, pitch: 0.52, yaw: 0.24, turn: 0.74, gearH: 3.2, retract: true, cam: [60, 13], cock: [0.85, -15], wingX: 14.4, brake: 4.5, shadow: 16, big: true, stats: [0.8, 0.35, 0.4] },
     skyliner: { name: "Boeing 787-9 Dreamliner", type: "Wide-body airliner · 2 × GEnx", build: buildSkyliner, thrust: 6.3, vmax: 146, stall: 53, roll: 0.62, pitch: 0.42, yaw: 0.2, turn: 0.68, gearH: 5.2, retract: true, cam: [106, 21], cock: [1.5, -25.9], wingX: 30, brake: 4, shadow: 32, big: true, stats: [1, 0.22, 0.28] },
+    b772: { name: "Boeing 777-200ER", type: "Wide-body airliner · 2 × GE90", build: build772, thrust: 6.4, vmax: 146, stall: 53, roll: 0.6, pitch: 0.42, yaw: 0.2, turn: 0.68, gearH: 5.6, retract: true, cam: [110, 22], cock: [1.6, -26.4], wingX: 30.4, brake: 4, shadow: 32, big: true, stats: [1, 0.22, 0.28] },
     jumbo: { name: "Boeing 747-400", type: "Double-deck airliner · 4 × CF6", build: buildJumbo, thrust: 5.9, vmax: 148, stall: 55, roll: 0.58, pitch: 0.4, yaw: 0.18, turn: 0.66, gearH: 5.8, retract: true, cam: [120, 25], cock: [2.7, -29.2], wingX: 32.2, brake: 4, shadow: 34, big: true, stats: [1, 0.18, 0.25] },
   };
   for (const k of Object.keys(PLANES)) PLANES[k].kind = k;
@@ -1406,9 +1416,9 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       sp.gearH *= f; sp.wingX *= f; sp.shadow *= f; sp.cam = sp.cam.map((v) => v * f); sp.cock = sp.cock.map((v) => v * f);
     }
   })();
-  const CAT = { trainer: "light", aero: "light", swift: "light", islander: "airliner", breeze: "airliner", regio: "airliner", skyliner: "airliner", jumbo: "airliner", commuter: "airliner", atlas: "special", arrow: "special" };
-  const SEATS = { trainer: 4, aero: 2, swift: 9, islander: 189, breeze: 72, regio: 100, skyliner: 296, jumbo: 416, commuter: 19, atlas: 116, arrow: 1 };
-  const CRUISE = { trainer: 124, aero: 210, swift: 465, islander: 453, breeze: 275, regio: 447, skyliner: 488, jumbo: 490, commuter: 280, atlas: 421, arrow: 500 };
+  const CAT = { trainer: "light", aero: "light", swift: "light", islander: "airliner", breeze: "airliner", regio: "airliner", skyliner: "airliner", jumbo: "airliner", b772: "airliner", commuter: "airliner", atlas: "special", arrow: "special" };
+  const SEATS = { trainer: 4, aero: 2, swift: 9, islander: 189, breeze: 72, regio: 100, skyliner: 296, jumbo: 416, b772: 314, commuter: 19, atlas: 116, arrow: 1 };
+  const CRUISE = { trainer: 124, aero: 210, swift: 465, islander: 453, breeze: 275, regio: 447, skyliner: 488, jumbo: 490, b772: 482, commuter: 280, atlas: 421, arrow: 500 };
   for (const k of Object.keys(PLANES)) { PLANES[k].cat = CAT[k] || "light"; PLANES[k].seats = SEATS[k] || 0; }
 
   // ================= DETAILED 3D MODELS (GLB) =================
@@ -1861,9 +1871,9 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       sc = new THREE.Scene();
       const bg = document.createElement("canvas"); bg.width = 4; bg.height = 256; const g = bg.getContext("2d");
       bg.width = 480; bg.height = 270;
-      const g2 = bg.getContext("2d"); const rg = g2.createRadialGradient(240, 120, 10, 240, 150, 300); rg.addColorStop(0, "#3a3732"); rg.addColorStop(0.55, "#1f1e1d"); rg.addColorStop(1, "#111113"); g2.fillStyle = rg; g2.fillRect(0, 0, 480, 270);
+      const g2 = bg.getContext("2d"); const sky = g2.createLinearGradient(0, 0, 0, 270); sky.addColorStop(0, "#5d8cc4"); sky.addColorStop(1, "#8fb2d6"); g2.fillStyle = sky; g2.fillRect(0, 0, 480, 270);
       const bt = new THREE.CanvasTexture(bg); bt.encoding = THREE.sRGBEncoding; sc.background = bt;
-      sc.add(new THREE.HemisphereLight(0xf3eadb, 0x2a2826, 0.85));
+      sc.add(new THREE.HemisphereLight(0xe8f1ff, 0x6f7a86, 0.95));
       const key = new THREE.DirectionalLight(0xfff3e0, 1.1); key.position.set(-1, 1.4, -0.8); sc.add(key);
       const rim = new THREE.DirectionalLight(0xbfd6ff, 0.5); rim.position.set(1, 0.6, 1); sc.add(rim);
       const fc = document.createElement("canvas"); fc.width = fc.height = 128; const fg = fc.getContext("2d");
@@ -1871,7 +1881,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       fg.fillStyle = fr; fg.fillRect(0, 0, 128, 128);
       floor = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(fc), transparent: true, depthWrite: false }));
       floor.rotation.x = -Math.PI / 2; sc.add(floor);
-      cam = new THREE.PerspectiveCamera(28, 16 / 9, 0.1, 5000);
+      cam = new THREE.PerspectiveCamera(24, 16 / 9, 0.1, 5000);
       return true;
     }
     function shoot(kind, livId) {
@@ -1884,8 +1894,8 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       sc.add(m); m.updateMatrixWorld(true);
       const box = new THREE.Box3().setFromObject(m), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
       const d = Math.max(size.x, size.z) * 1.9;
-      floor.scale.set(size.x * 1.3, size.z * 1.3, 1); floor.position.set(c.x, box.min.y + 0.02, c.z);
-      cam.position.set(c.x - d * 0.62, c.y + d * 0.2, c.z - d * 0.78); cam.lookAt(c.x, c.y - size.y * 0.05, c.z);
+      floor.visible = false;
+      cam.position.set(c.x + d * 0.92, c.y - d * 0.1, c.z - d * 0.3); cam.lookAt(c.x, c.y, c.z + size.z * 0.02);
       r.render(sc, cam);
       const url = r.domElement.toDataURL("image/jpeg", 0.86);
       sc.remove(m);
@@ -2593,7 +2603,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
   // Other aircraft fly real circuits: hold at the runway, take off, climb, cruise to another airport, fly a 3° final, land, and go again.
   const AI = [], RADIO = [];
   const TAN3 = Math.tan(3 * Math.PI / 180);
-  const AI_FLEET = [["regio", "OCEANA 301"], ["skyliner", "OCEANA 88"], ["regio", "ISLA 214"], ["islander", "ISLANDER 52"], ["regio", "SOUTHWIND 640"], ["islander", "ISLANDER 17"], ["trainer", "SKYLARK 42"], ["aero", "FALCON 7"], ["jumbo", "PACIFICA 12"],
+  const AI_FLEET = [["regio", "OCEANA 301"], ["skyliner", "OCEANA 88"], ["regio", "ISLA 214"], ["islander", "ISLANDER 52"], ["regio", "SOUTHWIND 640"], ["islander", "ISLANDER 17"], ["trainer", "SKYLARK 42"], ["aero", "FALCON 7"], ["b772", "PACIFICA 12"],
     ["regio", "EASTGATE 410"], ["skyliner", "SUNVALE 9"], ["commuter", "NORTHCAPE 77"], ["islander", "ISLANDER 63"], ["skyliner", "OCEANA 515"], ["trainer", "SKYLARK 18"], ["aero", "FALCON 22"],
     ["breeze", "BREEZE 301"], ["regio", "REGIO 190"], ["regio", "REGIO 44"], ["skyliner", "SKYLINER 35"], ["jumbo", "JUMBO 1"], ["commuter", "COMMUTER 9"], ["breeze", "BREEZE 88"], ["swift", "SWIFT 6"], ["atlas", "ATLAS 4"], ["arrow", "ARROW 1"]];
   const wrapA = (a) => { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; };
