@@ -1,3 +1,4 @@
+<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Skyways Flight Sim</title>
@@ -150,6 +151,7 @@ kbd { font: 12px var(--font-mono); color: var(--hud); border: 1px solid var(--ed
   --g0: #0f0f11; --g1: #17171a; --g2: #1f1f23; --g3: #2a2a2f; --hair: rgba(255,255,255,0.09); --hair-2: rgba(255,255,255,0.16);
   --fg: #f2efe9; --fg-2: #a7a39b; --fg-3: #6f6c66; --champ: #d6bf96; --champ-2: #b9a27a;
   --deck: #0f0f11; --glass: #17171a; --edge: rgba(255,255,255,0.12); --text: #f2efe9; --muted: #a7a39b; --amber: #d6bf96; --sky: #d6bf96;
+  --hud: #f1e6cc; --hud-nav: #e2c58d; --hud-caution: #ffb43d; --hud-warn: #ff5a4e;
   --font-display: "Marcellus", "Times New Roman", serif;
   --font-body: "Manrope", system-ui, sans-serif;
   --font-mono: "DM Mono", ui-monospace, "Courier New", monospace;
@@ -303,11 +305,62 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
 .help { background: rgba(23,23,26,0.94); border: 1px solid var(--hair-2); border-radius: 18px; color: var(--fg); box-shadow: 0 40px 80px rgba(0,0,0,0.6); backdrop-filter: blur(18px); }
 .help h3 { font: 400 22px var(--font-display); text-transform: none; color: var(--fg); }
 .help .keys dd { color: var(--fg-2); }
+/* phones: the key list stacks (key above its description) instead of squeezing the descriptions to one word per line */
+@media (max-width: 560px) { .keys { grid-template-columns: minmax(0, 1fr); gap: 2px; } .keys dt { white-space: normal; } .keys dd { margin-bottom: 10px; } }
 @media (max-width: 680px) {
   .chip { padding: 9px 12px; font-size: 12px; }
   .chip .lbl-sm { display: none; }
   .dialog { padding-top: 84px; }
 }
+/* settings, fps, flight log, best result */
+.fps { font: 400 12px var(--font-mono); color: var(--fg-2); background: rgba(23,23,26,0.62); border: 1px solid var(--hair-2); border-radius: 999px; padding: 9px 12px; min-width: 6.5em; text-align: center; pointer-events: none; }
+.more .chip .val { color: var(--champ); margin-left: 6px; }
+.more hr { border: 0; border-top: 1px solid var(--hair); margin: 4px 6px; }
+.best { margin: 6px 0 0; font: 400 12px var(--font-mono); color: var(--champ); text-align: right; grid-column: 1 / -1; }
+@media (max-width: 680px) { .best { text-align: left; } }
+.dialog { z-index: 4; }
+.topbar { z-index: 5; }   /* sound, graphics and the flight log stay reachable from the briefing and pause screens */
+.log { box-sizing: border-box; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(720px, calc(100% - 24px)); max-height: calc(100% - 96px); overflow: auto; display: grid; gap: 10px; background: #17171a; border: 1px solid var(--hair-2); border-radius: 18px; padding: 18px 20px; color: var(--fg); box-shadow: 0 40px 80px rgba(0,0,0,0.6); z-index: 7; }
+.log h3 { margin: 0; font: 400 22px var(--font-display); }
+.log-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.log-acts { display: flex; gap: 6px; }
+.log table { width: 100%; border-collapse: collapse; font: 400 12px var(--font-mono); color: var(--fg-2); }
+.log th { text-align: left; font: 500 10px var(--font-body); letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); padding: 0 8px 8px 0; }
+.log td { padding: 7px 8px 7px 0; border-top: 1px solid var(--hair); vertical-align: top; }
+.log td.ok { color: var(--champ); } .log td.bad { color: #e8a598; }
+.log .empty { color: var(--fg-3); margin: 0; }
+@media (max-width: 560px) { .log th.opt, .log td.opt { display: none; } }
+/* rudder and trim on touch screens: a 2 × 2 block between the stick and the throttle */
+.tbtns2 { position: absolute; left: 152px; bottom: calc(14px + var(--dock, 0px) + env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: repeat(2, auto); gap: 6px; }
+.tbtns2 .tbtn { width: 56px; padding: 11px 0; font-size: 10px; text-align: center; touch-action: none; }
+.tbtns2 .tbtn.held { background: rgba(214,191,150,0.22); border-color: var(--champ); color: var(--champ); }
+@media (hover: hover) and (pointer: fine) { .tbtns2 { display: none; } }
+@media (max-width: 380px) { .stick { width: 108px; height: 108px; } .tbtns2 { left: 128px; gap: 4px; } .tbtns2 .tbtn { width: 50px; letter-spacing: 0; } }
+.stick, .throttle, .tbtns { transition: bottom 0.2s; }
+.stick { bottom: calc(14px + var(--dock, 0px) + env(safe-area-inset-bottom, 0px)); }
+.throttle { bottom: calc(14px + var(--dock, 0px) + env(safe-area-inset-bottom, 0px)); }
+.apgrip { display: none; }
+/* phones: the autopilot is a sheet that slides up from the bottom and can fold down to one row */
+@media (max-width: 480px) {
+  .tbtns { bottom: calc(190px + var(--dock, 0px) + env(safe-area-inset-bottom, 0px)); }
+  .ap { top: auto; left: 0; right: 0; bottom: 0; max-width: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px 10px calc(10px + env(safe-area-inset-bottom, 0px)); border-radius: 18px 18px 0 0; border-bottom: 0; z-index: 3; animation: sheet-up 0.22s ease-out; }
+  .ap .apv { justify-content: space-between; }
+  .ap .apb { padding: 10px 8px; text-align: center; }
+  .apgrip { display: flex; grid-column: 1 / -1; justify-content: center; align-items: center; gap: 8px; font: 500 11px var(--font-body); letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); background: none; border: 0; padding: 2px 0 4px; cursor: pointer; }
+  .apgrip::before { content: ""; width: 36px; height: 4px; border-radius: 2px; background: var(--hair-2); }
+  .ap.mini { grid-template-columns: repeat(4, minmax(0, 1fr)) auto; }
+  .ap.mini .apv { display: none; }
+  .ap.mini .apgrip { grid-column: auto; order: 9; padding: 0 6px; }
+  .ap.mini .apgrip::before { width: 18px; }
+  .ap.mini #apNav, .ap.mini #apApp { order: 3; }
+  .stage.ap-mini { --dock: 62px; }
+  .stage.ap-full .tbtns { bottom: calc(var(--sheet, 200px) + 8px); }
+}
+/* the push-back button must not sit on the trim/rudder block */
+@media (pointer: coarse) { .pushbtn { bottom: calc(124px + var(--dock, 0px) + env(safe-area-inset-bottom, 0px)); } }
+@media (pointer: coarse) and (max-width: 480px) { .pushbtn { bottom: calc(292px + var(--dock, 0px) + env(safe-area-inset-bottom, 0px)); } }
+@keyframes sheet-up { from { transform: translateY(40%); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .ap { animation: none; } .stick, .throttle, .tbtns { transition: none; } }
 @media (prefers-reduced-motion: reduce) { .plane-card, .photo img, .chip, .btn { transition: none; } .plane-card.wait .photo { animation: none; } }
 </style>
 
@@ -327,12 +380,18 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       <button class="chip" id="camCycle" type="button" title="Change camera (C, or keys 1–6)"><span class="lbl-sm">View</span> <span id="camName">Chase</span></button>
       <button class="chip" id="apToggle" type="button" aria-pressed="false" title="Autopilot (U)">Autopilot</button>
       <span class="topbar-gap"></span>
+      <output class="fps" id="fpsOut" hidden aria-live="off">— FPS</output>
       <div class="more-wrap">
         <button class="chip icon" id="moreBtn" type="button" aria-expanded="false" aria-controls="moreMenu" aria-label="More options">⋯</button>
         <div class="more" id="moreMenu" hidden>
           <button class="chip" id="helpBtn" type="button">Controls</button>
           <button class="chip" id="invBtn" type="button" aria-pressed="false">Invert pitch</button>
-          <button class="chip" id="sndBtn" type="button" aria-pressed="false">Sound</button>
+          <button class="chip" id="sndBtn" type="button" aria-pressed="false" title="Engine, chimes and the STALL / PULL UP / TRAFFIC alerts">Sound</button>
+          <button class="chip" id="qualBtn" type="button" title="Graphics quality: resolution, terrain and forest detail distance, shadows">Graphics<span class="val" id="qualVal">Medium</span></button>
+          <button class="chip" id="fpsBtn" type="button" aria-pressed="false">FPS counter</button>
+          <button class="chip" id="vibBtn" type="button" aria-pressed="true" hidden>Vibration</button>
+          <hr>
+          <button class="chip" id="logBtn" type="button">Flight log</button>
           <button class="chip" id="fsBtn" type="button">Full screen</button>
         </div>
       </div>
@@ -349,10 +408,17 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
         <button class="tbtn" id="tRev" type="button" aria-pressed="false">REVERSE</button>
         <button class="tbtn" id="tLights" type="button" aria-pressed="false">LIGHTS</button>
       </div>
+      <div class="tbtns2" role="group" aria-label="Trim and rudder">
+        <button class="tbtn" id="tTrimDn" type="button" title="Trim nose down ([)">TRIM ▼</button>
+        <button class="tbtn" id="tTrimUp" type="button" title="Trim nose up (])">TRIM ▲</button>
+        <button class="tbtn" id="tRudL" type="button" title="Rudder left (Q)">◀ RUD</button>
+        <button class="tbtn" id="tRudR" type="button" title="Rudder right (E)">RUD ▶</button>
+      </div>
       <div class="throttle" id="throttle"><div class="lbl" id="thrLbl">THR 0%</div><div class="fill" id="thrFill"></div></div>
     </div>
 
     <div class="ap" id="apPanel" hidden>
+      <button class="apgrip" id="apGrip" type="button" aria-expanded="true" aria-label="Fold the autopilot panel">Autopilot</button>
       <button class="apb" id="apOn" type="button" aria-pressed="false">AP</button>
       <button class="apb" id="apThr" type="button" aria-pressed="false">A/THR</button>
       <div class="apv"><span>SPD</span><button type="button" data-ap="spd" data-d="-10" aria-label="Speed down">−</button><output id="apSpd">250</output><button type="button" data-ap="spd" data-d="10" aria-label="Speed up">+</button></div>
@@ -381,11 +447,17 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       </dl>
     </div>
 
+    <div class="log" id="logPanel" hidden role="dialog" aria-labelledby="logTitle">
+      <div class="log-head"><h3 id="logTitle">Flight log</h3><div class="log-acts"><button class="chip" id="logClear" type="button">Clear</button><button class="chip" id="logClose" type="button">Close</button></div></div>
+      <div id="logBody"></div>
+    </div>
+
     <div class="dialog" id="brief">
       <div class="panel">
         <div class="brief-head">
           <div><div class="eyebrow" id="briefEyebrow">FLIGHT BRIEFING</div><h2 id="briefTitle">Choose your aircraft and route</h2></div>
           <p class="summary" id="briefSummary"></p>
+          <p class="best" id="briefBest" hidden></p>
         </div>
         <div id="briefResult" hidden></div>
         <section class="step" aria-labelledby="stepHangar">
@@ -449,7 +521,8 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
         <dt><kbd>U</kbd> Autopilot</dt><dd>Open the panel with the Autopilot button. Set SPD, HDG, ALT and V/S, then press AP. NAV flies to your destination, APP lines up with the runway and lands by itself.</dd>
         <dt><kbd>K</kbd> Push back</dt><dd>When you start at the gate, push back, then taxi to the runway with gentle throttle and Q/E to steer</dd>
         <dt>Game controller</dt><dd>Left stick flies, triggers set throttle, A brakes, X flaps, B gear, Y camera</dd>
-        <dt>Phone / tablet</dt><dd>Left stick flies, orange bar is throttle, buttons for gear, flaps and brake</dd>
+        <dt>Phone / tablet</dt><dd>Left stick flies, the bar on the right is throttle, buttons for gear, flaps and brake; TRIM ▼ ▲ and ◀ RUD ▶ next to the stick. On phones the autopilot opens as a sheet at the bottom: tap its handle to fold it to one row</dd>
+        <dt>⋯ menu</dt><dd>Sound (engine plus STALL, PULL UP and TRAFFIC alerts), Graphics Low / Medium / High (High adds a real shadow under your aircraft), FPS counter, and your Flight log with the last 20 flights. Your best landing on each route shows in the briefing</dd>
       </dl>
     </section>
     <section class="card" aria-labelledby="howto">
@@ -486,7 +559,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   "use strict";
   const $ = (id) => document.getElementById(id);
   const load = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
-  const save = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+  const save = (k, v) => { try { localStorage.setItem(k, v); return true; } catch { return false; } };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const smooth = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -605,14 +678,26 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   let renderer;
   try { renderer = new THREE.WebGLRenderer({ canvas: worldCv, antialias: true }); }
   catch { $("briefTip").textContent = "This device can't run 3D graphics (WebGL is off)."; return; }
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  // graphics quality: render resolution, how far detailed terrain and forests reach, cloud count, real-time shadow of your aircraft
+  const QUALITY = {
+    low: { label: "Low", pr: 0.75, hi: 5500, vis: 10000, trees: 3500, clouds: 0.5, shadows: false },
+    medium: { label: "Medium", pr: 1.5, hi: 9500, vis: 15000, trees: 7500, clouds: 1, shadows: false },
+    high: { label: "High", pr: 2, hi: 12500, vis: 16000, trees: 10000, clouds: 1, shadows: true },
+  };
+  let qualName = load("sw-quality"); if (!QUALITY[qualName]) qualName = "medium";
+  let QS = QUALITY[qualName];
+  const pixelRatioFor = (q) => q.pr < 1 ? Math.min(window.devicePixelRatio || 1, 1) * q.pr : Math.min(window.devicePixelRatio || 1, q.pr);
+  renderer.setPixelRatio(pixelRatioFor(QS));
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputEncoding = THREE.sRGBEncoding;
   const scene = new THREE.Scene();
   const HORIZON = new THREE.Color(0xd3e6f3);
   scene.fog = new THREE.Fog(HORIZON, 3000, 14000);
   const camera = new THREE.PerspectiveCamera(65, 16 / 9, 0.4, 30000);
   const hemi = new THREE.HemisphereLight(0xe4f3ff, 0x5a6248, 0.8); scene.add(hemi);
-  const sun = new THREE.DirectionalLight(0xfff0d8, 1.05); sun.position.set(-0.6, 1, 0.45).multiplyScalar(1000); scene.add(sun);
+  const sun = new THREE.DirectionalLight(0xfff0d8, 1.05); sun.position.set(-0.6, 1, 0.45).multiplyScalar(1000); scene.add(sun, sun.target);
+  const SUN_DIR = sun.position.clone().normalize();
+  sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.03;
 
   let sunDisc = null, waterMat = null, towersMat = null;
   // sky dome + environment map for the detailed aircraft
@@ -699,7 +784,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   }
   function buildHiTile(t) {
     const { g, H, N, st } = terrainGeo(t.x0, t.z0, TILE, 80, true);
-    t.hi = new THREE.Mesh(g, terrainMat); scene.add(t.hi);
+    t.hi = new THREE.Mesh(g, terrainMat); t.hi.receiveShadow = true; scene.add(t.hi);
     // forests
     const cones = [], balls = [], m = new THREE.Matrix4(), col = new THREE.Color();
     for (let k = 0; k < 2600; k++) {
@@ -726,9 +811,9 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     let best = null, bd = 1e12;
     for (const t of tiles) {
       const d = Math.hypot(cam.x - t.cx, cam.z - t.cz), alt = Math.max(0, cam.y - 600);
-      const want = d < 9500 + alt * 2;
+      const want = d < QS.hi + alt * 2;
       if (want && !t.hi && d < bd) { bd = d; best = t; }
-      if (t.hi) { t.hi.visible = d < 15000; t.lo.visible = !t.hi.visible; t.trees.visible = d < 7500; }
+      if (t.hi) { t.hi.visible = d < QS.vis; t.lo.visible = !t.hi.visible; t.trees.visible = d < QS.trees; }
     }
     if (best) { buildHiTile(best); best.lo.visible = false; }
   }
@@ -890,7 +975,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     return {
       update(q) { puffs.forEach((pf, i) => { m4.compose(pf.p, q, pf.s); im.setMatrixAt(i, m4); }); im.instanceMatrix.needsUpdate = true; },
       setWeather(w, night, dusk) {
-        const n = w === "clear" ? Math.round(puffs.length * 0.35) : puffs.length; im.count = n;
+        const n = w === "clear" ? Math.round(puffs.length * 0.35) : puffs.length; im.count = Math.round(n * QS.clouds);
         const base = w === "rain" ? 0x8c949c : w === "cloudy" ? 0xe9edf1 : 0xffffff;
         const c = new THREE.Color(base); if (night) c.multiplyScalar(0.18); else if (dusk) c.lerp(new THREE.Color(0xffb489), 0.35);
         im.material.color.copy(c); im.material.opacity = w === "rain" ? 0.95 : 0.86;
@@ -1852,6 +1937,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     spec = PLANES[kind];
     if (model) scene.remove(model);
     model = m; model.userData.kind = kind; scene.add(model);
+    model.traverse((o) => { if (o.isMesh) o.castShadow = QS.shadows; });
     return true;
   }
 
@@ -1870,7 +1956,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const [x, z] = toWorld(at, along, 0);
     S.pos.set(x, at.elev + 0.05 + spec.gearH, z);
     S.q.setFromAxisAngle(AY, -at.hdg * Math.PI / 180); S.vel.set(0, 0, 0);
-    Object.assign(S, { speed: 0, sink: 0, throttle: 0, grounded: true, crashed: false, flaps: 1, gearDown: true, gearPos: 1, flapPos: 1, flightT: 0, vs: 0, touchFpm: null, landedAt: null, autobrake: false, calls: {}, callUntil: 0, boomT: 0, started: false, gate: null, push: null, taxiOut: false, groundPitch: 0, alpha: 0, load: 1, gust: 0, gs: 0, ias: 0, n1: 0, trimAlpha: 0.09, spoiler: 0, autoSpoiler: false, reverse: false, trim: 0, park: false, lights: typeof ENV !== "undefined" && ENV.time !== "day" });
+    Object.assign(S, { speed: 0, sink: 0, throttle: 0, grounded: true, crashed: false, flaps: 1, gearDown: true, gearPos: 1, flapPos: 1, flightT: 0, vs: 0, touchFpm: null, landedAt: null, autobrake: false, calls: {}, callUntil: 0, boomT: 0, started: false, gate: null, push: null, taxiOut: false, groundPitch: 0, alpha: 0, load: 1, gust: 0, gs: 0, ias: 0, n1: 0, trimAlpha: 0.09, spoiler: 0, autoSpoiler: false, reverse: false, trim: 0, park: false, alerts: {}, msgQ: [], gammaPrev: undefined, gammaRate: 0, lights: typeof ENV !== "undefined" && ENV.time !== "day" });
     if (typeof syncTouchKeys === "function") syncTouchKeys();
     if (typeof AP !== "undefined") { AP.on = false; AP.athr = false; AP.app = false; AP.lat = "HDG"; AP.flare = false; apSync(); pushBtn.hidden = true; }
     boom.visible = false; model.visible = true; flyby.set = false;
@@ -1904,10 +1990,37 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     o.type = "triangle"; o.frequency.setValueAtTime(f, t0); g.gain.setValueAtTime(0.1, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
     o.connect(g).connect(ac.destination); o.start(t0); o.stop(t0 + d + 0.02);
   }
+  // a short shaped tone for cockpit alerts (frequency can sweep from f0 to f1)
+  function tone(f0, f1, dur, type = "square", vol = 0.06, at = 0) {
+    if (!ac || !soundOn) return;
+    const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + at;
+    o.type = type; o.frequency.setValueAtTime(f0, t0); if (f1 !== f0) o.frequency.linearRampToValueAtTime(f1, t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(vol, t0 + 0.015); g.gain.setValueAtTime(vol, t0 + Math.max(0.02, dur - 0.04)); g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g).connect(ac.destination); o.start(t0); o.stop(t0 + dur + 0.05);
+  }
+  // STALL: fast double buzz; PULL UP: two rising whoops; TRAFFIC: three high chirps. Highest priority first, each with its own repeat interval.
+  const ALERTS = [
+    { id: "pull", every: 1.6, play() { tone(260, 820, 0.42, "square", 0.05); tone(260, 820, 0.42, "square", 0.05, 0.55); } },
+    { id: "stall", every: 1.1, play() { tone(390, 390, 0.13, "sawtooth", 0.06); tone(390, 390, 0.13, "sawtooth", 0.06, 0.19); } },
+    { id: "traffic", every: 4, play() { [0, 0.15, 0.3].forEach((t) => tone(1150, 1150, 0.09, "sine", 0.07, t)); } },
+  ];
+  const alertNext = { pull: 0, stall: 0, traffic: 0 }; let alertBusy = 0;
+  function soundAlerts(active, now) {
+    if (now < alertBusy) return;
+    for (const a of ALERTS) {
+      if (!active[a.id]) { alertNext[a.id] = Math.min(alertNext[a.id], now + 0.25); continue; }
+      if (now >= alertNext[a.id]) { a.play(); alertNext[a.id] = now + a.every; alertBusy = now + 0.9; }
+      return;   // a higher-priority alert holds the channel while it is active
+    }
+  }
+  // haptics on phones (where supported)
+  const canVibrate = typeof navigator.vibrate === "function" && matchMedia("(pointer: coarse)").matches;
+  let vibOn = load("sw-vib") !== "0";
+  function buzz(pattern) { if (!canVibrate || !vibOn) return; try { navigator.vibrate(pattern); } catch {} }
 
   // ================= INPUT =================
   const keys = new Set(); let invert = load("sw-invert") === "1", showMap = 1;
-  const stick = { x: 0, y: 0 }; let touchBrake = false;
+  const stick = { x: 0, y: 0 }; let touchBrake = false, touchYaw = 0;
   const CAMS = [["chase", "Chase"], ["cockpit", "Cockpit"], ["wing", "Wing"], ["tower", "Tower"], ["orbit", "Orbit"], ["flyby", "Fly-by"], ["free", "Free"]];
   const freeCam = { pos: new THREE.Vector3(), yaw: 0, pitch: 0, speed: 40, on: false };
   const camWrap = $("cams");
@@ -1937,6 +2050,11 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     if (S.grounded && S.gearDown) { flash("Can't raise the gear on the ground", 1.6); return; }
     S.gearDown = !S.gearDown; flash(S.gearDown ? "Gear down" : "Gear up", 1.4); chime(S.gearDown ? 330 : 440, 0.2);
   }
+  function trimStep(noseUp) {
+    if (S.mode !== "fly") return;
+    if (ENV.model === "real" && !spec.fbw) { S.trimAlpha = clamp(S.trimAlpha + (noseUp ? 0.006 : -0.006), -0.05, 0.22); flash(`Trim ${(S.trimAlpha * 57.3).toFixed(1)}° (${noseUp ? "nose up, slower" : "nose down, faster"})`, 1.2); }
+    else { S.trim = clamp(S.trim + (noseUp ? 0.05 : -0.05), -0.4, 0.4); flash(`Trim ${S.trim > 0 ? "nose up" : S.trim < 0 ? "nose down" : "neutral"} ${Math.round(Math.abs(S.trim) * 100)}%`, 1.2); }
+  }
   function cycleFlaps() { S.flaps = (S.flaps + 1) % 3; flash(`Flaps ${S.flaps}`, 1.2); chime(500 + S.flaps * 80, 0.15); }
 
   window.addEventListener("keydown", (e) => {
@@ -1954,16 +2072,16 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       if (k === "KeyT") toggleReverse();
       if (k === "KeyL") toggleLights();
       if (k === "KeyN") { S.park = !S.park; flash(S.park ? "Parking brake set" : "Parking brake released", 1.4); chime(S.park ? 300 : 500, 0.15); }
-      if ((k === "BracketLeft" || k === "BracketRight") && ENV.model === "real" && !spec.fbw) { S.trimAlpha = clamp(S.trimAlpha + (k === "BracketRight" ? 0.006 : -0.006), -0.05, 0.22); flash(`Trim ${(S.trimAlpha * 57.3).toFixed(1)}° (${k === "BracketRight" ? "nose up, slower" : "nose down, faster"})`, 1.2); }
-      else if (k === "BracketLeft" || k === "BracketRight") { S.trim = clamp(S.trim + (k === "BracketRight" ? 0.05 : -0.05), -0.4, 0.4); flash(`Trim ${S.trim > 0 ? "nose up" : S.trim < 0 ? "nose down" : "neutral"} ${Math.round(Math.abs(S.trim) * 100)}%`, 1.2); }
+      if (k === "BracketLeft" || k === "BracketRight") trimStep(k === "BracketRight");
     }
     if (k === "KeyK" && S.mode === "fly") startPushback();
     if (k === "KeyM") showMap = (showMap + 1) % 3;
     if (k === "KeyH") toggleHelp();
+    if (k === "Escape" && !logPanel.hidden) { closeLog(); return; }
     if (k === "KeyP" || k === "Escape") { if (S.mode === "fly") pause(); else if (S.mode === "paused") resume(); }
   });
   window.addEventListener("keyup", (e) => keys.delete(e.code));
-  window.addEventListener("blur", () => { keys.clear(); touchBrake = false; if (typeof stickId !== "undefined" && stickId !== null) { stickId = null; stick.x = stick.y = 0; knob.style.transform = ""; } if (S.mode === "fly") pause(); });
+  window.addEventListener("blur", () => { keys.clear(); touchBrake = false; if (typeof releaseTouchHolds === "function") releaseTouchHolds(); if (typeof stickId !== "undefined" && stickId !== null) { stickId = null; stick.x = stick.y = 0; knob.style.transform = ""; } if (S.mode === "fly") pause(); });
   document.addEventListener("visibilitychange", () => { if (document.hidden && S.mode === "fly") pause(); });
 
   const helpEl = $("help");
@@ -1974,6 +2092,28 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   invBtn.addEventListener("click", () => { invert = !invert; save("sw-invert", invert ? "1" : "0"); syncInv(); });
   const sndBtn = $("sndBtn");
   sndBtn.addEventListener("click", () => { soundOn = !soundOn; sndBtn.setAttribute("aria-pressed", String(soundOn)); if (soundOn) initAudio(); if (ac && ac.state === "suspended") ac.resume(); });
+  // graphics quality and FPS counter (saved)
+  const qualBtn = $("qualBtn"), fpsBtn = $("fpsBtn"), fpsOut = $("fpsOut"), vibBtn = $("vibBtn");
+  function applyQuality(name, announce) {
+    qualName = QUALITY[name] ? name : "medium"; QS = QUALITY[qualName]; save("sw-quality", qualName);
+    $("qualVal").textContent = QS.label;
+    renderer.setPixelRatio(pixelRatioFor(QS)); resize();
+    if (renderer.shadowMap.enabled !== QS.shadows) {
+      renderer.shadowMap.enabled = QS.shadows; sun.castShadow = QS.shadows;
+      scene.traverse((o) => { if (!o.material) return; if (o.isMesh && !o.isInstancedMesh) o.receiveShadow = true; (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => (m.needsUpdate = true)); });
+      if (model) model.traverse((o) => { if (o.isMesh) o.castShadow = QS.shadows; });
+      if (!QS.shadows) { sun.target.position.set(0, 0, 0); sun.position.copy(SUN_DIR).multiplyScalar(1000); }
+    }
+    applyEnv(ENV.time, ENV.weather);
+    if (announce && S.mode === "fly") flash(`Graphics: ${QS.label}`, 1.4);
+  }
+  qualBtn.addEventListener("click", () => applyQuality(qualName === "low" ? "medium" : qualName === "medium" ? "high" : "low", true));
+  let fpsOn = load("sw-fps") === "1";
+  const syncFps = () => { fpsBtn.setAttribute("aria-pressed", String(fpsOn)); fpsOut.hidden = !fpsOn; };
+  fpsBtn.addEventListener("click", () => { fpsOn = !fpsOn; save("sw-fps", fpsOn ? "1" : "0"); syncFps(); });
+  syncFps();
+  vibBtn.hidden = !canVibrate; vibBtn.setAttribute("aria-pressed", String(vibOn));
+  vibBtn.addEventListener("click", () => { vibOn = !vibOn; save("sw-vib", vibOn ? "1" : "0"); vibBtn.setAttribute("aria-pressed", String(vibOn)); if (vibOn) buzz(30); });
   $("fsBtn").addEventListener("click", () => { try { if (document.fullscreenElement) document.exitFullscreen(); else stage.requestFullscreen().catch(() => {}); } catch {} });
   $("menuBtn").addEventListener("click", () => { if (S.mode === "fly") pause(); else if (S.mode === "paused") resume(); });
 
@@ -1996,6 +2136,22 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   $("tFlaps").addEventListener("click", () => S.mode === "fly" && cycleFlaps());
   const tb = $("tBrake"); tb.addEventListener("pointerdown", () => (touchBrake = true));
   for (const ev of ["pointerup", "pointerleave", "pointercancel"]) tb.addEventListener(ev, () => (touchBrake = false));
+  // rudder: held while the finger is down; trim: one step per tap, repeating while held
+  let trimTimer = null;
+  function releaseTouchHolds() {
+    touchYaw = 0; if (trimTimer) { clearInterval(trimTimer); trimTimer = null; }
+    for (const id of ["tRudL", "tRudR", "tTrimDn", "tTrimUp"]) $(id).classList.remove("held");
+  }
+  for (const [id, dir] of [["tRudL", -1], ["tRudR", 1]]) {
+    const el = $(id);
+    el.addEventListener("pointerdown", (e) => { e.preventDefault(); touchYaw = dir; el.classList.add("held"); try { el.setPointerCapture(e.pointerId); } catch {} });
+    for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) el.addEventListener(ev, () => { if (touchYaw === dir) touchYaw = 0; el.classList.remove("held"); });
+  }
+  for (const [id, up] of [["tTrimDn", false], ["tTrimUp", true]]) {
+    const el = $(id);
+    el.addEventListener("pointerdown", (e) => { e.preventDefault(); if (S.mode !== "fly") return; releaseTouchHolds(); trimStep(up); el.classList.add("held"); trimTimer = setInterval(() => trimStep(up), 220); try { el.setPointerCapture(e.pointerId); } catch {} });
+    for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) el.addEventListener(ev, () => { if (trimTimer) { clearInterval(trimTimer); trimTimer = null; } el.classList.remove("held"); });
+  }
 
   // orbit drag on the 3D view
   const orbit = { yaw: 2.4, pitch: 0.25, dist: 1 };
@@ -2190,11 +2346,33 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       row.append(b);
     }
   }
+  // ---------- progress: best result per route and a log of the last flights (localStorage, may be unavailable) ----------
+  const LOG_MAX = 20;
+  const readJSON = (k, fallback) => { try { const v = JSON.parse(load(k) || "null"); return v && typeof v === "object" ? v : fallback; } catch { return fallback; } };
+  const routeKey = (f, t) => `${f.code}>${t ? t.code : "FREE"}`;
+  const fmtTime = (sec) => { sec = Math.max(0, Math.round(sec || 0)); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`; };
+  const starStr = (n) => "★".repeat(n) + "☆".repeat(3 - n);
+  function bestFor(f, t) { if (!f || !t) return null; const b = readJSON("sw-best", {})[routeKey(f, t)]; return b && Number.isFinite(b.stars) ? b : null; }
+  function saveBest(f, t, rec) {
+    const all = readJSON("sw-best", {}), k = routeKey(f, t), old = all[k];
+    const better = !old || !Number.isFinite(old.stars) || rec.stars > old.stars || (rec.stars === old.stars && rec.fpm < old.fpm);
+    let saved = true;
+    if (better) { all[k] = rec; saved = save("sw-best", JSON.stringify(all)); }
+    return { better, saved, old: old && Number.isFinite(old.stars) ? old : null };
+  }
+  function logFlight(entry) {
+    const list = readJSON("sw-log", []); const arr = Array.isArray(list) ? list.filter((e) => e && typeof e === "object") : [];
+    arr.push(Object.assign({ d: Date.now(), plane: spec.kind, from: S.from ? S.from.code : "?", to: S.to ? S.to.code : "", t: Math.round(S.flightT), model: ENV.model }, entry));
+    save("sw-log", JSON.stringify(arr.slice(-LOG_MAX)));
+  }
   function updateSummary() {
     const f = AIRPORTS[+fromSel.value], t = toSel.value === "-1" ? null : AIRPORTS[+toSel.value];
     const opt = (id) => $(id).selectedOptions[0].textContent;
     const lv = livOf(chosen, chosenLiv[chosen]);
     $("briefSummary").textContent = `${PLANES[chosen].name}${lv ? " (" + lv.name + ")" : ""}  ·  ${f.code} → ${t ? t.code : "free flight"}  ·  ${opt("startSel")}  ·  ${opt("timeSel")}  ·  ${opt("wxSel")}  ·  ${opt("modelSel")}`;
+    const bestEl = $("briefBest"), b = bestFor(f, t);
+    bestEl.hidden = !t;
+    if (t) bestEl.textContent = b ? `Your best ${f.code} → ${t.code}: ${starStr(b.stars)}  ${b.fpm} ft/min · ${fmtTime(b.t)} · ${PLANES[b.plane] ? PLANES[b.plane].name : b.plane}` : `No landing at ${t.code} from ${f.code} yet`;
   }
   renderBoard(); updateSummary(); renderLiveries();
 
@@ -2216,6 +2394,37 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   function pause() { S.mode = "paused"; showBrief("PAUSED", "Flight paused", null, "Resume where you left off, or change the aircraft or route and start again.", true); }
   function resume() { S.mode = "fly"; brief.hidden = true; }
   resumeBtn.addEventListener("click", resume);
+  // flight log panel (opened from the ⋯ menu)
+  const logPanel = $("logPanel"), logBody = $("logBody"), logClear = $("logClear");
+  function renderLog() {
+    const list = readJSON("sw-log", []), arr = (Array.isArray(list) ? list : []).filter((e) => e && typeof e === "object").slice().reverse();
+    logBody.replaceChildren();
+    if (!arr.length) { const p = document.createElement("p"); p.className = "empty"; p.textContent = "No flights yet. Land at your destination or have a go, and your last 20 flights show up here."; logBody.append(p); return; }
+    const tbl = document.createElement("table"), head = document.createElement("tr");
+    [["When", "opt"], ["Aircraft", ""], ["Route", ""], ["Time", ""], ["Touchdown", "opt"], ["Result", ""]].forEach(([t, c]) => { const th = document.createElement("th"); th.textContent = t; if (c) th.className = c; head.append(th); });
+    tbl.append(head);
+    for (const e of arr) {
+      const tr = document.createElement("tr"), d = new Date(+e.d || 0);
+      const cells = [
+        [isNaN(d) ? "" : d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }), "opt"],
+        [(PLANES[e.plane] ? PLANES[e.plane].name : String(e.plane || "?")) + (e.model === "real" ? " · Realistic" : ""), ""],
+        [`${e.from || "?"} → ${e.to || "free"}`, ""], [fmtTime(e.t), ""],
+        [Number.isFinite(e.fpm) ? `${e.fpm} ft/min` : "—", "opt"],
+        [String(e.res || ""), e.ok ? "ok" : e.ok === false ? "bad" : ""],
+      ];
+      cells.forEach(([t, c]) => { const td = document.createElement("td"); td.textContent = t; if (c) td.className = c; tr.append(td); });
+      tbl.append(tr);
+    }
+    logBody.append(tbl);
+  }
+  function openLog() { $("moreMenu").hidden = true; $("moreBtn").setAttribute("aria-expanded", "false"); if (S.mode === "fly") pause(); renderLog(); logClear.textContent = "Clear"; logPanel.hidden = false; $("logClose").focus(); }
+  function closeLog() { logPanel.hidden = true; }
+  $("logBtn").addEventListener("click", (e) => { e.stopPropagation(); openLog(); });
+  $("logClose").addEventListener("click", closeLog);
+  logClear.addEventListener("click", () => {
+    if (logClear.textContent === "Clear") { logClear.textContent = "Tap again to clear"; return; }
+    save("sw-log", "[]"); logClear.textContent = "Clear"; renderLog();
+  });
   let pendingTakeoff = null;
   goBtn.addEventListener("click", () => {
     if (pendingTakeoff) return;
@@ -2227,6 +2436,10 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       return;
     }
     startFlight();
+  });
+  const trimKeys = (dn) => { const touch = matchMedia("(pointer: coarse)").matches; return dn ? (touch ? "TRIM ▼" : "[") : (touch ? "TRIM ▼ ▲" : "[ ]"); };
+  $("modelSel").addEventListener("change", () => {
+    if ($("modelSel").value === "real") briefTip.textContent = PLANES[chosen].fbw ? `${PLANES[chosen].name} is fly-by-wire: it keeps its protections even in Realistic.` : `Realistic: no stall protection and the trim holds the angle of attack. Full power pitches the nose up, so trim nose down with ${trimKeys(true)} after liftoff and watch your speed.`;
   });
   function startFlight() {
     goBtn.textContent = "Take off";
@@ -2243,6 +2456,8 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     S.mode = "fly"; brief.hidden = true;
     const rot = Math.round(spec.stall * 1.05 * 0.9 * MS2KT);
     flash(S.to ? `Cleared for takeoff, runway ${S.from.label}. Destination ${S.to.code}.` : `Cleared for takeoff. Rotate at ${rot} knots.`, 4);
+    S.msgQ = [];
+    if (ENV.model === "real" && !spec.fbw) S.msgQ.push([`Realistic: the trim holds your nose attitude. Full power pitches up, so after liftoff trim nose down with ${trimKeys(true)}.`, 5.5]);
     if (soundOn) initAudio();
     RADIO.length = 0;
   }
@@ -2292,6 +2507,8 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   function crash(reason) {
     if (S.crashed) return;
     S.crashed = true; model.visible = false; boom.visible = true; boom.position.copy(S.pos); boom.scale.setScalar(1); S.boomT = 0; chime(80, 0.8);
+    buzz([180, 70, 180]);
+    if (S.started) logFlight({ fpm: /landing/i.test(reason) ? Math.round(-S.vs * M2FT * 60) : null, res: "Crashed: " + reason.split(/[.!] /)[0].replace(/[.!]$/, ""), ok: false });
     const id = ++crashId;
     setTimeout(() => {
       if (id !== crashId || !S.crashed) return;   // a new flight was started meanwhile
@@ -2307,7 +2524,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     let pitch = fc ? 0 : ((keys.has("ArrowUp") || keys.has("KeyW")) ? 1 : 0) - ((keys.has("ArrowDown") || keys.has("KeyS")) ? 1 : 0);
     if (invert) pitch = -pitch;
     let roll = fc ? 0 : ((keys.has("ArrowRight") || keys.has("KeyD")) ? 1 : 0) - ((keys.has("ArrowLeft") || keys.has("KeyA")) ? 1 : 0);
-    let yaw = fc ? 0 : (keys.has("KeyE") ? 1 : 0) - (keys.has("KeyQ") ? 1 : 0);
+    let yaw = fc ? 0 : (keys.has("KeyE") ? 1 : 0) - (keys.has("KeyQ") ? 1 : 0) + (fc ? 0 : touchYaw);
     if (!fc) { pitch += invert ? stick.y : -stick.y; roll += stick.x; }
     const pad = readPad(); let brake = keys.has("Space") || keys.has("KeyB") || touchBrake;
     if (pad) { pitch += invert ? -pad.pitch : pad.pitch; roll += pad.roll; yaw += pad.yaw; if (pad.thr) S.throttle = clamp(S.throttle + pad.thr * dt * 0.8, 0, 1); brake = brake || pad.brake; }
@@ -2334,8 +2551,11 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     // ---------- aerodynamics: lift and drag from dynamic pressure and angle of attack ----------
     const RHO0 = 1.225, G = 9.81, CLA = 5.0;
     const realistic = ENV.model === "real" && !AP.on && !spec.fbw;
-    if (!spec._A) { spec._A = 2 * G / (RHO0 * spec.stall * spec.stall * 1.45); spec._CD0 = spec.thrust / (0.5 * RHO0 * spec.vmax * spec.vmax * spec._A); }
-    const Aw = spec._A, span = (DIMS[spec.kind] || [12])[0];
+    // Realistic: no aircraft has more thrust than 0.6 of its weight (the arcade numbers let the Extra 330 and the Learjet
+    // climb straight up hands-off, go over the top and dive into the ground). Drag is re-fitted so top speed stays the same.
+    const realModel = ENV.model === "real" && !spec.fbw, thrMax = realModel ? Math.min(spec.thrust, 0.6 * G) : spec.thrust;
+    if (!spec._A) { spec._A = 2 * G / (RHO0 * spec.stall * spec.stall * 1.45); spec._CD0 = spec.thrust / (0.5 * RHO0 * spec.vmax * spec.vmax * spec._A); spec._CD0r = Math.min(spec.thrust, 0.6 * G) / (0.5 * RHO0 * spec.vmax * spec.vmax * spec._A); }
+    const Aw = spec._A, span = (DIMS[spec.kind] || [12])[0], CD0 = realModel ? spec._CD0r : spec._CD0;
     const CL0 = 0.15 + 0.3 * S.flapPos - 0.25 * S.spoiler, CLMAX = 1.45 + 0.55 * S.flapPos - 0.4 * S.spoiler;
     const aCrit = (CLMAX - CL0) / CLA;
     const clOf = (al) => al < aCrit ? Math.max(-0.9, CL0 + CLA * al) : Math.max(CLMAX * 0.5, CLMAX - (al - aCrit) * 4);
@@ -2347,7 +2567,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const ge = agl < span ? 1 + 0.15 * (1 - Math.max(0, agl) / span) : 1;   // ground effect: a cushion of air near the runway
     // engines spool up and down instead of answering instantly
     S.n1 = lerp(S.n1 || 0, S.throttle, Math.min(1, dt * (spec.big || spec.jetSound ? 0.45 : 1.8)));
-    const thrustAcc = (S.reverse ? -0.5 : 1) * S.n1 * spec.thrust * Math.pow(sigma, 0.7);
+    const thrustAcc = (S.reverse ? -0.5 : 1) * S.n1 * thrMax * Math.pow(sigma, 0.7);
     // wind with gusts (stronger in cloud and rain)
     const gustAmp = ENV.weather === "rain" ? 1 : ENV.weather === "cloudy" ? 0.45 : 0.12;
     S.gustV.lerp(V.tmp.set((Math.random() - 0.5) * 9 * gustAmp, (Math.random() - 0.5) * 5 * gustAmp * (agl > 8 ? 1 : 0.1), (Math.random() - 0.5) * 9 * gustAmp), Math.min(1, dt * 1.4));
@@ -2360,7 +2580,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       const headwind = -(wind.x * hx + wind.z * hz), cross = wind.x * -hz + wind.z * hx;
       S.speed = Math.max(0, S.gs + headwind);
       const q = 0.5 * rho * S.speed * S.speed;
-      S.gs += (thrustAcc - q * Aw * spec._CD0 * dragMult) * dt;
+      S.gs += (thrustAcc - q * Aw * CD0 * dragMult) * dt;
       // autobrake after a landing: medium deceleration until taxi speed, cancelled by thrust or the brake key
       if (S.autobrake && (S.throttle > 0.3 || S.gs < 12)) S.autobrake = false;
       S.gs -= ((brake ? spec.brake : S.autobrake ? 2.6 : 0.25) + (S.throttle < 0.02 ? 0.25 : 0) + S.spoiler * 1.3) * dt;
@@ -2383,9 +2603,9 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       if (gy < 0.5) { crash("You rolled off the island into the sea."); return; }
       const liftG = q * Aw * clOf(S.groundPitch) * ge / G;
       if (liftG > 1.02 && S.groundPitch > 0.03) {
-        S.grounded = false; S.sink = 0;
+        S.grounded = false; S.sink = 0; S.gammaPrev = undefined; S.gammaRate = 0;
         S.vel.set(fwd.x / hl * S.gs, 0.6, fwd.z / hl * S.gs);
-        flash("Positive climb. Gear up!", 2);
+        flash(ENV.model === "real" && !spec.fbw && !AP.on ? `Positive climb. Gear up, trim with ${trimKeys()}` : "Positive climb. Gear up!", 2.6);
       }
       if (S.gs > 8 && !runwayAt(S.pos.x, S.pos.z) && airportMask(S.pos.x, S.pos.z)[0] < 0.97) {
         const sl = Math.abs(heightAt(S.pos.x + 5, S.pos.z) - heightAt(S.pos.x - 5, S.pos.z)) + Math.abs(heightAt(S.pos.x, S.pos.z + 5) - heightAt(S.pos.x, S.pos.z - 5));
@@ -2401,8 +2621,16 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       const auth = clamp(Math.sqrt(qr), 0.15, 1.3);
       const gamma = Math.asin(clamp(va.y / sp, -1, 1)), bankNow = Math.asin(clamp(-right.y, -1, 1));
       let aTrim;
-      if (realistic) aTrim = S.trimAlpha;   // a real aircraft holds the angle of attack its trim is set for
-      else {
+      if (realistic) {
+        // a real aircraft holds the angle of attack its trim is set for. Two things keep hands-off flight sane:
+        // pitch damping of the flight path (so the climb/dive swing, the phugoid, dies out instead of growing into a loop),
+        // and a soft limit so the trim alone never pulls more than a gentle load factor at high speed.
+        const gRate = S.gammaPrev === undefined ? 0 : (gamma - S.gammaPrev) / Math.max(dt, 1e-3); S.gammaPrev = gamma;
+        S.gammaRate = lerp(S.gammaRate || 0, clamp(gRate, -2, 2), Math.min(1, dt * 4));
+        aTrim = S.trimAlpha - clamp(S.gammaRate * 0.16, -0.07, 0.07);
+        const handsOffG = spec.big ? 1.35 : 1.7;
+        aTrim = Math.min(aTrim, (handsOffG * G / Math.max(1, q * Aw * ge) - CL0) / CLA);
+      } else {
         // assisted (fly-by-wire style): holds 1 g, adds lift in turns, protects against the stall
         const need = G * (Math.cos(gamma) - 0.35 * Math.sin(gamma)) / Math.max(0.35, Math.cos(Math.min(Math.abs(bankNow), 1.1))) - thrustAcc * Math.sin(alpha);
         aTrim = clamp((need / Math.max(1, q * Aw * ge) - CL0) / CLA, -0.12, aCrit * 0.84);
@@ -2424,7 +2652,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       S.q.multiply(tmpQ.setFromAxisAngle(AY, yawRate * dt));
       S.q.normalize();
       fwd.set(0, 0, -1).applyQuaternion(S.q); up.set(0, 1, 0).applyQuaternion(S.q); right.set(1, 0, 0).applyQuaternion(S.q);
-      const cl = clOf(alpha), lift = q * Aw * cl * ge, drag = q * Aw * (spec._CD0 * dragMult + (cl * cl * 0.045) / ge);
+      const cl = clOf(alpha), lift = q * Aw * cl * ge, drag = q * Aw * (CD0 * dragMult + (cl * cl * 0.045) / ge);
       const vhat = V.tmp.copy(va).divideScalar(sp);
       const liftDir = V.tmp2.copy(up).addScaledVector(vhat, -up.dot(vhat)); if (liftDir.lengthSq() < 1e-6) liftDir.copy(up); liftDir.normalize();
       const v = S.vel;
@@ -2457,6 +2685,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
         if (AP.on) { const auto = AP.lat === "LOC"; AP.on = false; AP.athr = false; AP.app = false; AP.lat = "HDG"; apSync(); if (auto) RADIO.push({ text: "Autoland complete. Hold Space to brake.", t: 8 }); }
         const feel = S.touchFpm < 240 ? "Butter" : S.touchFpm < 480 ? "Smooth" : S.touchFpm < 700 ? "Firm" : "Hard";
         flash(`${feel} touchdown at ${S.landedAt.code}: ${S.touchFpm} ft/min${S.autobrake ? " · autobrake" : ". Hold Space to brake"}`, 3.5); chime(520);
+        if (S.touchFpm > 420) buzz(110);   // firm landing
       }
     }
     for (const ai of AI) {
@@ -2469,7 +2698,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
 
   function completeLanding() {
     const a = S.landedAt; S.landedAt = null;
-    if (!S.to || a !== S.to) { flash(`Stopped at ${a.name}. Throttle up to take off again.`, 4); S.touchFpm = null; return; }
+    if (!S.to || a !== S.to) { logFlight({ to: a.code, fpm: S.touchFpm, res: S.to ? `Landed at ${a.code} instead of ${S.to.code}` : `Landed at ${a.code}`, ok: null }); flash(`Stopped at ${a.name}. Throttle up to take off again.`, 4); S.touchFpm = null; return; }
     const fpm = S.touchFpm, off = Math.abs(S.touchOff || 0), tdz = S.touchDist || 0;
     let stars = fpm < 240 ? 3 : fpm < 480 ? 2 : 1;
     if (off > 8 || tdz > 900 || tdz < 0) stars = Math.max(1, stars - 1);
@@ -2482,6 +2711,11 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const det = document.createElement("p"); det.className = "result"; det.style.opacity = "0.8";
     det.textContent = `Touchdown ${fpm} ft/min · ${S.touchKt || "–"} kt · ${Math.round(tdz)} m past threshold · ${off < 1 ? "on centreline" : `${off.toFixed(1)} m ${(S.touchOff || 0) > 0 ? "right" : "left"} of centreline`}`;
     wrap.append(st, r, det);
+    const { better, old, saved } = saveBest(S.from, a, { stars, fpm, t: Math.round(S.flightT), plane: spec.kind, d: Date.now() });
+    logFlight({ fpm, stars, res: `${starStr(stars)} landed`, ok: true });
+    const pb = document.createElement("p"); pb.className = "result";
+    pb.textContent = !saved ? "Best results can't be saved: this browser blocks local storage" : better ? (old ? `New personal best on this route (was ${starStr(old.stars)} ${old.fpm} ft/min)` : "First landing on this route: saved as your best") : `Your best here: ${starStr(old.stars)} ${old.fpm} ft/min`;
+    wrap.append(pb);
     const others = AIRPORTS.filter((x) => x !== a), next = others[Math.floor(Math.random() * others.length)];
     fromSel.value = String(AIRPORTS.indexOf(a)); toSel.value = String(AIRPORTS.indexOf(next)); S.from = a;
     showBrief("ARRIVED", `Welcome to ${a.name}`, wrap, `Next leg is set up: ${a.code} → ${next.code}. Pick a different plane or route if you like.`, false);
@@ -2552,15 +2786,27 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const blink = (now % 1200) < 80; u.strobes.forEach((s) => (s.visible = blink));
     if (u.beacon) u.beacon.visible = (now % 1000) < 500;
     const gy = Math.max(groundY(S.pos.x, S.pos.z), 0);
-    const agl = S.pos.y - gy; shadow.visible = !S.crashed && agl < 300;
+    const agl = S.pos.y - gy; shadow.visible = !S.crashed && agl < 300 && !QS.shadows;
     shadow.position.set(S.pos.x, gy + 0.12, S.pos.z); shadow.material.opacity = 0.18 * clamp(1 - agl / 300, 0, 1);
     const fw = V.fwd.set(0, 0, -1).applyQuaternion(S.q); shadow.scale.set(spec.shadow * 0.7, spec.shadow * 0.8, 1); shadow.rotation.z = Math.atan2(fw.x, -fw.z);
   }
 
   // ================= HUD =================
   const css = getComputedStyle(document.documentElement);
-  const HC = { hud: css.getPropertyValue("--hud").trim(), amber: css.getPropertyValue("--amber").trim(), warn: css.getPropertyValue("--warn").trim(), deck: css.getPropertyValue("--deck").trim() };
+  // HUD palette: warm ivory symbology, champagne-gold for navigation, amber cautions and red warnings
+  const cssVar = (n, d) => css.getPropertyValue(n).trim() || d;
+  const HC = { hud: cssVar("--hud", "#f1e6cc"), nav: cssVar("--hud-nav", "#e2c58d"), caution: cssVar("--hud-caution", "#ffb43d"), amber: cssVar("--hud-caution", "#ffb43d"), warn: cssVar("--hud-warn", "#ff5a4e"), deck: cssVar("--deck", "#0f0f11"), box: "rgba(15,15,17,0.58)", text: "#f2efe9" };
   const MONO = css.getPropertyValue("--font-mono").trim();
+  // every HUD label gets a thin graphite halo so the light symbology stays readable against bright sky and cloud
+  {
+    const rawFill = hud.fillText.bind(hud), rawStroke = hud.strokeText.bind(hud);
+    hud.fillText = (t, x, y, mw) => {
+      const lw = hud.lineWidth, ss = hud.strokeStyle, lj = hud.lineJoin;
+      hud.lineWidth = 3; hud.strokeStyle = "rgba(12,12,14,0.6)"; hud.lineJoin = "round";
+      if (mw === undefined) { rawStroke(t, x, y); hud.lineWidth = lw; hud.strokeStyle = ss; hud.lineJoin = lj; rawFill(t, x, y); }
+      else { rawStroke(t, x, y, mw); hud.lineWidth = lw; hud.strokeStyle = ss; hud.lineJoin = lj; rawFill(t, x, y, mw); }
+    };
+  }
   const hudSize = { w: 1, h: 1 }, coarseMQ = matchMedia("(pointer: coarse)");
   // minimap base image
   const mapImg = document.createElement("canvas"); mapImg.width = mapImg.height = 320; const MAP_R = WORLD;
@@ -2586,7 +2832,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const cock = S.cam === "cockpit" && !S.crashed;
     const dashH = cock ? Math.min(h * 0.26, 170) : 0;
     const cx = w / 2, cy = (h - dashH) * 0.48, sc = Math.min(w, h) / 620, fs = Math.max(12, Math.round(16 * sc));
-    hud.lineWidth = 2; hud.strokeStyle = HC.hud; hud.fillStyle = HC.hud; hud.font = `${fs}px ${MONO}`; hud.shadowColor = "rgba(0,0,0,0.6)"; hud.shadowBlur = 3;
+    hud.lineWidth = 2; hud.strokeStyle = HC.hud; hud.fillStyle = HC.hud; hud.font = `${fs}px ${MONO}`; hud.shadowColor = "rgba(0,0,0,0.75)"; hud.shadowBlur = 4;
 
     // pitch ladder
     hud.save(); hud.beginPath(); hud.arc(cx, cy, Math.min(w, h) * 0.26, 0, Math.PI * 2); hud.clip();
@@ -2602,10 +2848,10 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     // speed/alt boxes
     const kt = Math.round((S.ias || S.speed) * MS2KT), ft = Math.round(Math.max(0, S.pos.y - spec.gearH) * M2FT);
     const agl = Math.max(0, Math.round((S.pos.y - spec.gearH - Math.max(0, groundY(S.pos.x, S.pos.z))) * M2FT));
-    const stallV = S.stallV || spec.stall, stall = !S.grounded && S.alpha > S.alphaCrit * 0.88;
+    const stallV = S.stallV || spec.stall, AL = S.alerts || {}, stall = !!AL.stall;
     const bw = 84 * sc + 22, bh = fs + 14, lx = Math.max(10, cx - 215 * sc - bw), rx = Math.min(w - bw - 10, cx + 215 * sc);
     const box = (x, label, val, color, sub) => {
-      hud.strokeStyle = color; hud.fillStyle = "rgba(8,14,20,0.55)"; hud.fillRect(x, cy - bh / 2, bw, bh); hud.strokeRect(x, cy - bh / 2, bw, bh);
+      hud.strokeStyle = color; hud.fillStyle = HC.box; hud.fillRect(x, cy - bh / 2, bw, bh); hud.strokeRect(x, cy - bh / 2, bw, bh);
       hud.fillStyle = color; hud.textAlign = "center"; hud.textBaseline = "middle"; hud.fillText(val, x + bw / 2, cy);
       hud.font = `${Math.round(fs * 0.7)}px ${MONO}`; hud.fillText(label, x + bw / 2, cy - bh / 2 - fs * 0.6);
       sub.forEach((t, i) => hud.fillText(t, x + bw / 2, cy + bh / 2 + fs * (0.8 + i)));
@@ -2617,6 +2863,9 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
 
     // heading tape
     const hdg = ((Math.atan2(fwd.x, -fwd.z) * 57.3) + 360) % 360, ty = Math.max(54, h * 0.1) + fs, tw = Math.min(w * 0.46, 380);
+    // minimap geometry (phones: below the destination and taxi lines) and, on phones, the text slot between it and the speed boxes
+    const MS = Math.round(clamp(Math.min(w, h) * (showMap === 2 ? 0.42 : 0.24), w < 480 ? 88 : 96, showMap === 2 ? 320 : 170));
+    const MX = w - MS - 10, MY = w < 480 ? Math.round(ty + 24 + fs * 4) : Math.max(48, h * 0.09) + (w < 700 ? 40 : 0);
     hud.strokeStyle = HC.hud; hud.fillStyle = HC.hud;
     hud.save(); hud.beginPath(); hud.rect(cx - tw / 2, ty - fs - 6, tw, fs * 2 + 10); hud.clip();
     for (let a = Math.floor((hdg - 60) / 10) * 10; a <= hdg + 60; a += 10) {
@@ -2631,33 +2880,33 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     // autopilot mode annunciator
     {
       const modes = AP.on ? [`AP`, AP.athr ? `SPD ${AP.spd}` : "", AP.lat === "LOC" ? (AP.flare ? "FLARE" : "LOC · G/S") : AP.lat === "NAV" ? `NAV ${S.to ? S.to.code : ""}${AP.app ? " · APP ARM" : ""}` : `HDG ${String(Math.round(AP.hdg) % 360).padStart(3, "0")}`, AP.lat === "LOC" ? "" : `ALT ${AP.alt}`].filter(Boolean).join("  ·  ") : AP.athr ? `A/THR  ·  SPD ${AP.spd}` : "";
-      if (modes) { hud.font = `${Math.round(fs * 0.8)}px ${MONO}`; hud.textAlign = "center"; hud.fillStyle = "rgba(8,14,20,0.55)"; const mw = hud.measureText(modes).width + 20; hud.fillRect(cx - mw / 2, ty - fs * 2.6, mw, fs * 1.4); hud.fillStyle = HC.hud; hud.fillText(modes, cx, ty - fs * 1.9); }
+      if (modes) { hud.font = `${Math.round(fs * 0.8)}px ${MONO}`; hud.textAlign = "center"; hud.fillStyle = HC.box; const mw = hud.measureText(modes).width + 20; hud.fillRect(cx - mw / 2, ty - fs * 2.6, mw, fs * 1.4); hud.fillStyle = HC.hud; hud.fillText(modes, cx, ty - fs * 1.9); }
     }
     // taxi guidance from the gate
     if (S.grounded && S.taxiOut && !S.push) {
       const [gx, gz] = taxiTarget(); proj.set(gx, S.from.elev + 3, gz).project(camera);
       const dist = Math.hypot(gx - S.pos.x, gz - S.pos.z);
-      hud.fillStyle = HC.amber; hud.font = `${Math.round(fs * 0.85)}px ${MONO}`; hud.textAlign = "center";
-      hud.fillText(`TAXI TO RWY ${S.from.label} · ${Math.round(dist)} m`, cx, ty + 24 + fs * 3.2);
+      hud.fillStyle = HC.nav; hud.font = `${Math.round(fs * 0.85)}px ${MONO}`; hud.textAlign = "center";
+      hud.fillText(`TAXI TO RWY ${S.from.label} · ${Math.round(dist)} m`, cx, ty + 24 + fs * 3.2, w - 24);
       if (proj.z < 1 && Math.abs(proj.x) < 1 && Math.abs(proj.y) < 1) {
         const sx = (proj.x + 1) / 2 * w, sy = (1 - proj.y) / 2 * (h - dashH);
-        hud.strokeStyle = HC.amber; hud.lineWidth = 2; hud.beginPath(); hud.moveTo(sx, sy - 14); hud.lineTo(sx + 10, sy); hud.lineTo(sx, sy + 14); hud.lineTo(sx - 10, sy); hud.closePath(); hud.stroke();
+        hud.strokeStyle = HC.nav; hud.lineWidth = 2; hud.beginPath(); hud.moveTo(sx, sy - 14); hud.lineTo(sx + 10, sy); hud.lineTo(sx, sy + 14); hud.lineTo(sx - 10, sy); hud.closePath(); hud.stroke();
       }
     }
     // wind and ground speed
     hud.font = `${Math.round(fs * 0.78)}px ${MONO}`; hud.textAlign = "left"; hud.fillStyle = HC.hud;
-    { const wy0 = cy + bh / 2 + fs * 3.2; hud.fillText(`WIND ${windText()}`, lx, wy0); hud.fillText(`GS ${Math.round(S.gs * MS2KT)}`, lx, wy0 + fs * 1.05); }
+    { const wy0 = cy + bh / 2 + fs * 3.2, wx = phoneMQ.matches ? rx + bw : lx; hud.textAlign = phoneMQ.matches ? "right" : "left"; hud.fillText(`WIND ${windText()}`, wx, wy0); hud.fillText(`GS ${Math.round(S.gs * MS2KT)}`, wx, wy0 + fs * 1.05); hud.textAlign = "left"; }
     // destination
     if (S.to) {
       const [tx, tz] = toWorld(S.to, -S.to.len / 2, 0);
       const dx = tx - S.pos.x, dz = tz - S.pos.z, dist = Math.hypot(dx, dz), brg = ((Math.atan2(dx, -dz) * 57.3) + 360) % 360;
-      hud.fillStyle = HC.amber; hud.fillText(`${S.to.code} · ${(dist / 1000).toFixed(1)} km · BRG ${String(Math.round(brg) % 360).padStart(3, "0")} · RWY ${S.to.label}`, cx, ty + 24 + fs * 2);
+      hud.fillStyle = HC.nav; hud.textAlign = "center"; hud.fillText(`${S.to.code} · ${(dist / 1000).toFixed(1)} km · BRG ${String(Math.round(brg) % 360).padStart(3, "0")}${w < 480 ? "" : ` · RWY ${S.to.label}`}`, cx, ty + 24 + fs * 2, w - 24);
       proj.set(tx, S.to.elev + 10, tz).project(camera);
       let x = proj.x, y = proj.y; const behind = proj.z > 1; if (behind) { x = -x; y = -y; }
       const on = !behind && Math.abs(x) < 0.9 && Math.abs(y) < 0.9, m = Math.max(Math.abs(x), Math.abs(y), 0.001);
       if (!on) { x = x / m * 0.85; y = y / m * 0.85; }
       const sx = (x + 1) / 2 * w, sy = (1 - y) / 2 * (h - dashH);
-      hud.save(); hud.translate(sx, sy); hud.strokeStyle = HC.amber; hud.fillStyle = HC.amber;
+      hud.save(); hud.translate(sx, sy); hud.strokeStyle = HC.nav; hud.fillStyle = HC.nav;
       if (on) { hud.beginPath(); hud.moveTo(0, -11); hud.lineTo(11, 0); hud.lineTo(0, 11); hud.lineTo(-11, 0); hud.closePath(); hud.stroke(); hud.font = `${Math.round(fs * 0.75)}px ${MONO}`; hud.fillText(S.to.code, 0, 24); }
       else { hud.rotate(Math.atan2(-y, x)); hud.beginPath(); hud.moveTo(18, 0); hud.lineTo(-6, -11); hud.lineTo(-6, 11); hud.closePath(); hud.fill(); }
       hud.restore();
@@ -2709,16 +2958,18 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     // config strip
     hud.font = `${Math.round(fs * 0.85)}px ${MONO}`; hud.textAlign = "center"; hud.textBaseline = "middle";
     const gearTxt = spec.retract ? (S.gearPos > 0.98 ? "GEAR DN" : S.gearPos < 0.02 ? "GEAR UP" : "GEAR ···") : "GEAR FIXED";
+    const narrowTouch = coarseMQ.matches && !cock && phoneMQ.matches;   // phone: stick, buttons and throttle fill the bottom edge
     const items = [[`THR ${Math.round(S.throttle * 100)}%`, HC.hud], [`FLAPS ${S.flaps}`, HC.hud], [gearTxt, spec.retract && S.gearPos < 0.98 && agl < 1000 && !S.grounded && S.speed < spec.stall * 1.6 ? HC.warn : HC.hud]];
-    if (S.brake && S.grounded) items.push(["BRAKE", HC.amber]);
-    else if (S.autobrake && S.grounded) items.push(["AUTOBRAKE", HC.amber]);
-    if (S.spoiler) items.push([`SPLR ${S.spoiler === 1 ? "FULL" : "½"}`, HC.amber]);
-    if (S.reverse) items.push(["REV", HC.amber]);
+    if (narrowTouch) items.shift();   // the throttle lever already shows THR on phones
+    if (S.brake && S.grounded) items.push(["BRAKE", HC.caution]);
+    else if (S.autobrake && S.grounded) items.push(["AUTOBRAKE", HC.caution]);
+    if (S.spoiler) items.push([`SPLR ${S.spoiler === 1 ? "FULL" : "½"}`, HC.caution]);
+    if (S.reverse) items.push(["REV", HC.caution]);
     if (S.trim) items.push([`TRIM ${S.trim > 0 ? "▲" : "▼"}${Math.round(Math.abs(S.trim) * 100)}`, HC.hud]);
     if (S.lights) items.push(["LDG LT", HC.hud]);
     if (S.park && S.grounded) items.push(["PARK BRK", HC.warn]);
     if (ENV.model === "real" && !spec.fbw) items.push([`TRIM ${(S.trimAlpha * 57.3).toFixed(1)}°`, HC.hud]);
-    if (Math.abs(S.n1 - S.throttle) > 0.08) items.push([`ENG ${Math.round(S.n1 * 100)}%`, HC.amber]);
+    if (Math.abs(S.n1 - S.throttle) > 0.08) items.push([`ENG ${Math.round(S.n1 * 100)}%`, HC.caution]);
     {
       const iasKt = (S.ias || 0) * MS2KT, vmaxKt = spec.vmax * MS2KT;
       const gLim = spec.kind === "arrow" ? 9 : spec.big ? 2.5 : 4.4;
@@ -2726,30 +2977,53 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       if (S.flaps > 0 && iasKt > vmaxKt * 0.62) items.push(["FLAP OVERSPEED", HC.warn]);
       if (spec.retract && S.gearPos > 0.5 && !S.grounded && iasKt > vmaxKt * 0.7) items.push(["GEAR OVERSPEED", HC.warn]);
     }
-    const narrowTouch = coarseMQ.matches && !cock && w < 480;   // phone: stick, buttons and throttle fill the bottom edge
-    const stripY = h - dashH - (narrowTouch ? 156 : coarseMQ.matches && !cock ? 30 : 20);
-    const iw = Math.min(104 * Math.max(0.8, sc), (w - (narrowTouch ? 130 : 24)) / items.length); const x0 = cx - (items.length - 1) * iw / 2;
-    items.forEach(([t, c], i) => { hud.fillStyle = c; hud.fillText(t, x0 + i * iw, stripY); });
+    // bottom inset: touch controls, and the autopilot sheet on phones (folded: controls sit above it; open: it covers them)
+    const sheetOpen = apDock.open && !apDock.mini, ctlLift = apDock.open && apDock.mini ? (narrowTouch ? 62 : apDock.h) : 0;
+    const stripB = sheetOpen ? apDock.h + 14 + (narrowTouch ? apDock.tb + 8 : 0) : (narrowTouch ? 152 : coarseMQ.matches && !cock ? 30 : 20) + ctlLift;
+    const stripY = h - dashH - stripB;
+    // the strip wraps into rows instead of overlapping; on phones it is left-aligned between the stick and the throttle
+    const gapX = Math.round(14 * Math.max(0.8, sc)), rowH = Math.round(fs * 1.1), left0 = 14, maxW = narrowTouch && !sheetOpen ? w - left0 - 74 : w - 24;
+    const rows = [[]], rw = [0];
+    items.forEach(([t, c]) => { const tw = hud.measureText(t).width; let r = rows.length - 1; if (rw[r] && rw[r] + gapX + tw > maxW) { rows.push([]); rw.push(0); r++; } rows[r].push([t, c, tw]); rw[r] += (rw[r] ? gapX : 0) + tw; });
+    hud.textAlign = "left";
+    rows.forEach((row, ri) => {
+      let x = narrowTouch && !sheetOpen ? left0 : cx - rw[ri] / 2; const y = stripY - (rows.length - 1 - ri) * rowH;
+      row.forEach(([t, c, tw]) => { hud.fillStyle = c; hud.fillText(t, x, y); x += tw + gapX; });
+    });
+    hud.textAlign = "center";
 
     // warnings + messages
     const blink = Math.floor(now / 300) % 2 === 0;
     hud.font = `bold ${Math.round(fs * 1.35)}px ${MONO}`;
-    if (stall && blink) { hud.fillStyle = HC.warn; hud.fillText("STALL", cx, cy + 100 * sc); }
-    else if (!S.grounded && agl < 400 && S.vs < -10 && blink) { hud.fillStyle = HC.warn; hud.fillText("PULL UP", cx, cy + 100 * sc); }
+    if (AL.pull && blink) { hud.fillStyle = HC.warn; hud.fillText("PULL UP", cx, cy + 100 * sc); }
+    else if (stall && blink) { hud.fillStyle = HC.warn; hud.fillText("STALL", cx, cy + 100 * sc); }
     else if (!S.grounded && spec.retract && S.gearPos < 0.5 && agl < 800 && S.vs < -1 && S.throttle < 0.6 && blink) { hud.fillStyle = HC.warn; hud.fillText("GEAR · press G", cx, cy + 100 * sc); }
-    if (S.msgT > 0) { hud.font = `${Math.round(fs * 1.0)}px ${MONO}`; hud.fillStyle = HC.amber; hud.globalAlpha = clamp(S.msgT, 0, 1); hud.fillText(S.msg, cx, cy - 135 * sc, w - 24); hud.globalAlpha = 1; }
+    let msgBottom = 0;
+    if (S.msgT > 0) {
+      // long messages wrap onto a second line instead of being squeezed
+      hud.font = `${Math.round(fs * 1.0)}px ${MONO}`; hud.fillStyle = HC.nav; hud.globalAlpha = clamp(S.msgT, 0, 1);
+      const lines = [], maxM = w - 28; let cur = "";
+      for (const word of String(S.msg).split(" ")) { const tryL = cur ? cur + " " + word : word; if (cur && hud.measureText(tryL).width > maxM) { lines.push(cur); cur = word; } else cur = tryL; }
+      if (cur) lines.push(cur);
+      const shownL = lines.slice(0, 3), lhM = fs * 1.2;
+      if (phoneMQ.matches) {
+        // phones: below the minimap, reading downwards, so it never sits on the map
+        const y0 = (showMap ? MY + MS : ty + 24 + fs * 3.2) + fs * 1.1;
+        shownL.forEach((ln, i) => hud.fillText(ln, cx, y0 + i * lhM, maxM)); msgBottom = y0 + (shownL.length - 1) * lhM + fs * 0.6;
+      } else shownL.forEach((ln, i, arr) => hud.fillText(ln, cx, cy - 135 * sc - (arr.length - 1 - i) * lhM, maxM));
+      hud.globalAlpha = 1;
+    }
     hud.shadowBlur = 0;
 
     // traffic markers and TCAS-style alert
-    let threat = null;
+    const threat = AL.traffic || null;
     for (const ai of AI) {
       if (!ai.model.visible) continue;
       const d = ai.pos.distanceTo(S.pos); if (d > 6500) continue;
       const dy = Math.round((ai.pos.y - S.pos.y) * M2FT / 100);
-      if (!S.grounded && ai.phase !== "hold" && d < 1100 && Math.abs(ai.pos.y - S.pos.y) < 200) threat = ai;
       proj.copy(ai.pos).project(camera); if (proj.z > 1 || Math.abs(proj.x) > 0.95 || Math.abs(proj.y) > 0.95) continue;
       const sx = (proj.x + 1) / 2 * w, sy = (1 - proj.y) / 2 * h; if (sy > h - dashH) continue;
-      const col = d < 1100 && Math.abs(ai.pos.y - S.pos.y) < 200 ? HC.warn : "#cfe6ff";
+      const col = d < 1100 && Math.abs(ai.pos.y - S.pos.y) < 200 ? HC.warn : HC.text;
       hud.strokeStyle = col; hud.fillStyle = col; hud.lineWidth = 1.5;
       hud.beginPath(); hud.moveTo(sx, sy - 8); hud.lineTo(sx + 8, sy); hud.lineTo(sx, sy + 8); hud.lineTo(sx - 8, sy); hud.closePath(); hud.stroke();
       hud.font = `${Math.round(fs * 0.7)}px ${MONO}`; hud.textAlign = "left"; hud.textBaseline = "middle";
@@ -2757,20 +3031,24 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     }
     if (threat && blink) { hud.font = `bold ${Math.round(fs * 1.25)}px ${MONO}`; hud.textAlign = "center"; hud.fillStyle = HC.warn; hud.fillText(`TRAFFIC · ${threat.cs}`, cx, cy + 135 * sc); }
     if (RADIO.length) {
-      const coarse = coarseMQ.matches, lh = Math.round(fs * 1.25);
-      let ry = h - dashH - (coarse && !cock ? (w < 480 ? 262 : 190) : 46) - (RADIO.length - 1) * lh;
+      const coarse = coarseMQ.matches, lh = Math.round(fs * 1.25), phoneR = phoneMQ.matches;
+      // phones: the bottom is full of controls, so the last two calls sit just above the speed and altitude boxes
+      // phones: the latest calls fill what is left of the text slot above the speed boxes (at least the newest one)
+      const slotBot = cy - bh / 2 - fs * 1.7, room = Math.floor((slotBot - Math.max(msgBottom, showMap ? MY + MS + 4 : 0)) / lh) + 1;
+      const shown = phoneR ? RADIO.slice(-clamp(room, 1, 2)) : RADIO;
+      let ry = phoneR ? slotBot - (shown.length - 1) * lh : h - dashH - (sheetOpen ? stripB + rows.length * rowH + 16 : (coarse && !cock ? (narrowTouch ? 290 : 190) : 46) + ctlLift) - (RADIO.length - 1) * lh;
       hud.font = `${Math.round(fs * 0.78)}px ${MONO}`; hud.textAlign = "left"; hud.textBaseline = "middle";
-      for (const r of RADIO) {
+      for (const r of shown) {
         hud.globalAlpha = clamp(r.t, 0, 1); const tw = Math.min(hud.measureText(r.text).width, w - 40);
-        hud.fillStyle = "rgba(10,30,60,0.55)"; hud.fillRect(10, ry - lh / 2, tw + hud.measureText("ATC ").width + 26, lh);
-        hud.fillStyle = HC.hud; hud.fillText("ATC", 14, ry); const atcW = hud.measureText("ATC ").width + 18; hud.fillStyle = "#e3ebf1"; hud.fillText(r.text, atcW, ry, w - atcW - 16); ry += lh;
+        hud.fillStyle = "rgba(15,15,17,0.62)"; hud.fillRect(10, ry - lh / 2, Math.min(tw + hud.measureText("ATC ").width + 26, w - 20), lh);
+        hud.fillStyle = HC.nav; hud.fillText("ATC", 14, ry); const atcW = hud.measureText("ATC ").width + 18; hud.fillStyle = HC.text; hud.fillText(r.text, atcW, ry, w - atcW - 16); ry += lh;
       }
       hud.globalAlpha = 1;
     }
 
     // minimap
     if (showMap) {
-      const ms = Math.round(clamp(Math.min(w, h) * (showMap === 2 ? 0.42 : 0.24), 96, showMap === 2 ? 320 : 170)), mx = w - ms - 10, my = Math.max(48, h * 0.09) + (w < 700 ? 40 : 0);
+      const ms = MS, mx = MX, my = MY;
       hud.save(); hud.beginPath(); hud.roundRect(mx, my, ms, ms, 8); hud.clip();
       const R = showMap === 1 ? 6000 : MAP_R, ox = showMap === 1 ? S.pos.x : 0, oz = showMap === 1 ? S.pos.z : 0;
       const px2 = (v) => (v / MAP_R + 1) / 2 * mapImg.width;
@@ -2779,8 +3057,8 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       const P = (x, z) => [mx + ((x - ox) / R + 1) / 2 * ms, my + ((z - oz) / R + 1) / 2 * ms];
       for (const a of AIRPORTS) {
         const [x1, z1] = toWorld(a, -a.len / 2, 0), [x2, z2] = toWorld(a, a.len / 2, 0); const p1 = P(x1, z1), p2 = P(x2, z2);
-        hud.strokeStyle = a === S.to ? HC.amber : "#ffffff"; hud.lineWidth = 3; hud.beginPath(); hud.moveTo(...p1); hud.lineTo(...p2); hud.stroke();
-        hud.fillStyle = a === S.to ? HC.amber : "#ffffff"; hud.font = `${Math.max(9, Math.round(ms / 16))}px ${MONO}`; hud.textAlign = "center"; hud.fillText(a.code, (p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2 - 8);
+        hud.strokeStyle = a === S.to ? HC.nav : "#ffffff"; hud.lineWidth = 3; hud.beginPath(); hud.moveTo(...p1); hud.lineTo(...p2); hud.stroke();
+        hud.fillStyle = a === S.to ? HC.nav : "#ffffff"; hud.font = `${Math.max(9, Math.round(ms / 16))}px ${MONO}`; hud.textAlign = "center"; hud.fillText(a.code, (p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2 - 8);
       }
       if (S.to) {
         const r = S.to.rwys[0], [fx, fz] = toWorld(S.to, -r.len / 2 - FIX_DIST, r.off), [tx2, tz2] = toWorld(S.to, -r.len / 2, r.off);
@@ -2794,7 +3072,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       const [px, pz] = P(S.pos.x, S.pos.z); hud.save(); hud.translate(px, pz); hud.rotate(Math.atan2(fwd.x, -fwd.z));
       hud.fillStyle = HC.hud; hud.strokeStyle = HC.deck; hud.lineWidth = 1.5; hud.beginPath(); hud.moveTo(0, -7); hud.lineTo(5, 6); hud.lineTo(0, 3); hud.lineTo(-5, 6); hud.closePath(); hud.fill(); hud.stroke(); hud.restore();
       hud.restore(); hud.strokeStyle = "rgba(255,255,255,0.35)"; hud.lineWidth = 1; hud.beginPath(); hud.roundRect(mx, my, ms, ms, 8); hud.stroke();
-      hud.fillStyle = "#ffffff"; hud.font = `${Math.max(9, Math.round(ms / 16))}px ${MONO}`; hud.textAlign = "left"; hud.fillText(showMap === 1 ? "N↑ 12 km · M: world map" : "N↑ whole map · M: hide", mx + 6, my + ms - 8);
+      hud.fillStyle = "#ffffff"; hud.font = `${Math.max(9, Math.round(ms / 16))}px ${MONO}`; hud.textAlign = "left"; hud.fillText(ms < 150 ? (showMap === 1 ? "N↑ 12 km" : "N↑ world") : showMap === 1 ? "N↑ 12 km · M: world map" : "N↑ whole map · M: hide", mx + 6, my + ms - 8, ms - 12);
     }
 
     if (cock) drawDash(w, h, dashH, kt, ft, vsfpm, hdg, pitchDeg, rollR);
@@ -2802,20 +3080,20 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
 
   function gauge(x, y, r, label, draw) {
     hud.save(); hud.translate(x, y);
-    hud.fillStyle = "#0a0e12"; hud.beginPath(); hud.arc(0, 0, r, 0, Math.PI * 2); hud.fill();
-    hud.strokeStyle = "#3a4654"; hud.lineWidth = 3; hud.stroke();
+    hud.fillStyle = "#0e0e10"; hud.beginPath(); hud.arc(0, 0, r, 0, Math.PI * 2); hud.fill();
+    hud.strokeStyle = "#3b3a37"; hud.lineWidth = 3; hud.stroke();
     draw(r);
-    hud.fillStyle = "#8d9fb0"; hud.font = `${Math.max(9, Math.round(r * 0.2))}px ${MONO}`; hud.textAlign = "center"; hud.textBaseline = "middle"; hud.fillText(label, 0, r * 0.55);
+    hud.fillStyle = "#a7a39b"; hud.font = `${Math.max(9, Math.round(r * 0.2))}px ${MONO}`; hud.textAlign = "center"; hud.textBaseline = "middle"; hud.fillText(label, 0, r * 0.55);
     hud.restore();
   }
   function needle(r, ang, color = "#ffffff", len = 0.8) {
     hud.strokeStyle = color; hud.lineWidth = 3; hud.beginPath(); hud.moveTo(0, 0); hud.lineTo(Math.sin(ang) * r * len, -Math.cos(ang) * r * len); hud.stroke();
     hud.fillStyle = "#ccc"; hud.beginPath(); hud.arc(0, 0, 3, 0, Math.PI * 2); hud.fill();
   }
-  function ticks(r, n) { hud.strokeStyle = "#cfd8e0"; hud.lineWidth = 1.5; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; hud.beginPath(); hud.moveTo(Math.sin(a) * r * 0.86, -Math.cos(a) * r * 0.86); hud.lineTo(Math.sin(a) * r * 0.96, -Math.cos(a) * r * 0.96); hud.stroke(); } }
+  function ticks(r, n) { hud.strokeStyle = "#d9d3c7"; hud.lineWidth = 1.5; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; hud.beginPath(); hud.moveTo(Math.sin(a) * r * 0.86, -Math.cos(a) * r * 0.86); hud.lineTo(Math.sin(a) * r * 0.96, -Math.cos(a) * r * 0.96); hud.stroke(); } }
   function drawDash(w, h, dh, kt, ft, vs, hdg, pitchDeg, rollR) {
     const y0 = h - dh;
-    const grd = hud.createLinearGradient(0, y0, 0, h); grd.addColorStop(0, "#1d252d"); grd.addColorStop(1, "#0e1317");
+    const grd = hud.createLinearGradient(0, y0, 0, h); grd.addColorStop(0, "#232326"); grd.addColorStop(1, "#111113");
     hud.fillStyle = grd; hud.beginPath(); hud.moveTo(0, y0 + 14); hud.quadraticCurveTo(w / 2, y0 - 16, w, y0 + 14); hud.lineTo(w, h); hud.lineTo(0, h); hud.closePath(); hud.fill();
     const r = Math.min(dh * 0.36, w / 13), gy = y0 + dh * 0.55, gap = r * 2.5, x0 = w / 2 - gap * 1.5;
     const vmaxKt = spec.vmax * MS2KT * 1.15;
@@ -2824,15 +3102,15 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       hud.save(); hud.beginPath(); hud.arc(0, 0, r * 0.92, 0, Math.PI * 2); hud.clip(); hud.rotate(rollR); const off = clamp(pitchDeg, -40, 40) * r / 45;
       hud.fillStyle = "#3a7fc4"; hud.fillRect(-r, -r * 2 + off, r * 2, r * 2); hud.fillStyle = "#7a5530"; hud.fillRect(-r, off, r * 2, r * 2);
       hud.strokeStyle = "#fff"; hud.lineWidth = 2; hud.beginPath(); hud.moveTo(-r, off); hud.lineTo(r, off); hud.stroke(); hud.restore();
-      hud.strokeStyle = HC.amber; hud.lineWidth = 3; hud.beginPath(); hud.moveTo(-r * 0.5, 0); hud.lineTo(-r * 0.15, 0); hud.lineTo(0, r * 0.1); hud.lineTo(r * 0.15, 0); hud.lineTo(r * 0.5, 0); hud.stroke();
+      hud.strokeStyle = HC.nav; hud.lineWidth = 3; hud.beginPath(); hud.moveTo(-r * 0.5, 0); hud.lineTo(-r * 0.15, 0); hud.lineTo(0, r * 0.1); hud.lineTo(r * 0.15, 0); hud.lineTo(r * 0.5, 0); hud.stroke();
     });
-    gauge(x0 + gap * 2, gy, r, "ALT FT", (r) => { ticks(r, 10); needle(r, (ft % 1000) / 1000 * Math.PI * 2); needle(r, (ft % 10000) / 10000 * Math.PI * 2, HC.amber, 0.5); hud.fillStyle = "#fff"; hud.font = `${Math.round(r * 0.26)}px ${MONO}`; hud.textAlign = "center"; hud.fillText(String(ft), 0, -r * 0.35); });
+    gauge(x0 + gap * 2, gy, r, "ALT FT", (r) => { ticks(r, 10); needle(r, (ft % 1000) / 1000 * Math.PI * 2); needle(r, (ft % 10000) / 10000 * Math.PI * 2, HC.nav, 0.5); hud.fillStyle = "#fff"; hud.font = `${Math.round(r * 0.26)}px ${MONO}`; hud.textAlign = "center"; hud.fillText(String(ft), 0, -r * 0.35); });
     gauge(x0 + gap * 3, gy, r, "HEADING", (r) => {
       hud.save(); hud.rotate(-hdg / 57.3); hud.fillStyle = "#fff"; hud.font = `${Math.round(r * 0.24)}px ${MONO}`; hud.textAlign = "center"; hud.textBaseline = "middle";
       ["N", "E", "S", "W"].forEach((l, i) => { hud.save(); hud.rotate(i * Math.PI / 2); hud.fillText(l, 0, -r * 0.68); hud.restore(); }); ticks(r, 36); hud.restore();
-      hud.fillStyle = HC.amber; hud.beginPath(); hud.moveTo(0, -r * 0.45); hud.lineTo(r * 0.12, r * 0.15); hud.lineTo(-r * 0.12, r * 0.15); hud.closePath(); hud.fill();
+      hud.fillStyle = HC.nav; hud.beginPath(); hud.moveTo(0, -r * 0.45); hud.lineTo(r * 0.12, r * 0.15); hud.lineTo(-r * 0.12, r * 0.15); hud.closePath(); hud.fill();
     });
-    hud.fillStyle = vs < -600 ? HC.warn : "#8d9fb0"; hud.font = `${Math.max(10, Math.round(r * 0.22))}px ${MONO}`; hud.textAlign = "center";
+    hud.fillStyle = vs < -600 ? HC.warn : "#a7a39b"; hud.font = `${Math.max(10, Math.round(r * 0.22))}px ${MONO}`; hud.textAlign = "center";
     hud.fillText(`VS ${vs > 0 ? "+" : ""}${vs} FT/MIN`, w / 2, h - 10);
   }
 
@@ -3039,9 +3317,10 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     hemi.color.set(night ? 0x6f86b3 : dusk ? 0xffd2b0 : 0xe4f3ff);
     sun.intensity = night ? 0.08 : dusk ? 0.75 : wet ? 0.35 : cloudy ? 0.8 : 1.05;
     sun.color.set(night ? 0x8ea6d6 : dusk ? 0xffa060 : 0xfff0d8);
-    sun.position.set(-0.6, night ? 0.8 : dusk ? 0.12 : 1, 0.45).normalize().multiplyScalar(1000);
+    SUN_DIR.set(-0.6, night ? 0.8 : dusk ? 0.12 : 1, 0.45).normalize();
+    sun.target.position.set(0, 0, 0); sun.position.copy(SUN_DIR).multiplyScalar(1000);
     sunDisc.visible = !night && !wet; sunDisc.material.color.set(dusk ? 0xffb070 : 0xfff6dc);
-    sunDisc.position.copy(sun.position).normalize().multiplyScalar(15000); sunDisc.lookAt(0, 0, 0);
+    sunDisc.position.copy(SUN_DIR).multiplyScalar(15000); sunDisc.lookAt(0, 0, 0);
     stars.visible = night && !wet;
     rain.l.visible = wet;
     clouds.setWeather(weather, night, dusk);
@@ -3070,7 +3349,21 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     } else { AP.app = false; AP.lat = "HDG"; flash("Autopilot off", 1.4); chime(330, 0.3); }
     apSync();
   }
-  $("apToggle").addEventListener("click", () => { apEls.panel.hidden = !apEls.panel.hidden; $("apToggle").setAttribute("aria-pressed", String(!apEls.panel.hidden)); });
+  // on phones the panel is a bottom sheet; folded, it is one row and the touch controls move up above it
+  const apGrip = $("apGrip"), phoneMQ = matchMedia("(max-width: 480px)"), apDock = { open: false, mini: false, h: 0 };
+  function syncApDock() {
+    const p = apEls.panel, mini = p.classList.contains("mini");
+    stage.classList.toggle("ap-mini", !p.hidden && mini); stage.classList.toggle("ap-full", !p.hidden && !mini);
+    apGrip.textContent = mini ? "▴" : "Autopilot ▾"; apGrip.setAttribute("aria-expanded", String(!mini));
+    apGrip.setAttribute("aria-label", mini ? "Unfold the autopilot panel" : "Fold the autopilot panel");
+    apDock.open = !p.hidden && phoneMQ.matches; apDock.mini = mini; apDock.h = apDock.open ? p.offsetHeight : 0;
+    stage.style.setProperty("--sheet", `${apDock.h}px`);
+    const tb = document.querySelector(".tbtns"); apDock.tb = tb ? tb.offsetHeight : 0;
+  }
+  $("apToggle").addEventListener("click", () => { apEls.panel.hidden = !apEls.panel.hidden; $("apToggle").setAttribute("aria-pressed", String(!apEls.panel.hidden)); syncApDock(); });
+  apGrip.addEventListener("click", () => { apEls.panel.classList.toggle("mini"); syncApDock(); });
+  if (phoneMQ.addEventListener) phoneMQ.addEventListener("change", syncApDock); else if (phoneMQ.addListener) phoneMQ.addListener(syncApDock);
+  syncApDock();
   apEls.on.addEventListener("click", () => apEngage(!AP.on));
   apEls.thr.addEventListener("click", () => { AP.athr = !AP.athr; if (AP.athr) AP.spd = Math.round(S.speed * MS2KT / 5) * 5 || AP.spd; apSync(); });
   apEls.nav.addEventListener("click", () => {
@@ -3171,16 +3464,47 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const a = S.from, r = a.rwys[0]; const [x, z] = toWorld(a, -r.len / 2 + 30, r.off); return [x, z];
   }
 
+  // ================= ALERTS =================
+  // one place decides STALL / PULL UP / TRAFFIC for the HUD, the sounds and the vibration
+  function updateAlerts(now) {
+    const A = S.alerts || (S.alerts = {});
+    const flying = S.mode === "fly" && !S.crashed && !S.grounded;
+    const aglFt = (S.pos.y - spec.gearH - Math.max(0, groundY(S.pos.x, S.pos.z))) * M2FT;
+    const stallNow = flying && S.alpha > S.alphaCrit * 0.88;
+    if (stallNow && !A.stall && now - (A.stallBuzz || -1e9) > 3000) { buzz([50, 40, 50]); A.stallBuzz = now; }
+    A.stall = stallNow;
+    A.pull = flying && aglFt < 400 && S.vs < -10;
+    let threat = null;
+    if (flying) for (const ai of AI) { if (!ai.model.visible || ai.phase === "hold") continue; if (ai.pos.distanceTo(S.pos) < 1100 && Math.abs(ai.pos.y - S.pos.y) < 200) { threat = ai; break; } }
+    A.traffic = threat;
+    if (S.mode === "fly" && !S.crashed) soundAlerts({ pull: A.pull, stall: A.stall, traffic: !!threat }, now / 1000);
+  }
+  // High quality: a real shadow of your aircraft, cast by the sun into a small shadow map that follows it
+  function updateSunShadow() {
+    if (!QS.shadows) return;
+    const gy = Math.max(0, groundY(S.pos.x, S.pos.z)), agl = Math.max(0, S.pos.y - gy);
+    const on = agl < 400 && !S.crashed && model && model.visible; sun.castShadow = on;
+    if (!on) return;
+    const k = agl / Math.max(0.12, SUN_DIR.y), r = spec.shadow * 1.25 + 8, back = 120;
+    sun.target.position.set(S.pos.x - SUN_DIR.x * k, gy, S.pos.z - SUN_DIR.z * k);
+    sun.position.copy(sun.target.position).addScaledVector(SUN_DIR, k + back);
+    const c = sun.shadow.camera; c.left = -r; c.right = r; c.top = r; c.bottom = -r; c.near = 1; c.far = k + back + r * 2; c.updateProjectionMatrix();
+    sun.target.updateMatrixWorld();
+  }
+  const fpsMeter = { n: 0, t0: performance.now() };
+
   // ================= LOOP =================
   function resize() {
     const r = stage.getBoundingClientRect(), w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
     renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
     const dpr = Math.min(window.devicePixelRatio || 1, 2); hudCv.width = Math.round(w * dpr); hudCv.height = Math.round(h * dpr); hud.setTransform(dpr, 0, 0, dpr, 0, 0);
     hudSize.w = w; hudSize.h = h;
+    if (typeof syncApDock === "function" && apEls.panel) syncApDock();
   }
   new ResizeObserver(resize).observe(stage);
   if (!setPlane(chosen)) setPlane("b737"); spawn(S.from); resize();
   applyEnv("day", "clear");
+  applyQuality(qualName, false);
   for (const id of ["timeSel", "wxSel"]) $(id).addEventListener("change", () => applyEnv($("timeSel").value, $("wxSel").value));
 
   let last = performance.now();
@@ -3189,12 +3513,14 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     if (S.mode === "fly" && !S.crashed) { step(dt / 2); if (!S.crashed && S.mode === "fly") step(dt / 2); }
     else if (S.mode === "paused") readPad();
     S.msgT -= dt;
+    if (S.msgT <= 0 && S.msgQ && S.msgQ.length && S.mode === "fly") { const [t, d] = S.msgQ.shift(); flash(t, d); }
     if (S.crashed && boom.visible) { S.boomT += dt; boom.scale.setScalar(1 + S.boomT * 30 * (spec.big ? 2 : 1)); boom.material.opacity = Math.max(0, 0.9 - S.boomT * 0.7); }
     animateModel(dt, now);
     if (S.mode !== "paused") { AI.forEach((ai) => updateAI(ai, dt, now)); updateCars(dt); }
     RADIO.forEach((r) => (r.t -= dt)); while (RADIO.length && RADIO[0].t <= 0) RADIO.shift();
     beacons.forEach((b) => (b.rotation.y += dt * 3));
     if (S.mode !== "paused") updateCamera(dt, now);
+    updateAlerts(now); updateSunShadow();
     scene.userData.sky.position.copy(camera.position);
     updateTiles(camera.position); clouds.update(camera.quaternion); rain.update(dt, camera.position); updateLightPool();
     waterNormal.offset.x += dt * 0.0025; waterNormal.offset.y += dt * 0.0012;
@@ -3203,6 +3529,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       eng.frequency.setTargetAtTime((spec.big || spec.jetSound ? 90 : 50) + S.throttle * (spec.big || spec.jetSound ? 140 : 70), ac.currentTime, 0.2);
     }
     renderer.render(scene, camera); drawHud(now);
+    if (fpsOn) { fpsMeter.n++; if (now - fpsMeter.t0 >= 500) { fpsOut.textContent = `${Math.round(fpsMeter.n * 1000 / (now - fpsMeter.t0))} FPS`; fpsMeter.n = 0; fpsMeter.t0 = now; } }
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
