@@ -439,7 +439,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
         <dt><kbd>R</kbd><kbd>F</kbd> or <kbd>Shift</kbd><kbd>Z</kbd></dt><dd>Throttle up / down</dd>
         <dt><kbd>Space</kbd></dt><dd>Wheel brakes</dd>
         <dt><kbd>V</kbd> · <kbd>G</kbd></dt><dd>Flaps (0, 1, 2) · landing gear</dd>
-        <dt><kbd>1</kbd>–<kbd>7</kbd> or <kbd>C</kbd></dt><dd>Camera views (drag to look around in Orbit)</dd>
+        <dt><kbd>1</kbd>–<kbd>8</kbd> or <kbd>C</kbd></dt><dd>Camera views (drag to look around in Orbit and Cabin)</dd>
         <dt><kbd>X</kbd> · <kbd>T</kbd></dt><dd>Spoilers (speed brakes) · reverse thrust on the ground</dd>
         <dt><kbd>[</kbd> <kbd>]</kbd> · <kbd>L</kbd> · <kbd>N</kbd></dt><dd>Pitch trim · landing lights · parking brake</dd>
         <dt><kbd>M</kbd> · <kbd>P</kbd> · <kbd>H</kbd></dt><dd>Map: local, whole world, off · pause · this help</dd>
@@ -513,7 +513,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
         <dt><kbd>Space</kbd></dt><dd>Wheel brakes</dd>
         <dt><kbd>V</kbd></dt><dd>Flaps: more lift at low speed for takeoff and landing</dd>
         <dt><kbd>G</kbd></dt><dd>Raise or lower the landing gear</dd>
-        <dt><kbd>1</kbd> Chase · <kbd>2</kbd> Cockpit · <kbd>3</kbd> Wing</dt><dd><kbd>4</kbd> Tower · <kbd>5</kbd> Orbit (drag + scroll) · <kbd>6</kbd> Fly-by · <kbd>7</kbd> Free camera (W A S D, Q / E, drag to look)</dd>
+        <dt><kbd>1</kbd> Chase · <kbd>2</kbd> Cockpit · <kbd>3</kbd> Wing</dt><dd><kbd>4</kbd> Tower · <kbd>5</kbd> Orbit (drag + scroll) · <kbd>6</kbd> Fly-by · <kbd>7</kbd> Free camera (W A S D, Q / E, drag to look) · <kbd>8</kbd> Cabin (window seat, drag to look)</dd>
         <dt><kbd>X</kbd> Spoilers</dt><dd>Panels on top of the wing that kill lift and add drag. Use them to slow down or descend faster; airliners raise them by themselves on touchdown</dd>
         <dt><kbd>T</kbd> Reverse thrust</dt><dd>On the ground after landing, press T and add throttle to slow down hard</dd>
         <dt><kbd>[</kbd> <kbd>]</kbd> Trim</dt><dd>Holds the nose up or down a little so you don't have to keep pressing</dd>
@@ -1488,23 +1488,26 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     azul:      Object.assign({ name: "Azul", bellyCss: "#f4f6f8", accent: 0x1a4aa0, accentCss: "#1a4aa0", cheat: false, tailCss: "#1a4aa0", title: "AZUL", titleColor: "#1a4aa0", reg: "PR-SKY" }, W),
   };
   // airline colour schemes for the detailed models: paint only, the 3D shapes are never changed.
-  // body / belly (below bellyY·R from the fuselage axis) / top (above topY·R) / stripe [colour, from, to] / fin colours top→bottom
+  // Airline colour schemes for the detailed models, drawn per pixel by a shader: paint and titles only, the 3D shapes are never changed.
+  // Lines are in fuselage radii, measured from the window line (+ up): belly / top / stripe (rises with the belly line) / stripe2 (straight).
+  // fin: up to three colours top→bottom; finMode 0 solid, 1 bands, 2 sloped bands. title: name on the forward fuselage.
   const AIRLINE = {
-    dal: { name: "Delta", belly: "#14284b", bellyY: -0.35, fin: ["#b0172f"] },
-    ual: { name: "United", belly: "#0033a0", bellyY: -0.2, fin: ["#0b2d6e"] },
-    aal: { name: "American", body: "#c3c9cf", wing: "#b4bac0", fin: ["#0a3a79"] },
-    uae: { name: "Emirates", fin: ["#d71921"] },
-    qtr: { name: "Qatar", fin: ["#5c0632"], top: "#e7e9ec", topY: 0.85 },
-    dlh: { name: "Lufthansa", fin: ["#05164d"] },
-    baw: { name: "British Airways", belly: "#13306b", bellyY: -0.45, fin: ["#13306b"] },
-    klm: { name: "KLM", top: "#00a1de", topY: 0.05, stripe: ["#003082", -0.05, 0.05], fin: ["#00a1de"] },
-    ryr: { name: "Ryanair", belly: "#073590", bellyY: -0.4, fin: ["#073590"] },
-    ezy: { name: "easyJet", fin: ["#ff6600"], stripe: ["#ff6600", -0.62, -0.5] },
-    thy: { name: "Turkish Airlines", fin: ["#c8102e"], stripe: ["#c8102e", -0.5, -0.46] },
-    afl: { name: "Aeroflot", body: "#eef1f4", stripe: ["#0b4ea2", -0.38, -0.3], fin: ["#0039a6"] },
-    s7: { name: "S7 Airlines", body: "#b5d334", wing: "#c9cfd4", fin: ["#8fb31d"] },
-    sia: { name: "Singapore", stripe: ["#f2a900", -0.45, -0.36], fin: ["#0b2a5b"] },
+    dal: { name: "Delta", belly: "#14284b", bellyY: -0.4, rise: 0.25, fin: ["#d01c35", "#b0172f", "#7d1530"], finMode: 2, title: ["DELTA", "#14284b", "900", "sans"] },
+    ual: { name: "United", belly: "#0033a0", bellyY: -0.28, rise: 0.3, stripe: ["#8a9bb0", -0.34, -0.28], fin: ["#0b2d6e"], title: ["UNITED", "#0b2d6e", "800", "sans", 0.18] },
+    aal: { name: "American", body: "#c3c9cf", wing: "#b4bac0", fin: ["#0a3a79", "#ffffff", "#c30019"], finMode: 2, title: ["American", "#36495a", "700", "sans"] },
+    uae: { name: "Emirates", fin: ["#00843d", "#ffffff", "#111111"], finMode: 1, title: ["Emirates", "#b5985a", "700", "serif"] },
+    qtr: { name: "Qatar Airways", fin: ["#5c0632"], stripe2: ["#5c0632", -0.28, -0.2], title: ["QATAR AIRWAYS", "#5c0632", "700", "sans", 0.1] },
+    dlh: { name: "Lufthansa", fin: ["#05164d"], title: ["Lufthansa", "#05164d", "700", "serif"] },
+    baw: { name: "British Airways", belly: "#13306b", bellyY: -0.45, rise: 0.2, stripe: ["#c8102e", -0.52, -0.45], fin: ["#13306b", "#ffffff", "#c8102e"], finMode: 2, title: ["BRITISH AIRWAYS", "#13306b", "600", "sans", 0.06] },
+    klm: { name: "KLM", top: "#00a1de", topY: -0.1, stripe2: ["#003082", -0.18, -0.09], fin: ["#00a1de"], title: ["KLM", "#ffffff", "900", "sans", 0.15] },
+    ryr: { name: "Ryanair", belly: "#073590", bellyY: -0.33, rise: 0.3, stripe: ["#f1c933", -0.4, -0.33], fin: ["#073590"], title: ["RYANAIR", "#073590", "900", "sans"] },
+    ezy: { name: "easyJet", fin: ["#ff6600"], nose: "#ff6600", title: ["easyJet", "#ff6600", "900", "sans"] },
+    thy: { name: "Turkish Airlines", fin: ["#c8102e"], stripe2: ["#c8102e", -0.27, -0.19], title: ["TURKISH AIRLINES", "#c8102e", "700", "sans", 0.05] },
+    afl: { name: "Aeroflot", body: "#eef1f4", stripe2: ["#0b4ea2", -0.29, -0.16], fin: ["#ffffff", "#0039a6", "#d52b1e"], finMode: 2, title: ["AEROFLOT", "#0b4ea2", "800", "sans", 0.12] },
+    s7: { name: "S7 Airlines", body: "#b5d334", wing: "#c9cfd4", fin: ["#8fb31d"], title: ["S7 AIRLINES", "#36520f", "900", "sans", 0.08] },
+    sia: { name: "Singapore Airlines", stripe2: ["#f2a900", -0.3, -0.17], fin: ["#0b2a5b", "#0b2a5b", "#f2a900"], finMode: 1, title: ["SINGAPORE AIRLINES", "#0b2a5b", "600", "serif", 0.04] },
   };
+  for (const [id, a] of Object.entries(AIRLINE)) LIV[id] = Object.assign({ id, pack: true }, a);
   for (const [id, a] of Object.entries(AIRLINE)) LIV[id] = Object.assign({ id, pack: true }, a);
   const LIVERIES = {
     b737: ["dlh", "baw", "ezy", "thy", "afl", "s7", "aal", "dal", "ual", "qtr"],
@@ -1686,52 +1689,162 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   // Paints a packed model: white by default, or an airline's colours. Light surfaces take the paint by region
   // (fuselage, belly, cheatline, fin, wings); dark parts (windows, engines' insides, tyres) keep the model's own colour.
   const linC = (hex) => new THREE.Color(hex).convertSRGBToLinear();
-  function paintPack(key, o, liv) {
-    const ck = `paint:${key}:${liv ? liv.id : "white"}`; if (PACK_CACHE[ck]) return PACK_CACHE[ck];
-    const pk = decodePack(key), cy = o.cy, R = o.R, finY = cy + R + 0.35;
-    const L = liv || {}, white = linC("#f4f6f8"), body = L.body ? linC(L.body) : white, wing = linC(L.wing || "#d9dde1");
-    const belly = L.belly && linC(L.belly), top = L.top && linC(L.top), stripe = L.stripe && [linC(L.stripe[0]), L.stripe[1], L.stripe[2]];
-    const fin = (L.fin || []).map(linC), finTop = o.finTop;
-    const regionColour = (x, y, z) => {
-      if (Math.abs(x) < 0.9 && y > finY && z > 0) {
-        if (!fin.length) return white;
-        const t = clamp((finTop - y) / (finTop - finY), 0, 0.999); return fin[Math.floor(t * fin.length)];
-      }
-      if (Math.abs(x) < R * 1.12 && y > cy - R * 1.15 && y < cy + R * 1.2) {
-        const v = (y - cy) / R;
-        if (stripe && v > stripe[1] && v < stripe[2]) return stripe[0];
-        if (belly && v < L.bellyY) return belly;
-        if (top && v > L.topY) return top;
-        return body;
-      }
-      return wing;
-    };
-    const parts = pk.parts.map((pt) => {
+  // geometry with the model's own colour per vertex (material colour × vertex colour), decoded once per model and shared
+  function paintGeo(key) {
+    const ck = `pgeo:${key}`; if (PACK_CACHE[ck]) return PACK_CACHE[ck];
+    const parts = decodePack(key).parts.map((pt) => {
       if (pt.gear) return pt;
-      const src = pt.g, P = src.attributes.position.array, N = src.attributes.normal.array, I = src.index.array, n = I.length;
-      const P2 = new Float32Array(n * 3), N2 = new Float32Array(n * 3), C2 = new Float32Array(n * 3);
-      for (let t = 0; t < n; t += 3) {
-        const a = I[t] * 3, b = I[t + 1] * 3, c = I[t + 2] * 3;
-        const col = regionColour((P[a] + P[b] + P[c]) / 3, (P[a + 1] + P[b + 1] + P[c + 1]) / 3, (P[a + 2] + P[b + 2] + P[c + 2]) / 3);
-        for (let k = 0; k < 3; k++) {
-          const v = I[t + k] * 3, d = (t + k) * 3;
-          for (let j = 0; j < 3; j++) { P2[d + j] = P[v + j]; N2[d + j] = N[v + j]; }
-          const br = pt.base[0] * (pt.vc ? pt.vc[v] : 1), bg = pt.base[1] * (pt.vc ? pt.vc[v + 1] : 1), bb = pt.base[2] * (pt.vc ? pt.vc[v + 2] : 1);
-          if (Math.max(br, bg, bb) > 0.4) { C2[d] = col.r; C2[d + 1] = col.g; C2[d + 2] = col.b; }   // paintable surface
-          else { C2[d] = br; C2[d + 1] = bg; C2[d + 2] = bb; }                                        // windows and dark detail stay
-        }
-      }
-      const g = new THREE.BufferGeometry();
-      g.setAttribute("position", new THREE.BufferAttribute(P2, 3)); g.setAttribute("normal", new THREE.BufferAttribute(N2, 3)); g.setAttribute("color", new THREE.BufferAttribute(C2, 3));
-      g.computeBoundingSphere();
-      const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, metalness: Math.min(pt.m, 0.3), roughness: clamp(pt.r, 0.32, 0.6), side: THREE.DoubleSide, envMapIntensity: 0.9 });
-      return { gear: false, g, mat };
+      const g = pt.g.clone(), n = g.attributes.position.count, C = new Float32Array(n * 3);
+      for (let v = 0; v < n; v++) for (let j = 0; j < 3; j++) C[v * 3 + j] = pt.base[j] * (pt.vc ? pt.vc[v * 3 + j] : 1);
+      g.setAttribute("color", new THREE.BufferAttribute(C, 3));
+      return Object.assign({}, pt, { g });
     });
     return (PACK_CACHE[ck] = parts);
   }
+  // airline titles: drawn once per airline into a wide canvas that the shader projects onto both sides of the fuselage
+  function titleTex(L) {
+    const ck = `title:${L.id}`; if (PACK_CACHE[ck]) return PACK_CACHE[ck];
+    const [text, col, weight, fam, track] = L.title, cv = document.createElement("canvas"); cv.width = 2048; cv.height = 128;
+    const g = cv.getContext("2d"), font = (px) => `${fam === "serif" ? "italic " : ""}${weight} ${px}px ${fam === "serif" ? "Georgia, 'Times New Roman', serif" : "'Helvetica Neue', Arial, sans-serif"}`;
+    let px = 116; g.font = font(px);
+    const sp = (track || 0) * px, width = () => g.measureText(text).width + sp * (text.length - 1);
+    while (width() > 1900 && px > 30) { px -= 4; g.font = font(px); }
+    g.fillStyle = col; g.textBaseline = "middle";
+    let x = (2048 - width()) / 2;
+    for (const ch of text) { g.fillText(ch, x, 68); x += g.measureText(ch).width + (track || 0) * px; }
+    const t = new THREE.CanvasTexture(cv); t.anisotropy = 4; t.generateMipmaps = true;
+    return (PACK_CACHE[ck] = t);
+  }
+  const LIV_VERT = "varying vec3 vLp;\n";
+  const LIV_FRAG = `varying vec3 vLp;
+uniform vec4 uGeo; uniform vec4 uZ; uniform vec4 uLn; uniform vec4 uLn2; uniform vec4 uTb; uniform vec4 uFl;
+uniform vec3 uBody; uniform vec3 uBelly; uniform vec3 uTop; uniform vec3 uStr; uniform vec3 uStr2; uniform vec3 uFin1; uniform vec3 uFin2; uniform vec3 uFin3; uniform vec3 uWing; uniform vec3 uNose; uniform vec3 uLead;
+uniform sampler2D uTitle; uniform float uCabin;
+vec3 liveryAt(vec3 p, out float fus) {
+  fus = 0.0;
+  float cy = uGeo.x, R = uGeo.y, finY = uGeo.z, finTop = uGeo.w;
+  if (abs(p.x) < 0.9 && p.y > finY && p.z > 0.0) {
+    float t = clamp((finTop - p.y) / (finTop - finY), 0.0, 1.0);
+    if (uFl.w > 1.5) t = clamp(t * 0.8 - (p.z - uZ.y) * 0.045 - 0.05, 0.0, 1.0);
+    if (uFl.z > 0.5 && p.z < uZ.y - (uZ.y - uZ.x) * 0.105 + (finTop - p.y) * 0.9) return uLead;
+    if (uFl.w < 0.5) return uFin1;
+    return t < 0.3333 ? uFin1 : (t < 0.6667 ? uFin2 : uFin3);
+  }
+  if (abs(p.x) < R * 1.12 && p.y > cy - R * 1.15 && p.y < cy + R * 1.2) {
+    fus = 1.0;
+    float v = (p.y - cy) / R - uZ.z, f = clamp((p.z - uZ.x) / (uZ.y - uZ.x), 0.0, 1.0);
+    float rise = uLn2.z * smoothstep(0.55, 1.0, f) - uLn2.z * 0.35 * (1.0 - smoothstep(0.0, 0.18, f));
+    vec3 c = uBody;
+    if (v > uLn.y) c = uTop;
+    if (v < uLn.x + rise) c = uBelly;
+    if (f > 0.05 && v > uLn.z + rise && v < uLn.w + rise) c = uStr;
+    if (f > 0.05 && f < 0.97 && v > uLn2.x && v < uLn2.y) c = uStr2;
+    if (uFl.y > 0.5 && f < 0.05 - v * 0.03) c = uNose;
+    if (uFl.x > 0.5 && abs(p.x) > R * 0.4) {
+      float tu = (p.z - uTb.x) / (uTb.y - uTb.x); if (p.x > 0.0) tu = 1.0 - tu;
+      float tv = (v - uTb.z) / (uTb.w - uTb.z);
+      if (tu > 0.0 && tu < 1.0 && tv > 0.0 && tv < 1.0) { vec4 tx = texture2D(uTitle, vec2(tu, tv)); c = mix(c, pow(clamp(tx.rgb / max(tx.a, 0.02), 0.0, 1.0), vec3(2.2)), clamp(tx.a * 1.5, 0.0, 1.0)); }
+    }
+    return c;
+  }
+  return uWing;
+}
+`;
+  const BLANK_TEX = new THREE.DataTexture(new Uint8Array(4), 1, 1);
+  function liveryCompile(shader) {
+    Object.assign(shader.uniforms, this.userData.u);
+    shader.vertexShader = LIV_VERT + shader.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n  vLp = position;");
+    shader.fragmentShader = LIV_FRAG + shader.fragmentShader.replace("#include <color_fragment>", `#include <color_fragment>
+  { float fus; vec3 lc = liveryAt(vLp, fus);
+    if (uCabin > 0.5 && fus > 0.5) discard;
+    float pnt = smoothstep(0.3, 0.42, max(max(vColor.r, vColor.g), vColor.b));
+    diffuseColor.rgb = mix(diffuseColor.rgb, lc, pnt); }`);
+  }
+  function liveryMat(pt, o, liv, cabin) {
+    const L = liv || {}, white = "#f4f6f8", V3 = (hex) => ({ value: linC(hex) }), fin = L.fin || [white];
+    const len = o.zTail - o.zNose, tz0 = o.zNose + len * 0.1, tw = 6.7 * o.R;
+    const u = {
+      uGeo: { value: new THREE.Vector4(o.cy, o.R, o.cy + o.R + 0.35, o.finTop) },
+      uZ: { value: new THREE.Vector4(o.zNose, o.zTail, o.win, 0) },
+      uLn: { value: new THREE.Vector4(L.belly ? L.bellyY : -9, L.top ? L.topY : 9, L.stripe ? L.stripe[1] : 9, L.stripe ? L.stripe[2] : 9) },
+      uLn2: { value: new THREE.Vector4(L.stripe2 ? L.stripe2[1] : 9, L.stripe2 ? L.stripe2[2] : 9, L.rise || 0, 0) },
+      uTb: { value: new THREE.Vector4(tz0, tz0 + tw, 0.07, 0.07 + tw / 16 / o.R) },
+      uFl: { value: new THREE.Vector4(L.title ? 1 : 0, L.nose ? 1 : 0, L.finLead ? 1 : 0, L.finMode || 0) },
+      uBody: V3(L.body || white), uBelly: V3(L.belly || white), uTop: V3(L.top || white), uStr: V3(L.stripe ? L.stripe[0] : white), uStr2: V3(L.stripe2 ? L.stripe2[0] : white),
+      uFin1: V3(fin[0]), uFin2: V3(fin[1] || fin[0]), uFin3: V3(fin[2] || fin[1] || fin[0]), uWing: V3(L.wing || "#d9dde1"), uNose: V3(L.nose || white), uLead: V3(L.finLead || white),
+      uTitle: { value: L.title ? titleTex(L) : BLANK_TEX }, uCabin: cabin || { value: 0 },
+    };
+    const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, metalness: Math.min(pt.m, 0.3), roughness: clamp(pt.r, 0.3, 0.55), side: THREE.DoubleSide, envMapIntensity: 0.9 });
+    mat.userData.u = u; mat.onBeforeCompile = liveryCompile;
+    return mat;
+  }
+  function paintPack(key, o, liv) {
+    const ck = `paint:${key}:${liv ? liv.id : "white"}`; if (PACK_CACHE[ck]) return PACK_CACHE[ck];
+    const parts = paintGeo(key).map((pt) => (pt.gear ? pt : { gear: false, g: pt.g, mat: liveryMat(pt, o, liv), src: pt }));
+    return (PACK_CACHE[ck] = parts);
+  }
+  // ---------- passenger cabin: built only for your own plane, seen from the Cabin camera ----------
+  function buildCabin(o) {
+    const g = new THREE.Group(), R = o.R, Ri = R * 0.9, len = o.zTail - o.zNose;
+    const z0 = o.zNose + len * 0.17, z1 = o.zTail - len * 0.24, cl = z1 - z0, zc = (z0 + z1) / 2;
+    const yw = o.win * R, floorY = Math.max(o.cy - R * 0.5, o.cy + yw - 1.12), bh = 0.56;   // window centre ~1.1 m above the floor
+    const mat = (c, e = 0.1) => new THREE.MeshLambertMaterial({ color: c, emissive: c, emissiveIntensity: e, side: THREE.DoubleSide });
+    const wallM = mat(0x9c988f), seatM = mat(0x1c2740, 0.08), headM = mat(0x8e8c87, 0.05), carpetM = mat(0x2a2e38, 0.06), binM = mat(0xa9a59d), trimM = mat(0x77746e);
+    const screenM = new THREE.MeshBasicMaterial({ color: 0x1f4d7a }), lightM = new THREE.MeshBasicMaterial({ color: 0xfff1d6 });
+    // wall: cylinder pieces above and below the window band; the band is a row of panels with rounded window openings
+    const tw = Math.acos(clamp(-yw / Ri, -1, 1)), dT = bh / 2 / Ri, tf = Math.acos(clamp(-(floorY - o.cy) / Ri, -1, 1));
+    for (const [a, b] of [[tf - 0.12, tw - dT], [tw + dT, Math.PI * 2 - tw - dT], [Math.PI * 2 - tw + dT, Math.PI * 2 - tf + 0.12]]) {
+      const cg = new THREE.CylinderGeometry(Ri, Ri, cl, 56, 1, true, a, b - a); cg.rotateX(Math.PI / 2); cg.translate(0, o.cy, zc);
+      g.add(new THREE.Mesh(cg, wallM));
+    }
+    const pitchW = 0.53, sh = new THREE.Shape();
+    const ph = bh / 2 + 0.05; sh.moveTo(-pitchW / 2 - 0.004, -ph); sh.lineTo(pitchW / 2 + 0.004, -ph); sh.lineTo(pitchW / 2 + 0.004, ph); sh.lineTo(-pitchW / 2 - 0.004, ph); sh.lineTo(-pitchW / 2 - 0.004, -ph);
+    { const hw = 0.12, hh = 0.175, r = 0.09, hole = new THREE.Path();
+      hole.moveTo(-hw, -hh + r); hole.lineTo(-hw, hh - r); hole.quadraticCurveTo(-hw, hh, -hw + r, hh); hole.lineTo(hw - r, hh); hole.quadraticCurveTo(hw, hh, hw, hh - r);
+      hole.lineTo(hw, -hh + r); hole.quadraticCurveTo(hw, -hh, hw - r, -hh); hole.lineTo(-hw + r, -hh); hole.quadraticCurveTo(-hw, -hh, -hw, -hh + r); sh.holes.push(hole); }
+    const nWin = Math.floor(cl / pitchW), panels = new THREE.InstancedMesh(new THREE.ShapeGeometry(sh, 6), wallM, nWin * 2);
+    const m4 = new THREE.Matrix4(), bx = new THREE.Vector3(), by = new THREE.Vector3(), bz = new THREE.Vector3();
+    for (let k = 0, i = 0; k < nWin; k++) for (const th of [tw, Math.PI * 2 - tw]) {
+      const z = z0 + (k + 0.5) * pitchW, sn = Math.sin(th), cs = Math.cos(th);
+      bx.set(0, 0, 1); by.set(cs, sn, 0); bz.set(-sn, cs, 0);
+      m4.makeBasis(bx, by, bz).setPosition(Ri * 0.997 * sn, o.cy - Ri * 0.997 * cs, z); panels.setMatrixAt(i++, m4);
+    }
+    g.add(panels);
+    // floor, end bulkheads, ceiling light strips, overhead bins
+    const fw = Ri * Math.sin(tf) * 2, floor = new THREE.Mesh(new THREE.PlaneGeometry(fw, cl), carpetM); floor.rotation.x = -Math.PI / 2; floor.position.set(0, floorY, zc); g.add(floor);
+    for (const [z, ry] of [[z0, 0], [z1, Math.PI]]) { const d = new THREE.Mesh(new THREE.CircleGeometry(Ri, 40), trimM); d.position.set(0, o.cy, z); d.rotation.y = ry; g.add(d); }
+    const box = (w, h, d, m, x, y, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); g.add(b); return b; };
+    for (const sx of [-1, 1]) {
+      box(0.62, 0.44, cl, binM, sx * (Ri * 0.82 - 0.31), o.cy + Ri * 0.55 - 0.05, zc);
+      box(0.04, 0.03, cl, lightM, sx * (Ri * 0.82 - 0.64), o.cy + Ri * 0.55 - 0.25, zc);        // reading-light strip under the bins
+      box(0.12, 0.02, cl, lightM, sx * 0.45, o.cy + Ri * 0.96, zc);                             // ceiling lights
+    }
+    const wide = R > 2.4;
+    if (wide) box(1.15, 0.4, cl, binM, 0, o.cy + Ri * 0.6, zc);
+    // seats: 3-3 single aisle, 2-3-2 on the 767, 3-3-3 on the 777
+    const blocks = !wide ? [3, 3] : R > 3.1 ? [3, 3, 3] : [2, 3, 2], sw = 0.47, aisle = 0.52;
+    const tot = blocks.reduce((a, b) => a + b, 0) * sw + (blocks.length - 1) * aisle, xs = [];
+    { let x = -tot / 2 + sw / 2; blocks.forEach((n, bi) => { for (let k = 0; k < n; k++) { xs.push(x); x += sw; } x += aisle; }); }
+    const rowPitch = 0.81, rows = Math.floor((cl - 1.2) / rowPitch), seatN = rows * xs.length;
+    const parts = [[sw - 0.05, 0.14, 0.48, seatM, 0.45, 0], [sw - 0.05, 0.62, 0.12, seatM, 0.76, 0.28], [sw - 0.12, 0.17, 0.13, headM, 0.99, 0.285], [0.25, 0.15, 0.01, screenM, 0.86, 0.345], [0.05, 0.09, 0.42, trimM, 0.6, 0.02]]
+      .map(([w, h, d, m, y, dz]) => ({ im: new THREE.InstancedMesh(new THREE.BoxGeometry(w, h, d), m, seatN), y, dz }));
+    const camZ = o.zNose + len * 0.47; let best = 0, bestD = 1e9;
+    for (let r = 0, i = 0; r < rows; r++) {
+      const z = z0 + 0.6 + r * rowPitch; if (Math.abs(z - camZ) < bestD) { bestD = Math.abs(z - camZ); best = z; }
+      for (const x of xs) { for (const pt of parts) { m4.makeTranslation(pt === parts[4] ? x + sw / 2 - 0.02 : x, floorY + pt.y, z + pt.dz); pt.im.setMatrixAt(i, m4); } i++; }
+    }
+    parts.forEach((pt) => g.add(pt.im));
+    g.userData.seat = new THREE.Vector3(xs[0] + 0.06, floorY + 1.17, best + 0.05);   // left window seat, just ahead of the wing
+    g.traverse((m) => { m.frustumCulled = false; });
+    return g;
+  }
   function buildPacked(key, o, liv) {
     const pk = decodePack(key), root = new THREE.Group(), gearG = new THREE.Group(); root.add(gearG);
-    for (const pt of paintPack(key, o, liv)) ((pt.gear && !o.bodyOnly) ? gearG : root).add(new THREE.Mesh(pt.g, pt.mat));
+    for (const pt of paintPack(key, o, liv)) {
+      const mesh = new THREE.Mesh(pt.g, pt.mat); ((pt.gear && !o.bodyOnly) ? gearG : root).add(mesh);
+      if (pt.src) mesh.userData.remat = (cabin) => liveryMat(pt.src, o, liv, cabin);   // the player's copy gets its own material for the cabin view
+    }
+    root.userData.cabin = o;
     if (o.addGear) {   // the model has no wheels of its own: separate struts and tyres underneath it
       const gh = o.gearH, r = o.wheelR || 0.55;
       root.updateMatrixWorld(true);
@@ -1755,10 +1868,10 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const dummy = () => new THREE.Object3D();
     return finishModel(root, { prop: null, gear: gearG, ail: [dummy(), dummy()], elev: [dummy()], rud: dummy(), strobes: [], fans: [] });
   }
-  function build737model(liv) { return buildPacked("b737", { cy: 1.08, R: 2.16, finTop: 9.2, tailZ: 19.6, beaconY: 2.2 }, liv); }
-  function build767model(liv) { return buildPacked("b767", { cy: 0.2, R: 2.7, finTop: 11.4, bodyOnly: true, addGear: true, gearH: 4.2, mainX: 4.65, mainZ: 2.4, noseZ: -18.3, bogie: true, tailZ: 24.0, beaconY: 2.8 }, liv); }
-  function build777model(liv) { return buildPacked("b777", { cy: 0.26, R: 3.46, finTop: 14.6, bodyOnly: true, addGear: true, gearH: 5.3, wheelR: 0.66, mainX: 5.6, mainZ: 3.3, noseZ: -25.4, bogie: true, six: true, tailZ: 30.7, beaconY: 3.6 }, liv); }
-  function buildMHmodel(liv) { return buildPacked("mh", { cy: 1.1, R: 2.1, finTop: 10.7, bodyOnly: true, addGear: true, gearH: 3.0, mainX: 2.7, mainZ: 1.6, noseZ: -13.6, tailZ: 17.6, beaconY: 2.0 }, liv); }
+  function build737model(liv) { return buildPacked("b737", { cy: 1.08, R: 2.16, finTop: 9.2, win: 0.19, zNose: -19.9, zTail: 19.5, tailZ: 19.6, beaconY: 2.2 }, liv); }
+  function build767model(liv) { return buildPacked("b767", { cy: 0.2, R: 2.7, finTop: 11.4, win: 0.21, zNose: -24.3, zTail: 24.3, bodyOnly: true, addGear: true, gearH: 4.2, mainX: 4.65, mainZ: 2.4, noseZ: -18.3, bogie: true, tailZ: 24.0, beaconY: 2.8 }, liv); }
+  function build777model(liv) { return buildPacked("b777", { cy: 0.26, R: 3.46, finTop: 14.6, win: 0.21, zNose: -32.7, zTail: 31.1, bodyOnly: true, addGear: true, gearH: 5.3, wheelR: 0.66, mainX: 5.6, mainZ: 3.3, noseZ: -25.4, bogie: true, six: true, tailZ: 30.7, beaconY: 3.6 }, liv); }
+  function buildMHmodel(liv) { return buildPacked("mh", { cy: 1.1, R: 2.1, finTop: 10.7, win: 0.1, zNose: -17.7, zTail: 16.6, bodyOnly: true, addGear: true, gearH: 3.0, mainX: 2.7, mainZ: 1.6, noseZ: -13.6, tailZ: 17.6, beaconY: 2.0 }, liv); }
   function buildPlane(kind, livId) {
     const sp = PLANES[kind];
     if (sp.glb) return GLB[kind] && GLB[kind].status === "ready" ? GLB[kind].make() : null;
@@ -1947,12 +2060,17 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   shadow.rotation.x = -Math.PI / 2; scene.add(shadow);
   const boom = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0xff8a3d, transparent: true, opacity: 0.9 }));
   boom.visible = false; scene.add(boom);
+  const CABIN = { value: 0 }, cabinLook = { yaw: 1.62, pitch: -0.22 };   // CABIN = 1 hides your own fuselage skin from inside
   function setPlane(kind) {
     const m = buildPlane(kind, chosenLiv[kind]);
     if (!m) return false;
     spec = PLANES[kind];
     if (model) scene.remove(model);
     model = m; model.userData.kind = kind; scene.add(model);
+    if (model.userData.cabin) {
+      model.traverse((o) => { if (o.isMesh && o.userData.remat) o.material = o.userData.remat(CABIN); });
+      const cg = buildCabin(model.userData.cabin); cg.visible = false; model.add(cg); model.userData.cabinG = cg;
+    }
     model.traverse((o) => { if (o.isMesh) o.castShadow = QS.shadows; });
     return true;
   }
@@ -1963,7 +2081,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     vs: 0, touchFpm: null, landedAt: null, autobrake: false, calls: {}, callUntil: 0, cam: "chase", inputs: { pitch: 0, roll: 0, yaw: 0 }, boomT: 0, started: false,
   };
   const flyby = { set: false, p: new THREE.Vector3() };
-  const V = { fwd: new THREE.Vector3(), up: new THREE.Vector3(), right: new THREE.Vector3(), tmp: new THREE.Vector3(), tmp2: new THREE.Vector3(), wind: new THREE.Vector3(), air: new THREE.Vector3() };
+  const V = { fwd: new THREE.Vector3(), up: new THREE.Vector3(), right: new THREE.Vector3(), tmp: new THREE.Vector3(), tmp2: new THREE.Vector3(), wind: new THREE.Vector3(), air: new THREE.Vector3(), q2: new THREE.Quaternion(), eul: new THREE.Euler(0, 0, 0, "YXZ") };
   const tmpQ = new THREE.Quaternion(), AX = new THREE.Vector3(1, 0, 0), AY = new THREE.Vector3(0, 1, 0), AZ = new THREE.Vector3(0, 0, 1);
   const MS2KT = 1.944, M2FT = 3.281;
 
@@ -2037,7 +2155,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   // ================= INPUT =================
   const keys = new Set(); let invert = load("sw-invert") === "1", showMap = 1;
   const stick = { x: 0, y: 0 }; let touchBrake = false, touchYaw = 0;
-  const CAMS = [["chase", "Chase"], ["cockpit", "Cockpit"], ["wing", "Wing"], ["tower", "Tower"], ["orbit", "Orbit"], ["flyby", "Fly-by"], ["free", "Free"]];
+  const CAMS = [["chase", "Chase"], ["cockpit", "Cockpit"], ["wing", "Wing"], ["tower", "Tower"], ["orbit", "Orbit"], ["flyby", "Fly-by"], ["free", "Free"], ["cabin", "Cabin"]];
   const freeCam = { pos: new THREE.Vector3(), yaw: 0, pitch: 0, speed: 40, on: false };
   const camWrap = $("cams");
   CAMS.forEach(([id, label], i) => {
@@ -2054,6 +2172,8 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     S.cam = id; flyby.set = false;
     { const nm = document.getElementById("camName"); if (nm) nm.textContent = CAMS.find((c) => c[0] === id)[1]; }
     camWrap.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.cam === id)));
+    if (id === "cabin" && !(model && model.userData.cabinG)) { flash("This aircraft has no cabin view", 1.6); id = "chase"; S.cam = id; }
+    if (S.mode === "fly" && id === "cabin") { flash("Cabin view: window seat · drag to look around", 2.4); return; }
     if (S.mode === "fly") flash(id === "free" ? "Free camera: WASD move · Q/E down/up · drag to look" : `${CAMS.find((c) => c[0] === id)[1]} view${id === "orbit" ? ": drag to look around, scroll to zoom" : ""}`, id === "free" ? 4 : 1.6);
   }
   setCam("chase");
@@ -2078,7 +2198,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const k = e.code;
     if (S.mode === "fly" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(k)) e.preventDefault();
     keys.add(k); if (e.repeat) return;
-    if (/^Digit[1-7]$/.test(k)) setCam(CAMS[+k.slice(5) - 1][0]);
+    if (/^Digit[1-8]$/.test(k)) setCam(CAMS[+k.slice(5) - 1][0]);
     if (k === "KeyC") cycleCam();
     if (k === "KeyG" && S.mode === "fly") toggleGear();
     if (k === "KeyV" && S.mode === "fly") cycleFlaps();
@@ -2176,6 +2296,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   worldCv.addEventListener("pointermove", (e) => {
     if (!drag || e.pointerId !== drag.id) return;
     if (S.cam === "orbit") { orbit.yaw -= (e.clientX - drag.x) * 0.008; orbit.pitch = clamp(orbit.pitch + (e.clientY - drag.y) * 0.006, -0.3, 1.4); }
+    if (S.cam === "cabin") { cabinLook.yaw = clamp(cabinLook.yaw - (e.clientX - drag.x) * 0.005, -0.6, 3.6); cabinLook.pitch = clamp(cabinLook.pitch - (e.clientY - drag.y) * 0.005, -0.8, 0.7); }
     if (S.cam === "free") { freeCam.yaw -= (e.clientX - drag.x) * 0.005; freeCam.pitch = clamp(freeCam.pitch - (e.clientY - drag.y) * 0.005, -1.5, 1.5); }
     drag.x = e.clientX; drag.y = e.clientY;
   });
@@ -2744,12 +2865,20 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   function updateCamera(dt, now) {
     const fwd = V.fwd.set(0, 0, -1).applyQuaternion(S.q), up = V.up.set(0, 1, 0).applyQuaternion(S.q), right = V.right.set(1, 0, 0).applyQuaternion(S.q);
     let fov = 65;
+    { // the cabin is drawn (and your own fuselage skin hidden) only while you sit in it
+      const cg = model && model.userData.cabinG, inCab = !!cg && S.cam === "cabin" && !S.crashed && S.mode !== "brief" && S.mode !== "over";
+      CABIN.value = inCab ? 1 : 0; if (cg) cg.visible = inCab;
+      const nr = inCab ? 0.05 : 0.4; if (camera.near !== nr) { camera.near = nr; camera.updateProjectionMatrix(); }
+    }
     if (S.mode === "brief" || S.mode === "over") {
       const a = now / 8000, d = spec.cam[0] * 1.3;
       camera.position.set(S.pos.x + Math.sin(a) * d, S.pos.y + spec.cam[1] * 0.6, S.pos.z + Math.cos(a) * d); clampCam(camera.position);
       camera.up.copy(WUP); camera.lookAt(S.pos); fov = 50;
     } else if (S.cam === "cockpit" && !S.crashed) {
       camera.position.copy(S.pos).addScaledVector(up, spec.cock[0]).addScaledVector(fwd, -spec.cock[1]); camera.quaternion.copy(S.q); fov = 72;
+    } else if (S.cam === "cabin" && !S.crashed && model.userData.cabinG) {
+      camera.position.copy(model.userData.cabinG.userData.seat).applyQuaternion(S.q).add(S.pos);
+      camera.quaternion.copy(S.q).multiply(V.q2.setFromEuler(V.eul.set(cabinLook.pitch, cabinLook.yaw, 0, "YXZ"))); fov = 64;
     } else if (S.cam === "wing" && !S.crashed) {
       camera.position.copy(S.pos).addScaledVector(right, spec.wingX * 0.92).addScaledVector(up, spec.cam[1] * 0.22).addScaledVector(fwd, -spec.cam[0] * 0.12);
       camera.quaternion.copy(S.q); camera.rotateY(0.12); fov = 70;
@@ -2843,6 +2972,17 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const { w, h } = hudSize; hud.clearRect(0, 0, w, h);
     thrFill.style.height = `${Math.round(S.throttle * (thrEl.clientHeight - 8))}px`; thrLbl.textContent = `THR ${Math.round(S.throttle * 100)}%`;
     if (S.mode !== "fly" && S.mode !== "paused") return;
+    if (S.cam === "cabin" && CABIN.value) {   // passenger view: a quiet flight-information strip instead of the HUD
+      const fs = Math.max(12, Math.round(Math.min(w, h) / 46)), MONO2 = MONO;
+      const kt = Math.round(S.gs * MS2KT), ft = Math.round(Math.max(0, S.pos.y - spec.gearH) * M2FT);
+      let line = `${spec.name} · ${ft.toLocaleString("en-US")} ft · ${kt} kt ground speed`;
+      if (S.to) { const [tx, tz] = toWorld(S.to, -S.to.len / 2, 0), d = Math.hypot(tx - S.pos.x, tz - S.pos.z); line += ` · ${S.to.name} ${(d / 1000).toFixed(1)} km` + (S.gs > 20 ? ` · ${Math.max(1, Math.round(d / S.gs / 60))} min` : ""); }
+      hud.font = `${fs}px ${MONO2}`; hud.textAlign = "center"; hud.textBaseline = "middle";
+      const lw = Math.min(w - 24, hud.measureText(line).width + 32), y = h - fs * 2.6;
+      hud.fillStyle = "rgba(10,14,20,0.55)"; hud.fillRect((w - lw) / 2, y - fs, lw, fs * 2); hud.fillStyle = "#f3efe6"; hud.fillText(line, w / 2, y, w - 40);
+      if (S.msgT > 0) { hud.fillStyle = HC.amber; hud.globalAlpha = clamp(S.msgT, 0, 1); hud.fillText(S.msg, w / 2, fs * 3.5, w - 24); hud.globalAlpha = 1; }
+      return;
+    }
     const fwd = V.fwd.set(0, 0, -1).applyQuaternion(S.q), up = V.up.set(0, 1, 0).applyQuaternion(S.q), right = V.right.set(1, 0, 0).applyQuaternion(S.q);
     const pitchDeg = Math.asin(clamp(fwd.y, -1, 1)) * 57.3, rollR = Math.atan2(right.y, up.y);
     const cock = S.cam === "cockpit" && !S.crashed;
