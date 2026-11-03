@@ -373,7 +373,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
         <dt><kbd>R</kbd><kbd>F</kbd> or <kbd>Shift</kbd><kbd>Z</kbd></dt><dd>Throttle up / down</dd>
         <dt><kbd>Space</kbd></dt><dd>Wheel brakes</dd>
         <dt><kbd>V</kbd> · <kbd>G</kbd></dt><dd>Flaps (0, 1, 2) · landing gear</dd>
-        <dt><kbd>1</kbd>–<kbd>6</kbd> or <kbd>C</kbd></dt><dd>Camera views (drag to look around in Orbit)</dd>
+        <dt><kbd>1</kbd>–<kbd>7</kbd> or <kbd>C</kbd></dt><dd>Camera views (drag to look around in Orbit)</dd>
         <dt><kbd>X</kbd> · <kbd>T</kbd></dt><dd>Spoilers (speed brakes) · reverse thrust on the ground</dd>
         <dt><kbd>[</kbd> <kbd>]</kbd> · <kbd>L</kbd> · <kbd>N</kbd></dt><dd>Pitch trim · landing lights · parking brake</dd>
         <dt><kbd>M</kbd> · <kbd>P</kbd> · <kbd>H</kbd></dt><dd>Map: local, whole world, off · pause · this help</dd>
@@ -441,7 +441,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
         <dt><kbd>Space</kbd></dt><dd>Wheel brakes</dd>
         <dt><kbd>V</kbd></dt><dd>Flaps: more lift at low speed for takeoff and landing</dd>
         <dt><kbd>G</kbd></dt><dd>Raise or lower the landing gear</dd>
-        <dt><kbd>1</kbd> Chase · <kbd>2</kbd> Cockpit · <kbd>3</kbd> Wing</dt><dd><kbd>4</kbd> Tower · <kbd>5</kbd> Orbit (drag + scroll) · <kbd>6</kbd> Fly-by</dd>
+        <dt><kbd>1</kbd> Chase · <kbd>2</kbd> Cockpit · <kbd>3</kbd> Wing</dt><dd><kbd>4</kbd> Tower · <kbd>5</kbd> Orbit (drag + scroll) · <kbd>6</kbd> Fly-by · <kbd>7</kbd> Free camera (W A S D, Q / E, drag to look)</dd>
         <dt><kbd>X</kbd> Spoilers</dt><dd>Panels on top of the wing that kill lift and add drag. Use them to slow down or descend faster; airliners raise them by themselves on touchdown</dd>
         <dt><kbd>T</kbd> Reverse thrust</dt><dd>On the ground after landing, press T and add throttle to slow down hard</dd>
         <dt><kbd>[</kbd> <kbd>]</kbd> Trim</dt><dd>Holds the nose up or down a little so you don't have to keep pressing</dd>
@@ -466,11 +466,11 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     </section>
     <section class="card credits" aria-labelledby="credits">
       <h2 id="credits">Model credits</h2>
-      <p class="tip">All three aircraft are 3D models from Sketchfab, used under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> license. They were rescaled, re-oriented, merged and packed into a lighter format for the game; the Medium-haul jet and the 767 have no wheels of their own, so the game adds landing gear beside them.</p>
+      <p class="tip">All three aircraft are 3D models from Sketchfab, used under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> license. They were rescaled, re-oriented, merged and packed into a lighter format for the game; the 737 and 767 models have no wheels of their own, so the game adds separate landing gear under them.</p>
       <ul class="airports">
-        <li><code>B737</code><span><a href="https://sketchfab.com/3d-models/1400-boeing-737-airplane-for-free-f39ca33a81f14613a3d562d6b74c466a" target="_blank" rel="noopener">1/400 Boeing 737 Airplane For Free</a> by businessyuen</span><span>CC BY 4.0</span></li>
+        <li><code>A320</code><span><a href="https://sketchfab.com/3d-models/1400-boeing-737-airplane-for-free-f39ca33a81f14613a3d562d6b74c466a" target="_blank" rel="noopener">1/400 Boeing 737 Airplane For Free</a> by businessyuen</span><span>CC BY 4.0</span></li>
         <li><code>B767</code><span><a href="https://sketchfab.com/3d-models/boeing-767-200er-41d1b62ed48c4212bf3ef7cd1fca3995" target="_blank" rel="noopener">Boeing 767-200ER</a> by beanz_ncheese</span><span>CC BY 4.0</span></li>
-        <li><code>MH</code><span><a href="https://sketchfab.com/3d-models/medium-haul-plane-low-poly-226d0f39a9154db9922fcbdd56efe0f5" target="_blank" rel="noopener">Medium haul plane (low poly)</a> by reeledzin</span><span>CC BY 4.0</span></li>
+        <li><code>737</code><span><a href="https://sketchfab.com/3d-models/medium-haul-plane-low-poly-226d0f39a9154db9922fcbdd56efe0f5" target="_blank" rel="noopener">Medium haul plane (low poly)</a> by reeledzin</span><span>CC BY 4.0</span></li>
       </ul>
     </section>
   </div>
@@ -1401,9 +1401,9 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   const randomLiv = (kind) => { const l = LIVERIES[kind]; return l && Math.random() < 0.85 ? l[Math.floor(Math.random() * l.length)] : "house"; };
   let chosenLiv = {}; try { chosenLiv = JSON.parse(load("sw-liv") || "{}") || {}; } catch { chosenLiv = {}; }
   const PLANES = {
-    b737: { name: "Boeing 737", type: "Narrow-body airliner · detailed 3D model", packed: true, build: build737model, thrust: 7.0, vmax: 128, stall: 46, roll: 0.8, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 3.2, retract: true, cam: [64, 13], cock: [1.0, -20.4], wingX: 17.9, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.3, 0.35] },
+    b737: { name: "Airbus A320", type: "Narrow-body airliner · detailed 3D model", packed: true, build: build737model, thrust: 7.0, vmax: 128, stall: 46, roll: 0.8, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 3.2, retract: true, cam: [64, 13], cock: [1.0, -20.4], wingX: 17.9, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.3, 0.35] },
     b767: { name: "Boeing 767-200ER", type: "Wide-body airliner · 3D model", packed: true, build: build767model, thrust: 6.6, vmax: 140, stall: 50, roll: 0.68, pitch: 0.45, yaw: 0.22, turn: 0.7, gearH: 4.2, retract: true, cam: [90, 18], cock: [1.2, -24.85], wingX: 23.6, brake: 4.2, shadow: 26, big: true, stats: [0.9, 0.25, 0.3] },
-    mh: { name: "Medium-haul jet", type: "Narrow-body airliner · low-poly 3D model", packed: true, build: buildMHmodel, thrust: 7.0, vmax: 130, stall: 46, roll: 0.82, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 3.0, retract: true, cam: [60, 13], cock: [1.0, -18.3], wingX: 18.9, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.32, 0.38] },
+    mh: { name: "Boeing 737", type: "Narrow-body airliner · low-poly 3D model", packed: true, build: buildMHmodel, thrust: 7.0, vmax: 130, stall: 46, roll: 0.82, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 3.0, retract: true, cam: [60, 13], cock: [1.0, -18.3], wingX: 18.9, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.32, 0.38] },
   };
   for (const k of Object.keys(PLANES)) PLANES[k].kind = k;
   (function realScale() {
@@ -1420,8 +1420,8 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     }
   })();
   const CAT = { b767: "airliner", b737: "airliner", mh: "airliner", trainer: "light", aero: "light", swift: "light", islander: "airliner", breeze: "airliner", regio: "airliner", skyliner: "airliner", jumbo: "airliner", b772: "airliner", commuter: "airliner", atlas: "special", arrow: "special" };
-  const SEATS = { b767: 224, b737: 189, mh: 180, trainer: 4, aero: 2, swift: 9, islander: 189, breeze: 72, regio: 100, skyliner: 296, jumbo: 416, b772: 396, commuter: 19, atlas: 116, arrow: 1 };
-  const CRUISE = { b767: 459, b737: 453, mh: 450, trainer: 124, aero: 210, swift: 465, islander: 453, breeze: 275, regio: 447, skyliner: 488, jumbo: 490, b772: 490, commuter: 280, atlas: 421, arrow: 500 };
+  const SEATS = { b767: 224, b737: 180, mh: 189, trainer: 4, aero: 2, swift: 9, islander: 189, breeze: 72, regio: 100, skyliner: 296, jumbo: 416, b772: 396, commuter: 19, atlas: 116, arrow: 1 };
+  const CRUISE = { b767: 459, b737: 447, mh: 453, trainer: 124, aero: 210, swift: 465, islander: 453, breeze: 275, regio: 447, skyliner: 488, jumbo: 490, b772: 490, commuter: 280, atlas: 421, arrow: 500 };
   for (const k of Object.keys(PLANES)) { PLANES[k].cat = CAT[k] || "light"; PLANES[k].seats = SEATS[k] || 0; }
 
   // ================= DETAILED 3D MODELS (GLB) =================
@@ -1553,22 +1553,28 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   function buildPacked(key, o) {
     const pk = decodePack(key), root = new THREE.Group(), gearG = new THREE.Group(); root.add(gearG);
     for (const pt of pk.parts) ((pt.gear && !o.bodyOnly) ? gearG : root).add(new THREE.Mesh(pt.g, pt.mat));
-    if (o.addGear) {   // the model has no wheels of its own: simple struts and tyres in the right places
+    if (o.addGear) {   // the model has no wheels of its own: separate struts and tyres underneath it
       const gh = o.gearH, r = 0.55;
+      root.updateMatrixWorld(true);
+      const solids = root.children.filter((c) => c.isMesh), ray = new THREE.Raycaster();
+      // each leg starts exactly at the model's underside above it, so nothing pokes through the wing or body
+      const underside = (x, z) => {
+        const ck = `${key}:${x}:${z}`; if (PACK_CACHE[ck] !== undefined) return PACK_CACHE[ck];
+        ray.set(new THREE.Vector3(x, -gh - 1, z), new THREE.Vector3(0, 1, 0)); ray.far = gh + 40;
+        const hit = ray.intersectObjects(solids, false)[0];
+        return (PACK_CACHE[ck] = hit ? hit.point.y + 0.05 : -0.8);
+      };
       for (const [x, z, n] of [[o.mainX, o.mainZ, 2], [-o.mainX, o.mainZ, 2], [0, o.noseZ, 2]]) {
         const nose = z === o.noseZ, rr = nose ? r * 0.8 : r;
-        gearG.add(strut(x, -0.8, z, x, -gh + rr, z, nose ? 0.1 : 0.16));
+        gearG.add(strut(x, underside(x, z), z, x, -gh + rr, z, nose ? 0.1 : 0.16));
         for (const dz of (o.bogie && !nose ? [-0.65, 0.65] : [0])) for (let k = 0; k < n; k++) {
           const w = wheel(rr, 0.32); w.position.set(x + (k - 0.5) * 0.7, -gh + rr, z + dz); gearG.add(w);
         }
         if (o.bogie && !nose) { const beam = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, 1.6), M.metal); beam.position.set(x, -gh + rr, z); gearG.add(beam); }
       }
     }
-    const tip = new THREE.Vector3(...pk.tip);
-    const strobes = addLights(root, tip.clone(), new THREE.Vector3(-tip.x, tip.y, tip.z), new THREE.Vector3(0, 1.4, o.tailZ));
-    const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 6), M.red); beacon.position.set(0, o.beaconY, 0); root.add(beacon);
     const dummy = () => new THREE.Object3D();
-    return finishModel(root, { prop: null, gear: gearG, ail: [dummy(), dummy()], elev: [dummy()], rud: dummy(), strobes, fans: [], beacon });
+    return finishModel(root, { prop: null, gear: gearG, ail: [dummy(), dummy()], elev: [dummy()], rud: dummy(), strobes: [], fans: [] });
   }
   function build737model() { return buildPacked("b737", { tailZ: 19.6, beaconY: 2.2 }); }
   function build767model() { return buildPacked("b767", { bodyOnly: true, addGear: true, gearH: 4.2, mainX: 4.65, mainZ: 2.4, noseZ: -18.3, bogie: true, tailZ: 24.0, beaconY: 2.8 }); }
@@ -1818,7 +1824,8 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   // ================= INPUT =================
   const keys = new Set(); let invert = load("sw-invert") === "1", showMap = 1;
   const stick = { x: 0, y: 0 }; let touchBrake = false;
-  const CAMS = [["chase", "Chase"], ["cockpit", "Cockpit"], ["wing", "Wing"], ["tower", "Tower"], ["orbit", "Orbit"], ["flyby", "Fly-by"]];
+  const CAMS = [["chase", "Chase"], ["cockpit", "Cockpit"], ["wing", "Wing"], ["tower", "Tower"], ["orbit", "Orbit"], ["flyby", "Fly-by"], ["free", "Free"]];
+  const freeCam = { pos: new THREE.Vector3(), yaw: 0, pitch: 0, speed: 40, on: false };
   const camWrap = $("cams");
   CAMS.forEach(([id, label], i) => {
     const b = document.createElement("button"); b.className = "chip"; b.type = "button"; b.dataset.cam = id;
@@ -1826,10 +1833,15 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     b.addEventListener("click", () => setCam(id)); camWrap.append(b);
   });
   function setCam(id) {
+    if (id === "free" && S.cam !== "free") {
+      // start where the current camera is, looking the same way
+      freeCam.pos.copy(camera.position); const d = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+      freeCam.yaw = Math.atan2(-d.x, -d.z); freeCam.pitch = Math.asin(clamp(d.y, -1, 1));
+    }
     S.cam = id; flyby.set = false;
     { const nm = document.getElementById("camName"); if (nm) nm.textContent = CAMS.find((c) => c[0] === id)[1]; }
     camWrap.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.cam === id)));
-    if (S.mode === "fly") flash(`${CAMS.find((c) => c[0] === id)[1]} view${id === "orbit" ? ": drag to look around, scroll to zoom" : ""}`, 1.6);
+    if (S.mode === "fly") flash(id === "free" ? "Free camera: WASD move · Q/E down/up · drag to look" : `${CAMS.find((c) => c[0] === id)[1]} view${id === "orbit" ? ": drag to look around, scroll to zoom" : ""}`, id === "free" ? 4 : 1.6);
   }
   setCam("chase");
   $("camCycle").addEventListener("click", () => cycleCam());
@@ -1848,7 +1860,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const k = e.code;
     if (S.mode === "fly" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(k)) e.preventDefault();
     keys.add(k); if (e.repeat) return;
-    if (/^Digit[1-6]$/.test(k)) setCam(CAMS[+k.slice(5) - 1][0]);
+    if (/^Digit[1-7]$/.test(k)) setCam(CAMS[+k.slice(5) - 1][0]);
     if (k === "KeyC") cycleCam();
     if (k === "KeyG" && S.mode === "fly") toggleGear();
     if (k === "KeyV" && S.mode === "fly") cycleFlaps();
@@ -1908,10 +1920,13 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   worldCv.addEventListener("pointermove", (e) => {
     if (!drag || e.pointerId !== drag.id) return;
     if (S.cam === "orbit") { orbit.yaw -= (e.clientX - drag.x) * 0.008; orbit.pitch = clamp(orbit.pitch + (e.clientY - drag.y) * 0.006, -0.3, 1.4); }
+    if (S.cam === "free") { freeCam.yaw -= (e.clientX - drag.x) * 0.005; freeCam.pitch = clamp(freeCam.pitch - (e.clientY - drag.y) * 0.005, -1.5, 1.5); }
     drag.x = e.clientX; drag.y = e.clientY;
   });
   worldCv.addEventListener("pointerup", () => (drag = null)); worldCv.addEventListener("pointercancel", () => (drag = null));
-  worldCv.addEventListener("wheel", (e) => { if (S.cam !== "orbit") return; e.preventDefault(); orbit.dist = clamp(orbit.dist * (e.deltaY > 0 ? 1.1 : 0.9), 0.35, 4); }, { passive: false });
+  worldCv.addEventListener("wheel", (e) => {
+    if (S.cam === "free") { e.preventDefault(); freeCam.speed = clamp(freeCam.speed * (e.deltaY > 0 ? 0.8 : 1.25), 2, 600); flash(`Free camera speed ${Math.round(freeCam.speed)} m/s`, 0.8); return; }
+    if (S.cam !== "orbit") return; e.preventDefault(); orbit.dist = clamp(orbit.dist * (e.deltaY > 0 ? 1.1 : 0.9), 0.35, 4); }, { passive: false });
 
   // gamepad
   let padPrev = [];
@@ -2204,11 +2219,12 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
 
   function step(dt) {
     const fwd = V.fwd.set(0, 0, -1).applyQuaternion(S.q), up = V.up.set(0, 1, 0).applyQuaternion(S.q), right = V.right.set(1, 0, 0).applyQuaternion(S.q);
-    let pitch = ((keys.has("ArrowUp") || keys.has("KeyW")) ? 1 : 0) - ((keys.has("ArrowDown") || keys.has("KeyS")) ? 1 : 0);
+    const fc = S.cam === "free";   // in the free camera the movement keys fly the camera, not the plane
+    let pitch = fc ? 0 : ((keys.has("ArrowUp") || keys.has("KeyW")) ? 1 : 0) - ((keys.has("ArrowDown") || keys.has("KeyS")) ? 1 : 0);
     if (invert) pitch = -pitch;
-    let roll = ((keys.has("ArrowRight") || keys.has("KeyD")) ? 1 : 0) - ((keys.has("ArrowLeft") || keys.has("KeyA")) ? 1 : 0);
-    let yaw = (keys.has("KeyE") ? 1 : 0) - (keys.has("KeyQ") ? 1 : 0);
-    pitch += invert ? stick.y : -stick.y; roll += stick.x;
+    let roll = fc ? 0 : ((keys.has("ArrowRight") || keys.has("KeyD")) ? 1 : 0) - ((keys.has("ArrowLeft") || keys.has("KeyA")) ? 1 : 0);
+    let yaw = fc ? 0 : (keys.has("KeyE") ? 1 : 0) - (keys.has("KeyQ") ? 1 : 0);
+    if (!fc) { pitch += invert ? stick.y : -stick.y; roll += stick.x; }
     const pad = readPad(); let brake = keys.has("Space") || keys.has("KeyB") || touchBrake;
     if (pad) { pitch += invert ? -pad.pitch : pad.pitch; roll += pad.roll; yaw += pad.yaw; if (pad.thr) S.throttle = clamp(S.throttle + pad.thr * dt * 0.8, 0, 1); brake = brake || pad.brake; }
     pitch = clamp(pitch, -1, 1); roll = clamp(roll, -1, 1); yaw = clamp(yaw, -1, 1);
@@ -2218,7 +2234,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       else { const c = apControl(dt, fwd, right); if (c) { pitch = c.pitch; roll = c.roll; } }
     }
     S.inputs.pitch = lerp(S.inputs.pitch, pitch, Math.min(1, dt * 8)); S.inputs.roll = lerp(S.inputs.roll, roll, Math.min(1, dt * 8)); S.inputs.yaw = lerp(S.inputs.yaw, yaw, Math.min(1, dt * 8));
-    if (keys.has("KeyR") || keys.has("ShiftLeft") || keys.has("ShiftRight") || keys.has("Equal")) S.throttle = clamp(S.throttle + dt * 0.9, 0, 1);
+    if (keys.has("KeyR") || (!fc && (keys.has("ShiftLeft") || keys.has("ShiftRight"))) || keys.has("Equal")) S.throttle = clamp(S.throttle + dt * 0.9, 0, 1);
     if (keys.has("KeyF") || keys.has("KeyZ") || keys.has("Minus")) S.throttle = clamp(S.throttle - dt * 0.9, 0, 1);
     apThrottle(dt);
     S.brake = brake;
@@ -2395,6 +2411,17 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     } else if (S.cam === "tower") {
       camera.position.copy(nearestTower()); camera.up.copy(WUP); camera.lookAt(S.pos);
       const d = camera.position.distanceTo(S.pos); fov = clamp(2 * Math.atan2(spec.cam[0] * 0.9, d) * 57.3, 2.5, 60);
+    } else if (S.cam === "free") {
+      // keys (or the touch stick) move the camera, not the plane
+      const f = new THREE.Vector3(-Math.sin(freeCam.yaw) * Math.cos(freeCam.pitch), Math.sin(freeCam.pitch), -Math.cos(freeCam.yaw) * Math.cos(freeCam.pitch));
+      const rgt = new THREE.Vector3(Math.cos(freeCam.yaw), 0, -Math.sin(freeCam.yaw));
+      const fast = keys.has("ShiftLeft") || keys.has("ShiftRight") ? 4 : 1, v = freeCam.speed * fast * dt;
+      const mf = ((keys.has("KeyW") || keys.has("ArrowUp")) ? 1 : 0) - ((keys.has("KeyS") || keys.has("ArrowDown")) ? 1 : 0) - stick.y;
+      const mr = ((keys.has("KeyD") || keys.has("ArrowRight")) ? 1 : 0) - ((keys.has("KeyA") || keys.has("ArrowLeft")) ? 1 : 0) + stick.x;
+      const mu = (keys.has("KeyE") ? 1 : 0) - (keys.has("KeyQ") ? 1 : 0);
+      freeCam.pos.addScaledVector(f, mf * v).addScaledVector(rgt, mr * v); freeCam.pos.y += mu * v;
+      clampCam(freeCam.pos);
+      camera.position.copy(freeCam.pos); camera.rotation.set(freeCam.pitch, freeCam.yaw, 0, "YXZ"); fov = 65;
     } else if (S.cam === "orbit") {
       const d = spec.cam[0] * 1.2 * orbit.dist;
       tv.set(Math.sin(orbit.yaw) * Math.cos(orbit.pitch), Math.sin(orbit.pitch), Math.cos(orbit.yaw) * Math.cos(orbit.pitch)).multiplyScalar(d).add(S.pos);
