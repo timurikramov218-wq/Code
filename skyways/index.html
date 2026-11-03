@@ -466,7 +466,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     </section>
     <section class="card credits" aria-labelledby="credits">
       <h2 id="credits">Model credits</h2>
-      <p class="tip">All three aircraft are 3D models from Sketchfab, used under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> license. They were rescaled, re-oriented, merged and packed into a lighter format for the game; the 737 and 767 models have no wheels of their own, so the game adds separate landing gear under them.</p>
+      <p class="tip">All three aircraft are 3D models from Sketchfab, used under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> license. They were rescaled, re-oriented, merged, packed into a lighter format and repainted (plain white, or fan-made airline colour schemes without logos) for the game; the 737 and 767 models have no wheels of their own, so the game adds separate landing gear under them.</p>
       <ul class="airports">
         <li><code>A320</code><span><a href="https://sketchfab.com/3d-models/1400-boeing-737-airplane-for-free-f39ca33a81f14613a3d562d6b74c466a" target="_blank" rel="noopener">1/400 Boeing 737 Airplane For Free</a> by businessyuen</span><span>CC BY 4.0</span></li>
         <li><code>B767</code><span><a href="https://sketchfab.com/3d-models/boeing-767-200er-41d1b62ed48c4212bf3ef7cd1fca3995" target="_blank" rel="noopener">Boeing 767-200ER</a> by beanz_ncheese</span><span>CC BY 4.0</span></li>
@@ -570,8 +570,19 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     for (const a of AIRPORTS) { const f = smooth(450, 40, apQ(a, x, z)); if (f > best) { best = f; ap = a; } }
     return [best, ap];
   }
+  // approach corridors: hills are lowered under both runway approaches so a 3° glide path (and the climb-out) is always clear
+  function corridorCap(a, x, z, h) {
+    const [al, ac] = local(a, x, z), r = a.rwys[0], d = Math.abs(al) - r.len / 2;
+    if (d <= 0 || d > 12000) return h;
+    const cap = a.elev + 2 + d * 0.0524 * 0.55;
+    if (h <= cap) return h;
+    const half = 350 + d * 0.12, q = Math.abs(ac - r.off);
+    if (q > half + 700) return h;
+    return h - (h - cap) * smooth(half + 700, half, q) * smooth(12000, 9500, d);
+  }
   function heightAt(x, z) {
     let h = rawHeight(x, z);
+    for (const a of AIRPORTS) h = corridorCap(a, x, z, h);
     for (const a of AIRPORTS) { const f = smooth(450, 40, apQ(a, x, z)); if (f > 0) h = h * (1 - f) + (a.elev - 0.3) * f; }
     return h;
   }
@@ -1390,7 +1401,29 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     emirates:  Object.assign({ name: "Emirates", bellyCss: "#f4f6f8", accent: 0xd71921, accentCss: "#d71921", cheat: false, tailCss: "#d71921", title: "Emirates", titleColor: "#d71921", reg: "A6-SKY" }, W),
     azul:      Object.assign({ name: "Azul", bellyCss: "#f4f6f8", accent: 0x1a4aa0, accentCss: "#1a4aa0", cheat: false, tailCss: "#1a4aa0", title: "AZUL", titleColor: "#1a4aa0", reg: "PR-SKY" }, W),
   };
+  // airline colour schemes for the detailed models: paint only, the 3D shapes are never changed.
+  // body / belly (below bellyY·R from the fuselage axis) / top (above topY·R) / stripe [colour, from, to] / fin colours top→bottom
+  const AIRLINE = {
+    dal: { name: "Delta", belly: "#14284b", bellyY: -0.35, fin: ["#b0172f"] },
+    ual: { name: "United", belly: "#0033a0", bellyY: -0.2, fin: ["#0b2d6e"] },
+    aal: { name: "American", body: "#c3c9cf", wing: "#b4bac0", fin: ["#0a3a79"] },
+    uae: { name: "Emirates", fin: ["#d71921"] },
+    qtr: { name: "Qatar", fin: ["#5c0632"], top: "#e7e9ec", topY: 0.85 },
+    dlh: { name: "Lufthansa", fin: ["#05164d"] },
+    baw: { name: "British Airways", belly: "#13306b", bellyY: -0.45, fin: ["#13306b"] },
+    klm: { name: "KLM", top: "#00a1de", topY: 0.05, stripe: ["#003082", -0.05, 0.05], fin: ["#00a1de"] },
+    ryr: { name: "Ryanair", belly: "#073590", bellyY: -0.4, fin: ["#073590"] },
+    ezy: { name: "easyJet", fin: ["#ff6600"], stripe: ["#ff6600", -0.62, -0.5] },
+    thy: { name: "Turkish Airlines", fin: ["#c8102e"], stripe: ["#c8102e", -0.5, -0.46] },
+    afl: { name: "Aeroflot", body: "#eef1f4", stripe: ["#0b4ea2", -0.38, -0.3], fin: ["#0039a6"] },
+    s7: { name: "S7 Airlines", body: "#b5d334", wing: "#c9cfd4", fin: ["#8fb31d"] },
+    sia: { name: "Singapore", stripe: ["#f2a900", -0.45, -0.36], fin: ["#0b2a5b"] },
+  };
+  for (const [id, a] of Object.entries(AIRLINE)) LIV[id] = Object.assign({ id, pack: true }, a);
   const LIVERIES = {
+    b737: ["dlh", "baw", "ezy", "thy", "afl", "s7", "aal", "dal", "ual", "qtr"],
+    mh: ["ryr", "ual", "aal", "dal", "klm", "thy", "s7", "afl", "sia"],
+    b767: ["dal", "ual", "aal", "baw", "uae", "qtr", "afl", "klm"],
     islander: ["ryanair", "klm", "turkish", "qantas", "lufthansa"],
     regio: ["klmch", "jetblue", "azul"],
     skyliner: ["ba", "qantas", "ana", "turkish", "airnz"],
@@ -1546,13 +1579,59 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       if (vc) { const C = new Float32Array(gr.n * 3); for (let i = 0; i < C.length; i++) C[i] = vc[i] / 255; g.setAttribute("color", new THREE.BufferAttribute(C, 3)); }
       g.setIndex(new THREE.BufferAttribute(gr.w ? new Uint32Array(ix) : new Uint16Array(ix), 1)); g.computeBoundingSphere();
       const mat = new THREE.MeshStandardMaterial({ color: vc ? 0xffffff : new THREE.Color(gr.c[0], gr.c[1], gr.c[2]), vertexColors: !!vc, metalness: Math.min(gr.m, 0.5), roughness: Math.max(gr.r, 0.32), side: THREE.DoubleSide, envMapIntensity: 0.9 });
-      return { gear: !!gr.g, g, mat };
+      return { gear: !!gr.g, g, mat, base: gr.c, vc: vc ? g.getAttribute("color").array : null, m: gr.m, r: gr.r };
     });
     return (PACK_CACHE[key] = { tip: D.tip, parts });
   }
-  function buildPacked(key, o) {
+  // Paints a packed model: white by default, or an airline's colours. Light surfaces take the paint by region
+  // (fuselage, belly, cheatline, fin, wings); dark parts (windows, engines' insides, tyres) keep the model's own colour.
+  const linC = (hex) => new THREE.Color(hex).convertSRGBToLinear();
+  function paintPack(key, o, liv) {
+    const ck = `paint:${key}:${liv ? liv.id : "white"}`; if (PACK_CACHE[ck]) return PACK_CACHE[ck];
+    const pk = decodePack(key), cy = o.cy, R = o.R, finY = cy + R + 0.35;
+    const L = liv || {}, white = linC("#f4f6f8"), body = L.body ? linC(L.body) : white, wing = linC(L.wing || "#d9dde1");
+    const belly = L.belly && linC(L.belly), top = L.top && linC(L.top), stripe = L.stripe && [linC(L.stripe[0]), L.stripe[1], L.stripe[2]];
+    const fin = (L.fin || []).map(linC), finTop = o.finTop;
+    const regionColour = (x, y, z) => {
+      if (Math.abs(x) < 0.9 && y > finY && z > 0) {
+        if (!fin.length) return white;
+        const t = clamp((finTop - y) / (finTop - finY), 0, 0.999); return fin[Math.floor(t * fin.length)];
+      }
+      if (Math.abs(x) < R * 1.12 && y > cy - R * 1.15 && y < cy + R * 1.2) {
+        const v = (y - cy) / R;
+        if (stripe && v > stripe[1] && v < stripe[2]) return stripe[0];
+        if (belly && v < L.bellyY) return belly;
+        if (top && v > L.topY) return top;
+        return body;
+      }
+      return wing;
+    };
+    const parts = pk.parts.map((pt) => {
+      if (pt.gear) return pt;
+      const src = pt.g, P = src.attributes.position.array, N = src.attributes.normal.array, I = src.index.array, n = I.length;
+      const P2 = new Float32Array(n * 3), N2 = new Float32Array(n * 3), C2 = new Float32Array(n * 3);
+      for (let t = 0; t < n; t += 3) {
+        const a = I[t] * 3, b = I[t + 1] * 3, c = I[t + 2] * 3;
+        const col = regionColour((P[a] + P[b] + P[c]) / 3, (P[a + 1] + P[b + 1] + P[c + 1]) / 3, (P[a + 2] + P[b + 2] + P[c + 2]) / 3);
+        for (let k = 0; k < 3; k++) {
+          const v = I[t + k] * 3, d = (t + k) * 3;
+          for (let j = 0; j < 3; j++) { P2[d + j] = P[v + j]; N2[d + j] = N[v + j]; }
+          const br = pt.base[0] * (pt.vc ? pt.vc[v] : 1), bg = pt.base[1] * (pt.vc ? pt.vc[v + 1] : 1), bb = pt.base[2] * (pt.vc ? pt.vc[v + 2] : 1);
+          if (Math.max(br, bg, bb) > 0.4) { C2[d] = col.r; C2[d + 1] = col.g; C2[d + 2] = col.b; }   // paintable surface
+          else { C2[d] = br; C2[d + 1] = bg; C2[d + 2] = bb; }                                        // windows and dark detail stay
+        }
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.BufferAttribute(P2, 3)); g.setAttribute("normal", new THREE.BufferAttribute(N2, 3)); g.setAttribute("color", new THREE.BufferAttribute(C2, 3));
+      g.computeBoundingSphere();
+      const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, metalness: Math.min(pt.m, 0.3), roughness: clamp(pt.r, 0.32, 0.6), side: THREE.DoubleSide, envMapIntensity: 0.9 });
+      return { gear: false, g, mat };
+    });
+    return (PACK_CACHE[ck] = parts);
+  }
+  function buildPacked(key, o, liv) {
     const pk = decodePack(key), root = new THREE.Group(), gearG = new THREE.Group(); root.add(gearG);
-    for (const pt of pk.parts) ((pt.gear && !o.bodyOnly) ? gearG : root).add(new THREE.Mesh(pt.g, pt.mat));
+    for (const pt of paintPack(key, o, liv)) ((pt.gear && !o.bodyOnly) ? gearG : root).add(new THREE.Mesh(pt.g, pt.mat));
     if (o.addGear) {   // the model has no wheels of its own: separate struts and tyres underneath it
       const gh = o.gearH, r = 0.55;
       root.updateMatrixWorld(true);
@@ -1576,9 +1655,9 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const dummy = () => new THREE.Object3D();
     return finishModel(root, { prop: null, gear: gearG, ail: [dummy(), dummy()], elev: [dummy()], rud: dummy(), strobes: [], fans: [] });
   }
-  function build737model() { return buildPacked("b737", { tailZ: 19.6, beaconY: 2.2 }); }
-  function build767model() { return buildPacked("b767", { bodyOnly: true, addGear: true, gearH: 4.2, mainX: 4.65, mainZ: 2.4, noseZ: -18.3, bogie: true, tailZ: 24.0, beaconY: 2.8 }); }
-  function buildMHmodel() { return buildPacked("mh", { bodyOnly: true, addGear: true, gearH: 3.0, mainX: 2.7, mainZ: 1.6, noseZ: -13.6, tailZ: 17.6, beaconY: 2.0 }); }
+  function build737model(liv) { return buildPacked("b737", { cy: 1.08, R: 2.16, finTop: 9.2, tailZ: 19.6, beaconY: 2.2 }, liv); }
+  function build767model(liv) { return buildPacked("b767", { cy: 0.2, R: 2.7, finTop: 11.4, bodyOnly: true, addGear: true, gearH: 4.2, mainX: 4.65, mainZ: 2.4, noseZ: -18.3, bogie: true, tailZ: 24.0, beaconY: 2.8 }, liv); }
+  function buildMHmodel(liv) { return buildPacked("mh", { cy: 1.1, R: 2.1, finTop: 10.7, bodyOnly: true, addGear: true, gearH: 3.0, mainX: 2.7, mainZ: 1.6, noseZ: -13.6, tailZ: 17.6, beaconY: 2.0 }, liv); }
   function buildPlane(kind, livId) {
     const sp = PLANES[kind];
     if (sp.glb) return GLB[kind] && GLB[kind].status === "ready" ? GLB[kind].make() : null;
@@ -1779,7 +1858,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   const S = {
     mode: "brief", vel: new THREE.Vector3(), wind: new THREE.Vector3(), gustV: new THREE.Vector3(), gs: 0, ias: 0, n1: 0, trimAlpha: 0.09, alpha: 0, load: 1, alphaCrit: 0.25, stallV: 30, groundPitch: 0, gust: 0, pos: new THREE.Vector3(), q: new THREE.Quaternion(), speed: 0, sink: 0, throttle: 0, grounded: true, crashed: false,
     flaps: 0, gearDown: true, gearPos: 1, flapPos: 0, from: AIRPORTS[0], to: AIRPORTS[1], t: 0, flightT: 0, msg: "", msgT: 0,
-    vs: 0, touchFpm: null, landedAt: null, cam: "chase", inputs: { pitch: 0, roll: 0, yaw: 0 }, boomT: 0, started: false,
+    vs: 0, touchFpm: null, landedAt: null, autobrake: false, calls: {}, callUntil: 0, cam: "chase", inputs: { pitch: 0, roll: 0, yaw: 0 }, boomT: 0, started: false,
   };
   const flyby = { set: false, p: new THREE.Vector3() };
   const V = { fwd: new THREE.Vector3(), up: new THREE.Vector3(), right: new THREE.Vector3(), tmp: new THREE.Vector3(), tmp2: new THREE.Vector3(), wind: new THREE.Vector3(), air: new THREE.Vector3() };
@@ -1791,12 +1870,17 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const [x, z] = toWorld(at, along, 0);
     S.pos.set(x, at.elev + 0.05 + spec.gearH, z);
     S.q.setFromAxisAngle(AY, -at.hdg * Math.PI / 180); S.vel.set(0, 0, 0);
-    Object.assign(S, { speed: 0, sink: 0, throttle: 0, grounded: true, crashed: false, flaps: 1, gearDown: true, gearPos: 1, flapPos: 1, flightT: 0, vs: 0, touchFpm: null, landedAt: null, boomT: 0, started: false, gate: null, push: null, taxiOut: false, groundPitch: 0, alpha: 0, load: 1, gust: 0, gs: 0, ias: 0, n1: 0, trimAlpha: 0.09, spoiler: 0, autoSpoiler: false, reverse: false, trim: 0, park: false, lights: typeof ENV !== "undefined" && ENV.time !== "day" });
+    Object.assign(S, { speed: 0, sink: 0, throttle: 0, grounded: true, crashed: false, flaps: 1, gearDown: true, gearPos: 1, flapPos: 1, flightT: 0, vs: 0, touchFpm: null, landedAt: null, autobrake: false, calls: {}, callUntil: 0, boomT: 0, started: false, gate: null, push: null, taxiOut: false, groundPitch: 0, alpha: 0, load: 1, gust: 0, gs: 0, ias: 0, n1: 0, trimAlpha: 0.09, spoiler: 0, autoSpoiler: false, reverse: false, trim: 0, park: false, lights: typeof ENV !== "undefined" && ENV.time !== "day" });
     if (typeof syncTouchKeys === "function") syncTouchKeys();
     if (typeof AP !== "undefined") { AP.on = false; AP.athr = false; AP.app = false; AP.lat = "HDG"; AP.flare = false; apSync(); pushBtn.hidden = true; }
     boom.visible = false; model.visible = true; flyby.set = false;
   }
   function flash(t, s = 2.4) { S.msg = t; S.msgT = s; }
+  // spoken callouts (only with sound on; quietly skipped where speech isn't available)
+  function speak(t) {
+    if (typeof soundOn === "undefined" || !soundOn) return;
+    try { const ss = window.speechSynthesis; if (!ss) return; ss.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = "en-US"; u.rate = 1.25; u.pitch = 0.75; ss.speak(u); } catch {}
+  }
 
   // ================= SOUND =================
   let ac = null, eng = null, engGain = null, soundOn = false;
@@ -2095,7 +2179,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const lab = document.createElement("span"); lab.textContent = `Livery · ${PLANES[chosen].name}`; row.append(lab);
     for (const id of ["house"].concat(list)) {
       const b = document.createElement("button"); b.type = "button"; b.className = "seg-btn";
-      b.textContent = id === "house" ? "Skyways" : LIV[id].name;
+      b.textContent = id === "house" ? (PLANES[chosen].packed ? "White" : "Skyways") : LIV[id].name;
       b.setAttribute("aria-pressed", String((chosenLiv[chosen] || "house") === id));
       b.addEventListener("click", () => {
         chosenLiv[chosen] = id; save("sw-liv", JSON.stringify(chosenLiv));
@@ -2277,7 +2361,9 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       S.speed = Math.max(0, S.gs + headwind);
       const q = 0.5 * rho * S.speed * S.speed;
       S.gs += (thrustAcc - q * Aw * spec._CD0 * dragMult) * dt;
-      S.gs -= ((brake ? spec.brake : 0.25) + (S.throttle < 0.02 ? 0.25 : 0) + S.spoiler * 1.3) * dt;
+      // autobrake after a landing: medium deceleration until taxi speed, cancelled by thrust or the brake key
+      if (S.autobrake && (S.throttle > 0.3 || S.gs < 12)) S.autobrake = false;
+      S.gs -= ((brake ? spec.brake : S.autobrake ? 2.6 : 0.25) + (S.throttle < 0.02 ? 0.25 : 0) + S.spoiler * 1.3) * dt;
       if (S.park) S.gs = Math.max(0, S.gs - 12 * dt);
       S.gs = Math.max(0, S.gs);
       let steer = (S.inputs.yaw + S.inputs.roll * 0.5) * clamp(S.gs / 6, 0, 1) * (spec.big ? 0.25 : 0.6);
@@ -2357,15 +2443,20 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
         right.set(1, 0, 0).applyQuaternion(S.q);
         const rw = runwayAt(S.pos.x, S.pos.z), am = airportMask(S.pos.x, S.pos.z)[0];
         if (gy < 0.5) { crash("Splashdown! You landed in the sea."); return; }
-        const gentle = S.vs > -4.2 && Math.abs(right.y) < 0.26 && fwd.y > -0.13 && fwd.y < 0.3 && S.speed < spec.stall * 1.85;
-        if (!gentle) { crash(S.vs <= -4.2 ? `Hard landing at ${Math.round(-S.vs * M2FT * 60)} ft/min. Aim for under 600.` : "You flew into the ground."); return; }
+        // up to ~1000 ft/min is survivable (rated "hard"); beyond ~1280 ft/min the gear fails
+        const gentle = S.vs > -6.5 && Math.abs(right.y) < 0.31 && fwd.y > -0.14 && fwd.y < 0.3 && S.speed < spec.stall * 1.9;
+        if (!gentle) { crash(S.vs <= -6.5 ? `Hard landing at ${Math.round(-S.vs * M2FT * 60)} ft/min: the gear collapsed. Aim for under 600.` : Math.abs(right.y) >= 0.31 ? "Wingtip strike: level the wings before touchdown." : "You flew into the ground."); return; }
         if (spec.retract && S.gearPos < 0.9) { crash("Belly landing! Press G to lower the gear before you land."); return; }
         if (!rw && am < 0.97) { crash("That wasn't a runway. Land on an airport runway."); return; }
         S.grounded = true; S.sink = 0; S.pos.y = gy + spec.gearH; S.gs = Math.hypot(S.vel.x, S.vel.z); S.groundPitch = clamp(Math.asin(clamp(fwd.y, -1, 1)), 0, 0.2);
         S.touchFpm = Math.round(-S.vs * M2FT * 60); S.landedAt = rw || airportMask(S.pos.x, S.pos.z)[1];
+        { const la = S.landedAt, r0 = la.rwys[0], [al, ac] = local(la, S.pos.x, S.pos.z); S.touchOff = ac - r0.off; S.touchDist = al + r0.len / 2; S.touchKt = Math.round(S.speed * MS2KT); }
+        if (spec.big && !brake) S.autobrake = true;
+        S.calls = {};
         if (spec.big && S.spoiler < 1) { S.spoiler = 1; S.autoSpoiler = true; syncTouchKeys(); }
         if (AP.on) { const auto = AP.lat === "LOC"; AP.on = false; AP.athr = false; AP.app = false; AP.lat = "HDG"; apSync(); if (auto) RADIO.push({ text: "Autoland complete. Hold Space to brake.", t: 8 }); }
-        flash(`Touchdown at ${S.landedAt.code}: ${S.touchFpm} ft/min. Hold Space to brake.`, 3.5); chime(520);
+        const feel = S.touchFpm < 240 ? "Butter" : S.touchFpm < 480 ? "Smooth" : S.touchFpm < 700 ? "Firm" : "Hard";
+        flash(`${feel} touchdown at ${S.landedAt.code}: ${S.touchFpm} ft/min${S.autobrake ? " · autobrake" : ". Hold Space to brake"}`, 3.5); chime(520);
       }
     }
     for (const ai of AI) {
@@ -2379,14 +2470,18 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   function completeLanding() {
     const a = S.landedAt; S.landedAt = null;
     if (!S.to || a !== S.to) { flash(`Stopped at ${a.name}. Throttle up to take off again.`, 4); S.touchFpm = null; return; }
-    const fpm = S.touchFpm, stars = fpm < 180 ? 3 : fpm < 420 ? 2 : 1;
+    const fpm = S.touchFpm, off = Math.abs(S.touchOff || 0), tdz = S.touchDist || 0;
+    let stars = fpm < 240 ? 3 : fpm < 480 ? 2 : 1;
+    if (off > 8 || tdz > 900 || tdz < 0) stars = Math.max(1, stars - 1);
     S.mode = "over";
     const wrap = document.createElement("div"); wrap.style.display = "grid"; wrap.style.gap = "4px";
     const st = document.createElement("div"); st.className = "stars"; st.textContent = "★".repeat(stars) + "☆".repeat(3 - stars); st.setAttribute("aria-label", `${stars} of 3 stars`);
     const r = document.createElement("p"); r.className = "result";
     const m = Math.floor(S.flightT / 60), s = Math.floor(S.flightT % 60);
-    r.textContent = `${S.from.code} → ${a.code} · ${m}:${String(s).padStart(2, "0")} · touchdown ${fpm} ft/min`;
-    wrap.append(st, r);
+    r.textContent = `${S.from.code} → ${a.code} · ${m}:${String(s).padStart(2, "0")}`;
+    const det = document.createElement("p"); det.className = "result"; det.style.opacity = "0.8";
+    det.textContent = `Touchdown ${fpm} ft/min · ${S.touchKt || "–"} kt · ${Math.round(tdz)} m past threshold · ${off < 1 ? "on centreline" : `${off.toFixed(1)} m ${(S.touchOff || 0) > 0 ? "right" : "left"} of centreline`}`;
+    wrap.append(st, r, det);
     const others = AIRPORTS.filter((x) => x !== a), next = others[Math.floor(Math.random() * others.length)];
     fromSel.value = String(AIRPORTS.indexOf(a)); toSel.value = String(AIRPORTS.indexOf(next)); S.from = a;
     showBrief("ARRIVED", `Welcome to ${a.name}`, wrap, `Next leg is set up: ${a.code} → ${next.code}. Pick a different plane or route if you like.`, false);
@@ -2568,11 +2663,55 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       hud.restore();
     }
 
+    // ILS: localizer and glideslope deviation on final approach to the destination runway
+    let ilsOn = false;
+    if (S.to && !S.grounded) {
+      const a = S.to, r = a.rwys[0], [al, ac] = local(a, S.pos.x, S.pos.z);
+      const toTd = (-r.len / 2 + 300) - al, hdgErr = Math.abs(wrapA(Math.atan2(fwd.x, -fwd.z) - a.hdg * Math.PI / 180));
+      if (toTd > -250 && toTd < 18000 && hdgErr < 1.2 && Math.abs(ac - r.off) < 3000) {
+        ilsOn = true;
+        const locDeg = Math.atan2(ac - r.off, toTd + r.len) * 57.3;            // the localizer antenna sits past the far end
+        const gsDeg = Math.atan2(S.pos.y - spec.gearH - a.elev, Math.max(toTd, 40)) * 57.3 - 3;
+        const sp = 22 * sc, locD = clamp(-locDeg / 1.25, -2.4, 2.4), gsD = clamp(gsDeg / 0.35, -2.4, 2.4);
+        const gx = cx + 186 * sc, ly = cy + 150 * sc;
+        hud.strokeStyle = HC.hud; hud.fillStyle = HC.hud; hud.lineWidth = 1.5;
+        for (const k of [-2, -1, 1, 2]) {
+          hud.beginPath(); hud.arc(gx, cy + k * sp, 3, 0, Math.PI * 2); hud.stroke();
+          hud.beginPath(); hud.arc(cx + k * sp, ly, 3, 0, Math.PI * 2); hud.stroke();
+        }
+        hud.beginPath(); hud.moveTo(gx - 9, cy); hud.lineTo(gx + 9, cy); hud.moveTo(cx, ly - 9); hud.lineTo(cx, ly + 9); hud.stroke();
+        const dia = (x, y, ok) => { hud.fillStyle = ok ? HC.hud : HC.amber; hud.beginPath(); hud.moveTo(x, y - 8); hud.lineTo(x + 7, y); hud.lineTo(x, y + 8); hud.lineTo(x - 7, y); hud.closePath(); hud.fill(); };
+        if (toTd > 30) dia(gx, cy + gsD * sp, Math.abs(gsD) < 1);
+        dia(cx + locD * sp, ly, Math.abs(locD) < 1);
+        const vref = Math.round(spec.stall * (1 - 0.28 * S.flapPos) * 1.3 * MS2KT);
+        hud.font = `${Math.round(fs * 0.72)}px ${MONO}`; hud.textAlign = "center"; hud.textBaseline = "middle"; hud.fillStyle = HC.hud;
+        hud.fillText(`ILS ${a.label} · ${(Math.max(0, toTd) / 1852).toFixed(1)} NM · VREF ${vref}`, cx, ly + fs * 1.3);
+        hud.fillText("G/S", gx, cy - 2.9 * sp); hud.lineWidth = 2;
+      }
+    }
+    // radio-altitude callouts on the way down to a runway
+    {
+      const nearRwy = ilsOn || airportMask(S.pos.x, S.pos.z)[0] > 0;
+      if (S.grounded || agl > 250) S.calls = {};
+      else if (nearRwy && S.vs < -0.3 && (!spec.retract || S.gearPos > 0.9)) {
+        for (const [v, say] of [[100, "One hundred"], [50, "Fifty"], [40, "Forty"], [30, "Thirty"], [20, "Twenty"], [10, "Ten"]]) {
+          if (agl <= v && agl > v - 12 && !S.calls[v]) {
+            S.calls[v] = true;
+            const cue = v === 30 ? "FLARE" : v === 20 && S.throttle > 0.08 ? "RETARD" : "";
+            S.callTxt = cue ? `${v} · ${cue}` : String(v); S.callUntil = now + 900;
+            speak(v === 20 && cue ? "Twenty. Retard" : say);
+          }
+        }
+      }
+      if (now < S.callUntil) { hud.font = `bold ${Math.round(fs * 1.25)}px ${MONO}`; hud.textAlign = "center"; hud.fillStyle = HC.amber; hud.fillText(S.callTxt, cx, cy + 62 * sc); }
+    }
+
     // config strip
     hud.font = `${Math.round(fs * 0.85)}px ${MONO}`; hud.textAlign = "center"; hud.textBaseline = "middle";
     const gearTxt = spec.retract ? (S.gearPos > 0.98 ? "GEAR DN" : S.gearPos < 0.02 ? "GEAR UP" : "GEAR ···") : "GEAR FIXED";
     const items = [[`THR ${Math.round(S.throttle * 100)}%`, HC.hud], [`FLAPS ${S.flaps}`, HC.hud], [gearTxt, spec.retract && S.gearPos < 0.98 && agl < 1000 && !S.grounded && S.speed < spec.stall * 1.6 ? HC.warn : HC.hud]];
     if (S.brake && S.grounded) items.push(["BRAKE", HC.amber]);
+    else if (S.autobrake && S.grounded) items.push(["AUTOBRAKE", HC.amber]);
     if (S.spoiler) items.push([`SPLR ${S.spoiler === 1 ? "FULL" : "½"}`, HC.amber]);
     if (S.reverse) items.push(["REV", HC.amber]);
     if (S.trim) items.push([`TRIM ${S.trim > 0 ? "▲" : "▼"}${Math.round(Math.abs(S.trim) * 100)}`, HC.hud]);
@@ -2597,6 +2736,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     hud.font = `bold ${Math.round(fs * 1.35)}px ${MONO}`;
     if (stall && blink) { hud.fillStyle = HC.warn; hud.fillText("STALL", cx, cy + 100 * sc); }
     else if (!S.grounded && agl < 400 && S.vs < -10 && blink) { hud.fillStyle = HC.warn; hud.fillText("PULL UP", cx, cy + 100 * sc); }
+    else if (!S.grounded && spec.retract && S.gearPos < 0.5 && agl < 800 && S.vs < -1 && S.throttle < 0.6 && blink) { hud.fillStyle = HC.warn; hud.fillText("GEAR · press G", cx, cy + 100 * sc); }
     if (S.msgT > 0) { hud.font = `${Math.round(fs * 1.0)}px ${MONO}`; hud.fillStyle = HC.amber; hud.globalAlpha = clamp(S.msgT, 0, 1); hud.fillText(S.msg, cx, cy - 135 * sc, w - 24); hud.globalAlpha = 1; }
     hud.shadowBlur = 0;
 
