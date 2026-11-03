@@ -905,14 +905,47 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     }
     g.computeVertexNormals(); return g;
   }
+  // a lifting surface with a real airfoil section: rounded leading edge, thickest near 30% chord, thin trailing edge
+  const AIRFOIL = (function () {
+    const N = 14, up = [], lo = [];
+    for (let i = 0; i <= N; i++) {
+      const x = (1 - Math.cos(Math.PI * i / N)) / 2;
+      const yt = 5 * 0.12 * (0.2969 * Math.sqrt(x) - 0.126 * x - 0.3516 * x * x + 0.2843 * x ** 3 - 0.1036 * x ** 4);
+      const yc = x < 0.4 ? 0.02 / 0.16 * (0.8 * x - x * x) : 0.02 / 0.36 * (0.2 + 0.8 * x - x * x);   // gentle camber
+      up.push([x, yc + yt]); lo.push([x, yc - yt]);
+    }
+    return up.concat(lo.slice(1, -1).reverse());   // a closed loop: leading edge → upper → trailing edge → lower
+  })();
+  function airfoilGeo(root, tip, span, sweep, thick, dihedral, camber = 1) {
+    const ring = AIRFOIL, M2 = ring.length, tr = thick / Math.max(root, 0.01) / 0.12;   // scale thickness to match the old slab
+    const pos = [], idx = [];
+    for (const sF of [0, 1]) {
+      const c = lerp(root, tip, sF), th = tr * (1 - 0.3 * sF);
+      for (const [x, y] of ring) pos.push(sF * span, y * c * th * (camber || 1) + sF * dihedral, (x - 0.5) * c + sF * sweep);
+    }
+    for (let i = 0; i < M2; i++) { const a = i, b = (i + 1) % M2, c = M2 + i, d = M2 + (i + 1) % M2; idx.push(a, b, c, b, d, c); }
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+    // tip and root caps with their own flat normals
+    const cap = (off, flip) => {
+      const cp = [], ci = []; for (let i = 0; i < M2; i++) cp.push(pos[(off + i) * 3], pos[(off + i) * 3 + 1], pos[(off + i) * 3 + 2]);
+      for (let i = 1; i < M2 - 1; i++) flip ? ci.push(0, i + 1, i) : ci.push(0, i, i + 1);
+      const cg = new THREE.BufferGeometry(); cg.setAttribute("position", new THREE.Float32BufferAttribute(cp, 3)); cg.setIndex(ci); cg.computeVertexNormals(); return cg;
+    };
+    const parts = [g, cap(0, false), cap(M2, true)].map((x) => x.toNonIndexed());
+    const out = new THREE.BufferGeometry(); let n = 0; parts.forEach((x) => (n += x.attributes.position.count));
+    const P = new Float32Array(n * 3), Nn = new Float32Array(n * 3); let o = 0;
+    parts.forEach((x) => { P.set(x.attributes.position.array, o * 3); Nn.set(x.attributes.normal.array, o * 3); o += x.attributes.position.count; });
+    out.setAttribute("position", new THREE.BufferAttribute(P, 3)); out.setAttribute("normal", new THREE.BufferAttribute(Nn, 3));
+    return out;
+  }
   // a surface with a moving trailing-edge control (aileron/elevator/rudder)
   function surface(o, mat, ctlMat) {
     const g = new THREE.Group();
-    g.add(new THREE.Mesh(panelGeo(o.root, o.tip, o.span, o.sweep, o.thick, o.dih || 0), mat));
+    g.add(new THREE.Mesh(airfoilGeo(o.root, o.tip, o.span, o.sweep, o.thick, o.dih || 0, o.vertical ? 0 : 1), mat));
     const s0 = o.c0 ?? 0.55, s1 = o.c1 ?? 0.95, cf = o.cf ?? 0.3;
     const ch = (s) => lerp(o.root, o.tip, s), te = (s) => ch(s) / 2 + s * o.sweep;
     const pivot = new THREE.Group(); pivot.position.set(s0 * o.span, s0 * (o.dih || 0), te(s0) - 0.02);
-    const cg = panelGeo(ch(s0) * cf, ch(s1) * cf, (s1 - s0) * o.span, te(s1) - te(s0), o.thick * 0.5, (s1 - s0) * (o.dih || 0));
+    const cg = panelGeo(ch(s0) * cf, ch(s1) * cf, (s1 - s0) * o.span, te(s1) - te(s0), o.thick * 0.3, (s1 - s0) * (o.dih || 0));
     cg.translate(0, 0, ch(s0) * cf / 2);
     pivot.add(new THREE.Mesh(cg, ctlMat || mat)); g.add(pivot);
     g.userData.tip = new THREE.Vector3(o.span, o.dih || 0, o.sweep);
@@ -1222,7 +1255,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
         if (z > zT) { const t = (z - zT) / (L / 2 - zT); pa.setY(i, pa.getY(i) + Math.pow(t, 1.6) * R * 0.42); }
       }
       pa.needsUpdate = true; fus.geometry.computeVertexNormals(); }
-    root.add(fus);
+    fus.scale.set(1, 1.06, 1); root.add(fus);
     if (o.hump) {
       const hl = L * o.hump, hump = latheBody([[0.12 * R, -hl / 2], [0.5 * R, -hl / 2 + hl * 0.12], [0.72 * R, -hl / 2 + hl * 0.32], [0.72 * R, hl / 2 - hl * 0.28], [0.5 * R, hl / 2 - hl * 0.08], [0.1 * R, hl / 2]], 22, null, base);
       hump.scale.set(1, 0.78, 1); hump.position.set(0, R * 0.52, -L / 2 + hl / 2 + L * 0.03); root.add(hump);
@@ -1324,6 +1357,19 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     jumbo: { name: "Boeing 747-400", type: "Double-deck airliner · 4 × CF6", build: buildJumbo, thrust: 5.9, vmax: 148, stall: 55, roll: 0.58, pitch: 0.4, yaw: 0.18, turn: 0.66, gearH: 5.8, retract: true, cam: [120, 25], cock: [2.7, -29.2], wingX: 32.2, brake: 4, shadow: 34, big: true, stats: [1, 0.18, 0.25] },
   };
   for (const k of Object.keys(PLANES)) PLANES[k].kind = k;
+  (function realScale() {
+    const box = new THREE.Box3(), size = new THREE.Vector3();
+    for (const [k, sp] of Object.entries(PLANES)) {
+      if (sp.glb || !DIMS[k]) continue;
+      const m = sp.build(); m.updateMatrixWorld(true);
+      box.makeEmpty(); m.traverse((o) => { if (o.isMesh && !(o.material && o.material.transparent)) { o.geometry.computeBoundingBox(); box.union(o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld)); } });
+      box.getSize(size);
+      const f = DIMS[k][1] / Math.max(size.z, 0.1);
+      if (Math.abs(f - 1) < 0.03) continue;
+      const orig = sp.build; sp.build = () => { const mm = orig(); mm.scale.setScalar(f); return mm; };
+      sp.gearH *= f; sp.wingX *= f; sp.shadow *= f; sp.cam = sp.cam.map((v) => v * f); sp.cock = sp.cock.map((v) => v * f);
+    }
+  })();
   const CAT = { trainer: "light", aero: "light", swift: "light", islander: "airliner", breeze: "airliner", regio: "airliner", skyliner: "airliner", jumbo: "airliner", commuter: "airliner", atlas: "special", arrow: "special" };
   const SEATS = { trainer: 4, aero: 2, swift: 9, islander: 189, breeze: 72, regio: 100, skyliner: 296, jumbo: 416, commuter: 19, atlas: 116, arrow: 1 };
   const CRUISE = { trainer: 124, aero: 210, swift: 465, islander: 453, breeze: 275, regio: 447, skyliner: 488, jumbo: 490, commuter: 280, atlas: 421, arrow: 500 };
