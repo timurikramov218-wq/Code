@@ -362,13 +362,53 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
 @keyframes sheet-up { from { transform: translateY(40%); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .ap { animation: none; } .stick, .throttle, .tbtns { transition: none; } }
 @media (prefers-reduced-motion: reduce) { .plane-card, .photo img, .chip, .btn { transition: none; } .plane-card.wait .photo { animation: none; } }
+/* briefing tabs: free flight or missions */
+.tabs { padding: 18px 36px 0; gap: 4px; }
+@media (max-width: 680px) { .tabs { padding: 14px 20px 0; } }
+.tabs .seg-btn { font-size: 14px; padding: 9px 18px; }
+.panel.tab-missions .step.free-only { display: none; }
+.panel:not(.tab-missions) #missionStep { display: none; }
+/* missions */
+.mis-note { margin: 0; color: var(--fg-3); font: 400 13px var(--font-body); }
+.missions { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+.mis { position: relative; display: grid; gap: 6px; align-content: start; text-align: left; font: inherit; color: var(--fg); background: var(--g2); border: 1px solid var(--hair); border-radius: 14px; padding: 14px 16px; cursor: pointer; transition: border-color 0.2s; min-width: 0; }
+.mis:hover:not(:disabled) { border-color: var(--hair-2); }
+.mis[aria-pressed="true"] { border-color: var(--champ); box-shadow: 0 0 0 1px var(--champ); }
+.mis:disabled { opacity: 0.45; cursor: default; }
+.mis .mn { font: 400 11px var(--font-mono); letter-spacing: 0.16em; color: var(--fg-3); display: flex; justify-content: space-between; gap: 8px; }
+.mis .mn .st { color: var(--champ); letter-spacing: 3px; font-size: 13px; }
+.mis b { font: 400 19px/1.15 var(--font-display); }
+.mis .md { font: 400 13px/1.45 var(--font-body); color: var(--fg-2); }
+.mis .mm { font: 400 11px var(--font-mono); color: var(--fg-3); }
+.mis ul { margin: 2px 0 0; padding-left: 1.1em; font: 400 12px/1.5 var(--font-body); color: var(--fg-2); }
+.goals { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 3px; font: 400 13px var(--font-mono); color: var(--fg-2); }
+.goals .ok { color: var(--champ); } .goals .no { color: #e8a598; }
+.res-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.res-acts .btn { padding: 12px 40px 12px 22px; }
+.btn.play::after { content: "▶"; font-size: 11px; }
+.btn.alt.next::after { content: "→"; }
+/* featured routes */
+.featured { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+.feat { display: grid; gap: 3px; text-align: left; font: inherit; color: var(--fg); background: var(--g2); border: 1px solid var(--hair); border-radius: 12px; padding: 11px 14px; cursor: pointer; min-width: 0; }
+.feat:hover { border-color: var(--hair-2); }
+.feat[aria-pressed="true"] { border-color: var(--champ); }
+.feat b { font: 400 17px var(--font-display); }
+.feat span { font: 400 11px var(--font-mono); color: var(--fg-3); overflow-wrap: anywhere; }
+.sub-h { margin: 0; font: 500 11px var(--font-body); letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg-3); }
+/* replay */
+.replay { position: absolute; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(760px, calc(100% - 20px)); box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; background: rgba(23,23,26,0.86); border: 1px solid var(--hair-2); border-radius: 16px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 6; }
+.replay input[type="range"] { flex: 1 1 160px; min-width: 0; accent-color: var(--champ); }
+.replay output { font: 400 12px var(--font-mono); color: var(--fg-2); min-width: 7.5em; text-align: center; }
+.replay .chip { padding: 9px 12px; }
+.replay .seg { flex-wrap: nowrap; }
+.stage.replaying .touch, .stage.replaying .ap, .stage.replaying #pushBtn, .stage.replaying #apToggle { display: none !important; }
 </style>
 
 <div class="wrap">
   <header class="masthead">
     <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="currentColor"/></svg></span>
       <h1>Skyways <span>Flight Sim</span></h1></div>
-    <p class="tagline">4 aircraft · 12 airports · 32 km world · autopilot · day, sunset and night</p>
+    <p class="tagline">4 aircraft · 17 airports · 10 missions · replays · 32 km world · day, sunset and night</p>
   </header>
 
   <div class="stage" id="stage">
@@ -444,12 +484,22 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
         <dt><kbd>[</kbd> <kbd>]</kbd> · <kbd>L</kbd> · <kbd>N</kbd></dt><dd>Pitch trim · landing lights · parking brake</dd>
         <dt><kbd>M</kbd> · <kbd>P</kbd> · <kbd>H</kbd></dt><dd>Map: local, whole world, off · pause · this help</dd>
         <dt><kbd>U</kbd> · <kbd>K</kbd></dt><dd>Autopilot on/off · push back from the gate</dd>
+        <dt>Replay</dt><dd><kbd>Space</kbd> play / pause · <kbd>←</kbd><kbd>→</kbd> seek · <kbd>Esc</kbd> back</dd>
       </dl>
     </div>
 
     <div class="log" id="logPanel" hidden role="dialog" aria-labelledby="logTitle">
       <div class="log-head"><h3 id="logTitle">Flight log</h3><div class="log-acts"><button class="chip" id="logClear" type="button">Clear</button><button class="chip" id="logClose" type="button">Close</button></div></div>
       <div id="logBody"></div>
+    </div>
+
+    <div class="replay" id="replayBar" hidden role="group" aria-label="Replay controls">
+      <button class="chip" id="rpPlay" type="button" aria-label="Pause replay">❚❚</button>
+      <input type="range" id="rpSeek" min="0" max="1000" value="0" aria-label="Replay position">
+      <output id="rpTime">0:00 / 0:00</output>
+      <div class="seg" id="rpSpeed" role="group" aria-label="Replay speed"><button type="button" class="seg-btn" data-s="0.5" aria-pressed="false">×0.5</button><button type="button" class="seg-btn" data-s="1" aria-pressed="true">×1</button><button type="button" class="seg-btn" data-s="2" aria-pressed="false">×2</button></div>
+      <button class="chip" id="rpCam" type="button" title="Change camera (C, or keys 1–8)">View</button>
+      <button class="chip" id="rpExit" type="button">Exit replay</button>
     </div>
 
     <div class="dialog" id="brief">
@@ -459,8 +509,17 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
           <p class="summary" id="briefSummary"></p>
           <p class="best" id="briefBest" hidden></p>
         </div>
+        <div class="seg tabs" id="briefTabs" role="group" aria-label="Briefing mode">
+          <button type="button" class="seg-btn" data-tab="free" aria-pressed="true">Free flight</button>
+          <button type="button" class="seg-btn" data-tab="missions" aria-pressed="false">Missions</button>
+        </div>
         <div id="briefResult" hidden></div>
-        <section class="step" aria-labelledby="stepHangar">
+        <section class="step" id="missionStep" aria-labelledby="stepMis">
+          <h3 id="stepMis"><span class="num">★</span>Missions</h3>
+          <p class="mis-note" id="misNote">Ten flights that get harder as you go. Each one sets the aircraft, the airport, the weather and the time of day. Land well to earn up to three stars; passing a mission opens the next one.</p>
+          <div class="missions" id="missionList"></div>
+        </section>
+        <section class="step free-only" aria-labelledby="stepHangar">
           <h3 id="stepHangar"><span class="num">1</span>Hangar</h3>
           <div class="filters" id="planeFilter" role="group" aria-label="Aircraft type" hidden>
             <button type="button" class="seg-btn" data-cat="all" aria-pressed="true">All</button>
@@ -471,29 +530,33 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
           <div class="planes" id="planes" role="radiogroup" aria-label="Aircraft"></div>
           <div class="seg livs" id="livRow" role="group" aria-label="Livery" hidden></div>
         </section>
-        <section class="step" aria-labelledby="stepRoute">
+        <section class="step free-only" aria-labelledby="stepRoute">
           <h3 id="stepRoute"><span class="num">2</span>Departures</h3>
+          <p class="sub-h">Featured routes</p>
+          <div class="featured" id="featured"></div>
+          <p class="sub-h">All airports</p>
           <div class="board-wrap"><div class="board" id="routeBoard"></div></div>
         </section>
-        <section class="step" aria-labelledby="stepCond">
+        <section class="step free-only" aria-labelledby="stepCond">
           <h3 id="stepCond"><span class="num">3</span>Conditions</h3>
           <div class="conds">
             <div class="seg" data-for="startSel" role="group" aria-label="Start position"><span>Start</span><button type="button" class="seg-btn" data-v="runway">Runway</button><button type="button" class="seg-btn" data-v="gate">Gate</button></div>
             <div class="seg" data-for="timeSel" role="group" aria-label="Time of day"><span>Time</span><button type="button" class="seg-btn" data-v="day">Day</button><button type="button" class="seg-btn" data-v="sunset">Sunset</button><button type="button" class="seg-btn" data-v="night">Night</button></div>
             <div class="seg" data-for="modelSel" role="group" aria-label="Flight model"><span>Flight model</span><button type="button" class="seg-btn" data-v="easy">Assisted</button><button type="button" class="seg-btn" data-v="real">Realistic</button></div>
-            <div class="seg" data-for="wxSel" role="group" aria-label="Weather"><span>Weather</span><button type="button" class="seg-btn" data-v="clear">Clear</button><button type="button" class="seg-btn" data-v="cloudy">Cloudy</button><button type="button" class="seg-btn" data-v="rain">Rain</button></div>
+            <div class="seg" data-for="wxSel" role="group" aria-label="Weather"><span>Weather</span><button type="button" class="seg-btn" data-v="clear">Clear</button><button type="button" class="seg-btn" data-v="cloudy">Cloudy</button><button type="button" class="seg-btn" data-v="rain">Rain</button><button type="button" class="seg-btn" data-v="fog">Fog</button></div>
           </div>
           <div hidden>
             <select id="fromSel" aria-label="Depart from"></select><select id="toSel" aria-label="Fly to"></select>
             <select id="startSel" aria-label="Start at"><option value="runway">Runway</option><option value="gate">Gate</option></select>
             <select id="timeSel" aria-label="Time of day"><option value="day">Day</option><option value="sunset">Sunset</option><option value="night">Night</option></select>
             <select id="modelSel" aria-label="Flight model"><option value="easy">Assisted</option><option value="real">Realistic</option></select>
-            <select id="wxSel" aria-label="Weather"><option value="clear">Clear</option><option value="cloudy">Cloudy</option><option value="rain">Rain</option></select>
+            <select id="wxSel" aria-label="Weather"><option value="clear">Clear</option><option value="cloudy">Cloudy</option><option value="rain">Rain</option><option value="fog">Fog</option></select>
           </div>
         </section>
         <div class="brief-foot">
           <p id="briefTip">Throttle up to full, roll down the runway, and gently pull back once you pass the rotate speed shown on the airspeed box.</p>
           <div class="btns">
+            <button class="btn alt play" id="replayBtn" type="button" hidden>Replay</button>
             <button class="btn alt" id="resumeBtn" type="button" hidden>Resume flight</button>
             <button class="btn" id="goBtn" type="button">Take off</button>
           </div>
@@ -522,6 +585,8 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
         <dt><kbd>K</kbd> Push back</dt><dd>When you start at the gate, push back, then taxi to the runway with gentle throttle and Q/E to steer</dd>
         <dt>Game controller</dt><dd>Left stick flies, triggers set throttle, A brakes, X flaps, B gear, Y camera</dd>
         <dt>Phone / tablet</dt><dd>Left stick flies, the bar on the right is throttle, buttons for gear, flaps and brake; TRIM ▼ ▲ and ◀ RUD ▶ next to the stick. On phones the autopilot opens as a sheet at the bottom: tap its handle to fold it to one row</dd>
+        <dt>Missions</dt><dd>Switch the briefing to Missions for ten set flights, from a short final in clear skies to a 777 in rain and crosswind, fog, a night ILS and an engine failure. Each awards up to three stars and opens the next</dd>
+        <dt>Replay</dt><dd>After a landing or a crash, or from the pause screen, press Replay to watch the last 90 seconds: play / pause (Space), seek with the slider or ← →, speed ×0.5 to ×2, and any camera (1–8). Esc returns</dd>
         <dt>⋯ menu</dt><dd>Sound (engine plus STALL, PULL UP and TRAFFIC alerts), Graphics Low / Medium / High (High adds a real shadow under your aircraft), FPS counter, and your Flight log with the last 20 flights. Your best landing on each route shows in the briefing</dd>
       </dl>
     </section>
@@ -592,6 +657,21 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       rwys: [{ off: 0, len: 1300, w: 35, sfx: "" }], stands: ["mh", "b767", "b737"] },
     { code: "FRC", name: "Far Reach", x: -12250, z: 5250, hdg: 10, elev: 33, kind: "ga",
       rwys: [{ off: 0, len: 1250, w: 35, sfx: "" }], stands: ["b767", "b737", "mh"] },
+    // mountain field 830 m up between the eastern ridges: thin air, short runway, snow on the peaks around it
+    { code: "GRP", name: "Granite Peak", x: 11250, z: -4000, hdg: 30, elev: 830, kind: "regional",
+      rwys: [{ off: 0, len: 1500, w: 40, sfx: "" }], stands: ["b737", "mh"] },
+    // a runway on its own little island far out in the western sea
+    { code: "PLC", name: "Pelican Isle", x: -8250, z: 5000, hdg: 60, elev: 4, kind: "regional",
+      rwys: [{ off: 0, len: 1900, w: 45, sfx: "" }], stands: ["mh", "b737", "b767"] },
+    // the big new hub on the eastern coastal plain, with two parallel runways
+    { code: "KBI", name: "Kingsbridge Intl", x: 6750, z: 4000, hdg: 90, elev: 30, kind: "intl",
+      rwys: [{ off: 0, len: 2800, w: 50, sfx: "R" }, { off: -400, len: 2500, w: 45, sfx: "L" }], stands: ["b777", "b737", "mh", "b767", "b777", "b737", "mh", "b767"] },
+    // small regional strip on the central plateau
+    { code: "MLB", name: "Millbrook", x: 7500, z: -1500, hdg: 105, elev: 240, kind: "regional",
+      rwys: [{ off: 0, len: 1400, w: 40, sfx: "" }], stands: ["mh", "b737"] },
+    // a hill-top general aviation field in the south
+    { code: "HLC", name: "Hillcrest", x: -1500, z: 8000, hdg: 100, elev: 165, kind: "ga",
+      rwys: [{ off: 0, len: 1300, w: 35, sfx: "" }], stands: ["b737", "mh"] },
   ];
   const WORLD = 16000;
   const DIMS = { b777: [60.9, 63.7], trainer: [11, 8.3], aero: [8, 6.6], islander: [35.8, 39.5], breeze: [27.1, 27.2], swift: [15.5, 17.7], atlas: [42.4, 45.1], arrow: [9.1, 14.4], regio: [28.7, 36.2], skyliner: [60.1, 62.8], jumbo: [64.4, 70.7], commuter: [17.7, 17.6], b772: [64.8, 73.9], b737: [35.8, 39.7], mh: [37.8, 35.5], b767: [47.6, 48.5] };
@@ -612,6 +692,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     a.acrossMin = Math.min(...a.rwys.map((r) => r.off - r.w / 2)) - 130;
     a.alongHalf = Math.max(...a.rwys.map((r) => r.len)) / 2 + 330;
   }
+  const AP_BY = Object.fromEntries(AIRPORTS.map((a) => [a.code, a]));
   const local = (a, x, z) => { const dx = x - a.x, dz = z - a.z; return [dx * a.s - dz * a.c, dx * a.c + dz * a.s]; };
   const toWorld = (a, along, across) => [a.x + along * a.s + across * a.c, a.z - along * a.c + across * a.s];
 
@@ -647,12 +728,12 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   // approach corridors: hills are lowered under both runway approaches so a 3° glide path (and the climb-out) is always clear
   function corridorCap(a, x, z, h) {
     const [al, ac] = local(a, x, z), r = a.rwys[0], d = Math.abs(al) - r.len / 2;
-    if (d <= 0 || d > 12000) return h;
+    if (d <= 0 || d > 14500) return h;   // out to 14.5 km: the hills used to come back above the 3° path at 10-12 km (Highmoor)
     const cap = a.elev + 2 + d * 0.0524 * 0.55;
     if (h <= cap) return h;
     const half = 350 + d * 0.12, q = Math.abs(ac - r.off);
     if (q > half + 700) return h;
-    return h - (h - cap) * smooth(half + 700, half, q) * smooth(12000, 9500, d);
+    return h - (h - cap) * smooth(half + 700, half, q) * smooth(14500, 12500, d);
   }
   function heightAt(x, z) {
     let h = rawHeight(x, z);
@@ -977,10 +1058,10 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       update(q) { puffs.forEach((pf, i) => { m4.compose(pf.p, q, pf.s); im.setMatrixAt(i, m4); }); im.instanceMatrix.needsUpdate = true; },
       setWeather(w, night, dusk) {
         const n = w === "clear" ? Math.round(puffs.length * 0.35) : puffs.length; im.count = Math.round(n * QS.clouds);
-        const base = w === "rain" ? 0x8c949c : w === "cloudy" ? 0xe9edf1 : 0xffffff;
+        const base = w === "rain" ? 0x8c949c : w === "cloudy" || w === "fog" ? 0xe9edf1 : 0xffffff;
         const c = new THREE.Color(base); if (night) c.multiplyScalar(0.18); else if (dusk) c.lerp(new THREE.Color(0xffb489), 0.35);
         im.material.color.copy(c); im.material.opacity = w === "rain" ? 0.95 : 0.86;
-        const yOff = w === "rain" ? -650 : w === "cloudy" ? -250 : 0;
+        const yOff = w === "rain" ? -650 : w === "cloudy" || w === "fog" ? -250 : 0;
         puffs.forEach((pf) => { if (pf.y0 === undefined) pf.y0 = pf.p.y; pf.p.y = pf.y0 + yOff; if (w === "rain") pf.s.set(pf.s.x, pf.s.y, 1); });
       },
     };
@@ -1927,14 +2008,14 @@ vec3 liveryAt(vec3 p, out float fus) {
 
   function buildAirport(a) {
     const grp = new THREE.Group(); grp.position.set(a.x, a.elev, a.z); grp.rotation.y = -a.hdg * Math.PI / 180; scene.add(grp);
-    const lg = (lx, lz) => { const [wx, wz] = toWorld(a, -lz, lx); return heightAt(wx, wz) - a.elev; };
+    const lg = (lx, lz) => { const [wx, wz] = toWorld(a, -lz, lx); return Math.max(0, heightAt(wx, wz)) - a.elev; };   // over the sea the approach lights stand on piers at the waterline
     const intl = a.kind === "intl", ga = a.kind === "ga";
     const edgeL = [], thrG = [], thrR = [], blueL = [], appr = [];
     // runways
     for (const r of a.rwys) {
       const num = String(a.num).padStart(2, "0") + r.sfx, recip = String(a.recip).padStart(2, "0") + swapLR(r.sfx);
-      flat(grp, r.w + 14, r.len + 120, MAT.shoulder, r.off, 0.03, 0);
-      flat(grp, r.w, r.len, new THREE.MeshLambertMaterial({ map: runwayTexture(r, num, recip) }), r.off, 0.07, 0);
+      flat(grp, r.w + 14, r.len + 120, MAT.shoulder, r.off, 0.03, 0).userData.keep = true;
+      flat(grp, r.w, r.len, new THREE.MeshLambertMaterial({ map: runwayTexture(r, num, recip) }), r.off, 0.07, 0).userData.keep = true;
       for (let z = -r.len / 2; z <= r.len / 2; z += 60) for (const sx of [-1, 1]) edgeL.push([r.off + sx * (r.w / 2 + 1.5), 0.3, z]);
       for (let i = 0; i < 12; i++) { const x = r.off - r.w / 2 + (i + 0.5) * r.w / 12; thrG.push([x, 0.3, r.len / 2 + 2]); thrR.push([x, 0.3, -r.len / 2 - 2]); thrG.push([x, 0.3, -r.len / 2 - 4]); thrR.push([x, 0.3, r.len / 2 + 4]); }
       // approach lights at both ends
@@ -1950,7 +2031,7 @@ vec3 liveryAt(vec3 p, out float fus) {
         const lamp = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.7, 0.3), k < 2 ? MAT.papiW : MAT.redL); lamp.position.set(x, 0.75, z + dir * 0.65); grp.add(lamp);
       }
     }
-    instanced(grp, lightG, MAT.edge, edgeL); instanced(grp, lightG, MAT.green, thrG); instanced(grp, lightG, MAT.redL, thrR); instanced(grp, lightG, MAT.white, appr);
+    for (const [mat, list] of [[MAT.edge, edgeL], [MAT.green, thrG], [MAT.redL, thrR], [MAT.white, appr]]) instanced(grp, lightG, mat, list).userData.keep = true;
     // taxiways
     const r0 = a.rwys[0], tl = r0.len * 0.92;
     flat(grp, 23, tl, MAT.taxi, a.tx, 0.05, 0); flat(grp, 0.5, tl, MAT.yellow, a.tx, 0.08, 0);
@@ -2049,6 +2130,10 @@ vec3 liveryAt(vec3 p, out float fus) {
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 8, 6), lam(0xdddddd)); pole.position.set(wsx, 4, wsz); grp.add(pole);
     const sock = new THREE.Mesh(new THREE.ConeGeometry(0.8, 4.5, 10, 1, true), new THREE.MeshLambertMaterial({ color: 0xff6a1f, side: THREE.DoubleSide }));
     sock.geometry.rotateZ(Math.PI / 2); sock.position.set(wsx + 2.4, 7.5, wsz); grp.add(sock);
+    // from far away only the runways and their lights are drawn; buildings, parked aircraft, taxiways and signs join in closer
+    const det = new THREE.Group();
+    for (const ch of grp.children.slice()) if (!ch.userData.keep) det.add(ch);
+    grp.add(det); a.detail = det;
     grp.updateMatrixWorld(true);
     a.tower = cab.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 1.5, 0));
   }
@@ -2090,7 +2175,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     const [x, z] = toWorld(at, along, 0);
     S.pos.set(x, at.elev + 0.05 + spec.gearH, z);
     S.q.setFromAxisAngle(AY, -at.hdg * Math.PI / 180); S.vel.set(0, 0, 0);
-    Object.assign(S, { speed: 0, sink: 0, throttle: 0, grounded: true, crashed: false, flaps: 1, gearDown: true, gearPos: 1, flapPos: 1, flightT: 0, vs: 0, touchFpm: null, landedAt: null, autobrake: false, calls: {}, callUntil: 0, boomT: 0, started: false, gate: null, push: null, taxiOut: false, groundPitch: 0, alpha: 0, load: 1, gust: 0, gs: 0, ias: 0, n1: 0, trimAlpha: 0.09, spoiler: 0, autoSpoiler: false, reverse: false, trim: 0, park: false, alerts: {}, msgQ: [], gammaPrev: undefined, gammaRate: 0, lights: typeof ENV !== "undefined" && ENV.time !== "day" });
+    Object.assign(S, { speed: 0, sink: 0, throttle: 0, grounded: true, crashed: false, flaps: 1, gearDown: true, gearPos: 1, flapPos: 1, flightT: 0, vs: 0, touchFpm: null, landedAt: null, autobrake: false, calls: {}, callUntil: 0, boomT: 0, started: false, gate: null, push: null, taxiOut: false, groundPitch: 0, alpha: 0, load: 1, gust: 0, gs: 0, ias: 0, n1: 0, trimAlpha: 0.09, spoiler: 0, autoSpoiler: false, reverse: false, trim: 0, park: false, alerts: {}, msgQ: [], gammaPrev: undefined, gammaRate: 0, engOut: false, lights: typeof ENV !== "undefined" && ENV.time !== "day" });
     if (typeof syncTouchKeys === "function") syncTouchKeys();
     if (typeof AP !== "undefined") { AP.on = false; AP.athr = false; AP.app = false; AP.lat = "HDG"; AP.flare = false; apSync(); pushBtn.hidden = true; }
     boom.visible = false; model.visible = true; flyby.set = false;
@@ -2197,7 +2282,19 @@ vec3 liveryAt(vec3 p, out float fus) {
     if (e.target.closest && e.target.closest("input, select, textarea")) return;
     const k = e.code;
     if (S.mode === "fly" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(k)) e.preventDefault();
-    keys.add(k); if (e.repeat) return;
+    keys.add(k);
+    if (S.mode === "replay") {   // replay: Space play/pause, arrows seek, Esc or P back; cameras still switch
+      const onBtn = !!(e.target.closest && e.target.closest("button"));   // Space on a focused button presses that button instead
+      if ((k === "Space" && !onBtn) || k === "ArrowLeft" || k === "ArrowRight") e.preventDefault();
+      if (k === "ArrowLeft" || k === "ArrowRight") rpSeekBy(k === "ArrowLeft" ? -5 : 5);
+      if (e.repeat) return;
+      if (k === "Space" && !onBtn) rpToggle();
+      if (k === "Escape" || k === "KeyP") closeReplay();
+      if (/^Digit[1-8]$/.test(k)) setCam(CAMS[+k.slice(5) - 1][0]);
+      if (k === "KeyC") cycleCam();
+      return;
+    }
+    if (e.repeat) return;
     if (/^Digit[1-8]$/.test(k)) setCam(CAMS[+k.slice(5) - 1][0]);
     if (k === "KeyC") cycleCam();
     if (k === "KeyG" && S.mode === "fly") toggleGear();
@@ -2217,7 +2314,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     if (k === "KeyP" || k === "Escape") { if (S.mode === "fly") pause(); else if (S.mode === "paused") resume(); }
   });
   window.addEventListener("keyup", (e) => keys.delete(e.code));
-  window.addEventListener("blur", () => { keys.clear(); touchBrake = false; if (typeof releaseTouchHolds === "function") releaseTouchHolds(); if (typeof stickId !== "undefined" && stickId !== null) { stickId = null; stick.x = stick.y = 0; knob.style.transform = ""; } if (S.mode === "fly") pause(); });
+  window.addEventListener("blur", () => { if (S.mode === "replay") RP.playing = false; keys.clear(); touchBrake = false; if (typeof releaseTouchHolds === "function") releaseTouchHolds(); if (typeof stickId !== "undefined" && stickId !== null) { stickId = null; stick.x = stick.y = 0; knob.style.transform = ""; } if (S.mode === "fly") pause(); });
   document.addEventListener("visibilitychange", () => { if (document.hidden && S.mode === "fly") pause(); });
 
   const helpEl = $("help");
@@ -2251,7 +2348,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   vibBtn.hidden = !canVibrate; vibBtn.setAttribute("aria-pressed", String(vibOn));
   vibBtn.addEventListener("click", () => { vibOn = !vibOn; save("sw-vib", vibOn ? "1" : "0"); vibBtn.setAttribute("aria-pressed", String(vibOn)); if (vibOn) buzz(30); });
   $("fsBtn").addEventListener("click", () => { try { if (document.fullscreenElement) document.exitFullscreen(); else stage.requestFullscreen().catch(() => {}); } catch {} });
-  $("menuBtn").addEventListener("click", () => { if (S.mode === "fly") pause(); else if (S.mode === "paused") resume(); });
+  $("menuBtn").addEventListener("click", () => { if (S.mode === "fly") pause(); else if (S.mode === "paused") resume(); else if (S.mode === "replay") closeReplay(); });
 
   // touch stick
   const stickEl = $("stick"), knob = $("knob"); let stickId = null;
@@ -2376,6 +2473,44 @@ vec3 liveryAt(vec3 p, out float fus) {
     else if (Object.values(PLANES).every((p) => !p.glb || (GLB[p.kind] && GLB[p.kind].status !== "loading"))) setTimeout(() => PHOTO.done(), 500);
   }
 
+  // ================= MISSIONS & FEATURED ROUTES (data) =================
+  // Ten set-piece flights, easiest first. Each one fixes the aircraft, the airports, where you start (runway or on final),
+  // the time, weather and wind (speed in knots, direction relative to the runway: 0 = headwind, 90 = from the right),
+  // and can add goals of its own on top of landing at the destination. The usual landing rating gives the stars.
+  const MISSIONS = [
+    { id: "m1", title: "Short final", plane: "b737", from: "HBP", to: "HBP", start: "approach", dist: 6000, time: "day", wx: "clear", wind: [5, 0], goals: [],
+      desc: "You're lined up on a 6 km final to Harbor Point in perfect weather, gear and flaps already down. Keep the ILS diamonds centred, close the throttle near the ground and flare gently." },
+    { id: "m2", title: "First hop", plane: "b737", from: "HBP", to: "SPT", start: "runway", time: "day", wx: "clear", wind: [6, 10], goals: [],
+      desc: "A whole flight: take off from Harbor Point, climb out, turn towards Southport and land. Follow the amber arrow and the magenta line on the map." },
+    { id: "m3", title: "Sea-breeze crosswind", plane: "mh", from: "PLC", to: "PLC", start: "approach", dist: 8000, time: "day", wx: "cloudy", wind: [20, 80], goals: [["centre", 8]],
+      desc: "Pelican Isle sits alone in the western sea and the wind blows straight across its runway. Point the nose into the wind to track the centreline, then straighten up with the rudder (Q / E) just before touchdown." },
+    { id: "m4", title: "Short field", plane: "b737", from: "CRK", to: "CRK", start: "approach", dist: 6000, time: "day", wx: "clear", wind: [8, -20], goals: [["stop"]],
+      desc: "Coral Key has only 1250 m of runway. Fly the final slow and on the glide path, touch down early, then brake hard (Space), with spoilers (X) and reverse thrust (T)." },
+    { id: "m5", title: "Night ILS", plane: "b737", from: "EGT", to: "EGT", start: "approach", dist: 15000, time: "night", wx: "cloudy", wind: [10, 30], goals: [],
+      desc: "A dark, overcast night into Eastgate. The runway lights are all you'll see, so fly the ILS and keep both diamonds centred. The autopilot's APP mode is allowed." },
+    { id: "m6", title: "Fog at Kingsbridge", plane: "b767", from: "KBI", to: "KBI", start: "approach", dist: 12000, time: "day", wx: "fog", vis: 900, wind: [4, 0], goals: [],
+      desc: "Visibility is under a kilometre. You won't see the runway until the last seconds, so trust the instruments: the ILS diamonds, the 3° path and the radio-altitude callouts." },
+    { id: "m7", title: "Engine failure", plane: "b737", from: "SNV", to: "SNV", start: "runway", time: "day", wx: "clear", wind: [6, 0], engFail: 400, goals: [],
+      desc: "A normal departure from Sunvale, until the right engine quits at 400 ft. Keep flying: left rudder, wings level, speed up. Then turn back and land on the runway you just left." },
+    { id: "m8", title: "Against the clock", plane: "mh", from: "HBP", to: "EGT", start: "runway", time: "sunset", wx: "clear", wind: [8, 200], noAP: true, limit: 390, goals: [["time"]],
+      desc: "The autopilot is broken and Eastgate is waiting. Fly the whole trip by hand and come to a stop on its runway within 6:30. Turn onto the final early, a tight last turn costs more time than it saves." },
+    { id: "m9", title: "Over the mountains", plane: "b737", from: "SPT", to: "GRP", start: "runway", time: "sunset", wx: "cloudy", wind: [9, 0], goals: [["stop"]],
+      desc: "Granite Peak sits 830 m up between the eastern ridges, on a 1500 m runway. Climb early, clear the peaks, then follow the valley down to the field. Thin air means a faster touchdown, so brake firmly." },
+    { id: "m10", title: "Heavy into Highmoor", plane: "b777", from: "HMR", to: "HMR", start: "approach", dist: 11000, time: "day", wx: "rain", wind: [14, -60], goals: [["fpm", 600], ["stop"]],
+      desc: "A 777 in rain and a gusty crosswind, onto Highmoor's 1800 m runway. The big jet is slow to respond: get it stable early, keep the sink rate low and stop before the end." },
+  ];
+  let briefTab = "free", selMission = MISSIONS[0], briefCanResume = false;
+  // hand-picked routes for the free-flight briefing
+  const FEATURED = [
+    { t: "Out to sea", f: "WFD", to: "PLC", plane: "mh", time: "day", wx: "clear", tip: "Pelican Isle is a lone island runway west of Westfield: nothing but water under the final approach." },
+    { t: "Ridge hop", f: "MLB", to: "GRP", plane: "b737", time: "day", wx: "cloudy", tip: "From the Millbrook plateau up to Granite Peak, 830 m high on a 1500 m runway. Climb straight away." },
+    { t: "Twin-runway hub", f: "HBP", to: "KBI", plane: "b767", time: "sunset", wx: "clear", tip: "Harbor Point to the new Kingsbridge hub on the eastern plain. Land on 09R, the longer of its two parallel runways." },
+    { t: "Coast to coast", f: "NCP", to: "SNV", plane: "b777", time: "day", wx: "cloudy", tip: "The longest trip on the map, from the north cape to Sunvale in the far south. A good one for the autopilot's NAV and APP." },
+    { t: "Foggy arrival", f: "KBI", to: "HMR", plane: "b737", time: "day", wx: "fog", tip: "Fog closes in on Highmoor. Use the ILS: the runway only shows up in the last kilometre." },
+    { t: "Hill country", f: "BYF", to: "HLC", plane: "mh", time: "sunset", wx: "clear", tip: "A short evening hop from Bayford to the hill-top strip at Hillcrest: only 1300 m, so come in slow." },
+  ];
+  const routeKm = (f, t) => (Math.hypot(f.x - t.x, f.z - t.z) / 1000).toFixed(1);
+
   // ================= BRIEFING UI =================
   const planesEl = $("planes"), fromSel = $("fromSel"), toSel = $("toSel");
   let chosen = load("sw-plane") || "b737"; if (!PLANES[chosen]) chosen = "b737";
@@ -2459,9 +2594,11 @@ vec3 liveryAt(vec3 p, out float fus) {
       row.append(code, name, rw, el, acts); boardEl.append(row);
     }
   }
+  const segSyncs = [], syncSegs = () => segSyncs.forEach((f) => f());
   document.querySelectorAll(".seg[data-for]").forEach((grp) => {
     const sel = $(grp.dataset.for);
     const sync = () => grp.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.v === sel.value)));
+    segSyncs.push(sync);
     grp.querySelectorAll("button").forEach((btn) => btn.addEventListener("click", () => { sel.value = btn.dataset.v; sel.dispatchEvent(new Event("change")); sync(); updateSummary(); }));
     sync();
   });
@@ -2503,6 +2640,10 @@ vec3 liveryAt(vec3 p, out float fus) {
     save("sw-log", JSON.stringify(arr.slice(-LOG_MAX)));
   }
   function updateSummary() {
+    if (briefTab === "missions") {
+      const m = selMission, i = MISSIONS.indexOf(m);
+      $("briefSummary").textContent = `Mission ${i + 1} · ${m.title}\n${missionMeta(m)}`; $("briefBest").hidden = true; return;
+    }
     const f = AIRPORTS[+fromSel.value], t = toSel.value === "-1" ? null : AIRPORTS[+toSel.value];
     const opt = (id) => $(id).selectedOptions[0].textContent;
     const lv = livOf(chosen, chosenLiv[chosen]);
@@ -2521,14 +2662,16 @@ vec3 liveryAt(vec3 p, out float fus) {
     li.append(c, n, d); apList.append(li);
   }
 
-  const brief = $("brief"), briefTitle = $("briefTitle"), briefEyebrow = $("briefEyebrow"), briefResult = $("briefResult"), briefTip = $("briefTip"), goBtn = $("goBtn"), resumeBtn = $("resumeBtn");
+  const brief = $("brief"), briefTitle = $("briefTitle"), briefEyebrow = $("briefEyebrow"), briefResult = $("briefResult"), briefTip = $("briefTip"), goBtn = $("goBtn"), resumeBtn = $("resumeBtn"), replayBtn = $("replayBtn");
   function showBrief(eyebrow, title, resultNode, tip, canResume) {
     briefEyebrow.textContent = eyebrow; briefTitle.textContent = title; briefTip.textContent = tip;
     briefResult.replaceChildren(); if (resultNode) briefResult.append(resultNode); briefResult.hidden = !resultNode;
-    resumeBtn.hidden = !canResume; goBtn.textContent = canResume ? "Restart flight" : "Take off"; brief.hidden = false; keys.clear();
-    renderBoard(); updateSummary();
+    resumeBtn.hidden = !canResume; briefCanResume = !!canResume; syncGoLabel(); brief.hidden = false; keys.clear();
+    replayBtn.hidden = !canReplay() || !(S.mode === "paused" || S.mode === "over");
+    renderBoard(); updateSummary(); if (briefTab === "missions") renderMissions(); renderFeatured();
+    brief.scrollTop = 0;   // a result or the pause screen always opens at the top
   }
-  function pause() { S.mode = "paused"; showBrief("PAUSED", "Flight paused", null, "Resume where you left off, or change the aircraft or route and start again.", true); }
+  function pause() { S.mode = "paused"; if (S.mission) { selMission = S.mission; setTab("missions"); } showBrief("PAUSED", "Flight paused", null, "Resume where you left off, or change the aircraft or route and start again.", true); }
   function resume() { S.mode = "fly"; brief.hidden = true; }
   resumeBtn.addEventListener("click", resume);
   // flight log panel (opened from the ⋯ menu)
@@ -2565,6 +2708,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   let pendingTakeoff = null;
   goBtn.addEventListener("click", () => {
     if (pendingTakeoff) return;
+    if (briefTab === "missions") { startMission(selMission); return; }
     const p = PLANES[chosen];
     if (p.glb && !(GLB[chosen] && GLB[chosen].status === "ready")) {
       pendingTakeoff = chosen; goBtn.textContent = `Loading ${p.name}…`;
@@ -2579,7 +2723,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     if ($("modelSel").value === "real") briefTip.textContent = PLANES[chosen].fbw ? `${PLANES[chosen].name} is fly-by-wire: it keeps its protections even in Realistic.` : `Realistic: no stall protection and the trim holds the angle of attack. Full power pitches the nose up, so trim nose down with ${trimKeys(true)} after liftoff and watch your speed.`;
   });
   function startFlight() {
-    goBtn.textContent = "Take off";
+    goBtn.textContent = "Take off"; S.mission = null; ENV.vis = null; recClear();
     S.from = AIRPORTS[+fromSel.value]; S.to = toSel.value === "-1" ? null : AIRPORTS[+toSel.value];
     if (!model || model.userData.kind !== chosen) {
       if (!setPlane(chosen)) { briefTip.textContent = `${PLANES[chosen].name} isn't ready yet. Pick another aircraft or try again.`; return; }
@@ -2588,7 +2732,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     applyEnv($("timeSel").value, $("wxSel").value);
     S.lights = ENV.time !== "day"; syncTouchKeys();
     ENV.model = $("modelSel").value;
-    { const ws = ENV.weather === "rain" ? 11 : ENV.weather === "cloudy" ? 7 : 3.5, dir = Math.random() * Math.PI * 2; S.wind.set(Math.sin(dir) * ws, 0, Math.cos(dir) * ws); S.gustV.set(0, 0, 0); }
+    { const ws = ENV.weather === "rain" ? 11 : ENV.weather === "cloudy" ? 7 : ENV.weather === "fog" ? 1.5 : 3.5, dir = Math.random() * Math.PI * 2; S.wind.set(Math.sin(dir) * ws, 0, Math.cos(dir) * ws); S.gustV.set(0, 0, 0); }
     if ($("startSel").value === "gate") spawnAtGate(S.from); else if (hiddenParked) { hiddenParked.visible = true; hiddenParked = null; }
     S.mode = "fly"; brief.hidden = true;
     const rot = Math.round(spec.stall * 1.05 * 0.9 * MS2KT);
@@ -2645,11 +2789,12 @@ vec3 liveryAt(vec3 p, out float fus) {
     if (S.crashed) return;
     S.crashed = true; model.visible = false; boom.visible = true; boom.position.copy(S.pos); boom.scale.setScalar(1); S.boomT = 0; chime(80, 0.8);
     buzz([180, 70, 180]);
-    if (S.started) logFlight({ fpm: /landing/i.test(reason) ? Math.round(-S.vs * M2FT * 60) : null, res: "Crashed: " + reason.split(/[.!] /)[0].replace(/[.!]$/, ""), ok: false });
+    if (S.started && !S.mission) logFlight({ fpm: /landing/i.test(reason) ? Math.round(-S.vs * M2FT * 60) : null, res: "Crashed: " + reason.split(/[.!] /)[0].replace(/[.!]$/, ""), ok: false });
     const id = ++crashId;
     setTimeout(() => {
       if (id !== crashId || !S.crashed) return;   // a new flight was started meanwhile
       S.mode = "over";
+      if (S.mission) { missionResult(false, { reason }); return; }
       const p = document.createElement("p"); p.className = "result bad"; p.textContent = reason;
       showBrief("INCIDENT REPORT", "Crashed", p, "Pick a plane and route, then try again. Tip: keep your speed up in turns and touch down gently.", false);
     }, 1400);
@@ -2704,7 +2849,13 @@ vec3 liveryAt(vec3 p, out float fus) {
     const ge = agl < span ? 1 + 0.15 * (1 - Math.max(0, agl) / span) : 1;   // ground effect: a cushion of air near the runway
     // engines spool up and down instead of answering instantly
     S.n1 = lerp(S.n1 || 0, S.throttle, Math.min(1, dt * (spec.big || spec.jetSound ? 0.45 : 1.8)));
-    const thrustAcc = (S.reverse ? -0.5 : 1) * S.n1 * thrMax * Math.pow(sigma, 0.7);
+    // mission engine failure: the right engine quits once you are 400 ft up; half the thrust, and the good engine yaws the nose
+    if (S.mission && S.mission.engFail && !S.engOut && !S.grounded && (S.pos.y - spec.gearH - S.from.elev) * M2FT > S.mission.engFail) {
+      S.engOut = true; flash("ENGINE FAILURE · right engine. Hold left rudder (Q), keep the speed up, come back and land.", 5);
+      tone(700, 700, 0.25, "square", 0.06); tone(700, 700, 0.25, "square", 0.06, 0.35); tone(700, 700, 0.25, "square", 0.06, 0.7); buzz([200, 80, 200, 80, 200]);
+      RADIO.push({ text: `${S.mission.to} Tower: copy the engine failure. Runway ${(AP_BY[S.mission.to] || S.from).label} is yours, cleared to land.`, t: 10 });
+    }
+    const thrustAcc = (S.reverse ? -0.5 : 1) * S.n1 * thrMax * Math.pow(sigma, 0.7) * (S.engOut ? 0.5 : 1);
     // wind with gusts (stronger in cloud and rain)
     const gustAmp = ENV.weather === "rain" ? 1 : ENV.weather === "cloudy" ? 0.45 : 0.12;
     S.gustV.lerp(V.tmp.set((Math.random() - 0.5) * 9 * gustAmp, (Math.random() - 0.5) * 5 * gustAmp * (agl > 8 ? 1 : 0.1), (Math.random() - 0.5) * 9 * gustAmp), Math.min(1, dt * 1.4));
@@ -2777,6 +2928,9 @@ vec3 liveryAt(vec3 p, out float fus) {
       if (alpha > aCrit) pitchRate -= 0.8 * Math.min(1, (alpha - aCrit) / 0.08);   // stall: the nose drops
       let yawRate = -S.inputs.yaw * spec.yaw * auth - (2.2 * Math.min(qr, 1.5) + 0.3) * beta;
       let rollRate = -S.inputs.roll * spec.roll * auth;
+      if (S.engOut) {   // asymmetric thrust: yaws and rolls towards the dead (right) engine; left rudder cancels the roll
+        const asym = S.n1 * auth; yawRate -= 0.1 * asym; rollRate -= 0.06 * asym * (1 - clamp(-S.inputs.yaw, 0, 1));
+      }
       if (realistic) {
         yawRate += S.inputs.roll * 0.07 * auth;                 // adverse yaw: ailerons drag the nose the other way
         rollRate += beta * 1.1 * Math.min(qr, 1.5);             // dihedral: sideslip rolls the wings level-ward
@@ -2814,6 +2968,10 @@ vec3 liveryAt(vec3 p, out float fus) {
         if (spec.retract && S.gearPos < 0.9) { crash("Belly landing! Press G to lower the gear before you land."); return; }
         if (!rw && am < 0.97) { crash("That wasn't a runway. Land on an airport runway."); return; }
         S.grounded = true; S.sink = 0; S.pos.y = gy + spec.gearH; S.gs = Math.hypot(S.vel.x, S.vel.z); S.groundPitch = clamp(Math.asin(clamp(fwd.y, -1, 1)), 0, 0.2);
+        { // the main wheels roll where the aircraft is actually going: a small crab angle is straightened out on touchdown
+          const hNow = Math.atan2(-fwd.x, -fwd.z), hTrk = Math.atan2(-S.vel.x, -S.vel.z);
+          if (S.gs > 5 && Math.abs(wrapA(hTrk - hNow)) < 0.35) S.q.setFromEuler(V.eul.set(S.groundPitch, hTrk, 0, "YXZ"));
+        }
         S.touchFpm = Math.round(-S.vs * M2FT * 60); S.landedAt = rw || airportMask(S.pos.x, S.pos.z)[1];
         { const la = S.landedAt, r0 = la.rwys[0], [al, ac] = local(la, S.pos.x, S.pos.z); S.touchOff = ac - r0.off; S.touchDist = al + r0.len / 2; S.touchKt = Math.round(S.speed * MS2KT); }
         if (spec.big && !brake) S.autobrake = true;
@@ -2840,6 +2998,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     let stars = fpm < 240 ? 3 : fpm < 480 ? 2 : 1;
     if (off > 8 || tdz > 900 || tdz < 0) stars = Math.max(1, stars - 1);
     S.mode = "over";
+    if (S.mission) { missionResult(true, { stars, fpm, off: S.touchOff || 0, tdz, kt: S.touchKt, onRwy: runwayAt(S.pos.x, S.pos.z) === a }); return; }
     const wrap = document.createElement("div"); wrap.style.display = "grid"; wrap.style.gap = "4px";
     const st = document.createElement("div"); st.className = "stars"; st.textContent = "★".repeat(stars) + "☆".repeat(3 - stars); st.setAttribute("aria-label", `${stars} of 3 stars`);
     const r = document.createElement("p"); r.className = "result";
@@ -2861,6 +3020,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   // ================= CAMERA =================
   const tv = new THREE.Vector3(), look = new THREE.Vector3(), WUP = new THREE.Vector3(0, 1, 0);
   function nearestTower() { let best = null, bd = 1e9; for (const a of AIRPORTS) { const d = a.tower.distanceTo(S.pos); if (d < bd) { bd = d; best = a; } } return best.tower; }
+  let camSnap = false;   // jump the chase camera into place (replay seek, mission start) instead of sweeping across the map
   function clampCam(p) { const g = Math.max(groundY(p.x, p.z), 0) + 1.5; if (p.y < g) p.y = g; }
   function updateCamera(dt, now) {
     const fwd = V.fwd.set(0, 0, -1).applyQuaternion(S.q), up = V.up.set(0, 1, 0).applyQuaternion(S.q), right = V.right.set(1, 0, 0).applyQuaternion(S.q);
@@ -2909,10 +3069,11 @@ vec3 liveryAt(vec3 p, out float fus) {
       camera.position.copy(flyby.p); camera.up.copy(WUP); camera.lookAt(S.pos); fov = clamp(2 * Math.atan2(spec.cam[0], d) * 57.3, 8, 65);
     } else {
       tv.copy(S.pos).addScaledVector(fwd, -spec.cam[0]).addScaledVector(up, spec.cam[1] * 0.5).addScaledVector(WUP, spec.cam[1] * 0.5);
-      clampCam(tv); camera.position.lerp(tv, 1 - Math.exp(-dt * 5)); look.copy(S.pos).addScaledVector(fwd, spec.cam[0] * 0.8);
+      clampCam(tv); camera.position.lerp(tv, camSnap ? 1 : 1 - Math.exp(-dt * 5)); look.copy(S.pos).addScaledVector(fwd, spec.cam[0] * 0.8);
       camera.up.copy(WUP); camera.lookAt(look);
     }
     if (Math.abs(camera.fov - fov) > 0.01) { camera.fov = S.cam === "tower" || S.cam === "flyby" ? fov : lerp(camera.fov, fov, 0.2); camera.updateProjectionMatrix(); }
+    camSnap = false;
   }
 
   // ================= ANIMATE MODEL =================
@@ -2971,6 +3132,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   function drawHud(now) {
     const { w, h } = hudSize; hud.clearRect(0, 0, w, h);
     thrFill.style.height = `${Math.round(S.throttle * (thrEl.clientHeight - 8))}px`; thrLbl.textContent = `THR ${Math.round(S.throttle * 100)}%`;
+    if (S.mode === "replay") { drawReplayHud(w, h); return; }
     if (S.mode !== "fly" && S.mode !== "paused") return;
     if (S.cam === "cabin" && CABIN.value) {   // passenger view: a quiet flight-information strip instead of the HUD
       const fs = Math.max(12, Math.round(Math.min(w, h) / 46)), MONO2 = MONO;
@@ -3126,6 +3288,9 @@ vec3 liveryAt(vec3 p, out float fus) {
     if (S.park && S.grounded) items.push(["PARK BRK", HC.warn]);
     if (ENV.model === "real" && !spec.fbw) items.push([`TRIM ${(S.trimAlpha * 57.3).toFixed(1)}°`, HC.hud]);
     if (Math.abs(S.n1 - S.throttle) > 0.08) items.push([`ENG ${Math.round(S.n1 * 100)}%`, HC.caution]);
+    if (S.engOut) items.push(["ENG 2 FAIL", HC.warn]);
+    if (S.mission && S.mission.noAP) items.push(["AP INOP", HC.caution]);
+    if (S.mission && S.mission.limit) { const left = S.mission.limit - S.flightT; items.push([left >= 0 ? `TIME ${fmtTime(left)}` : `OVER TIME +${fmtTime(-left)}`, left < 60 ? HC.warn : HC.hud]); }
     {
       const iasKt = (S.ias || 0) * MS2KT, vmaxKt = spec.vmax * MS2KT;
       const gLim = spec.kind === "arrow" ? 9 : spec.big ? 2.5 : 4.4;
@@ -3306,8 +3471,14 @@ vec3 liveryAt(vec3 p, out float fus) {
     makeAIModel(ai); AI.push(ai);
   });
   const playerOnRunway = (a) => S.mode === "fly" && !S.crashed && S.grounded && runwayAt(S.pos.x, S.pos.z) === a;
+  // the player on a short final to this runway also keeps the AI from lining up in front of them
+  const playerOnFinal = (a) => {
+    if (S.mode !== "fly" || S.crashed || S.grounded || S.to !== a) return false;
+    const r = a.rwys[0], [al, ac] = local(a, S.pos.x, S.pos.z);
+    return al < -r.len / 2 + 200 && al > -r.len / 2 - 9000 && Math.abs(ac - r.off) < 900 && S.pos.y - a.elev < 700;
+  };
   function runwayBusy(a, me) {
-    if (playerOnRunway(a)) return true;
+    if (playerOnRunway(a) || playerOnFinal(a)) return true;
     return AI.some((o) => o !== me && ((o.at === a && ["roll", "rollout", "taxi"].includes(o.phase)) || (o.to === a && o.phase === "final" && o.pos.distanceTo(me.pos) < 4500)));
   }
   function steer(ai, tx, tz, dt, maxRate) {
@@ -3423,7 +3594,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   }
 
   // ================= TIME OF DAY & WEATHER =================
-  const ENV = { time: "day", weather: "clear", model: "easy" };
+  const ENV = { time: "day", weather: "clear", model: "easy", vis: null };
   const stars = (function () {
     const n = 1400, pos = new Float32Array(n * 3);
     for (let i = 0; i < n; i++) { const u = hash(i, 1) * 2 - 1, th = hash(2, i) * Math.PI * 2, r = Math.sqrt(1 - u * u); pos.set([Math.cos(th) * r * 15000, Math.abs(u) * 15000 + 300, Math.sin(th) * r * 15000], i * 3); }
@@ -3461,26 +3632,28 @@ vec3 liveryAt(vec3 p, out float fus) {
   }
   function applyEnv(time, weather) {
     ENV.time = time; ENV.weather = weather;
-    const night = time === "night", dusk = time === "sunset", wet = weather === "rain", cloudy = weather !== "clear";
+    const night = time === "night", dusk = time === "sunset", wet = weather === "rain", cloudy = weather !== "clear", fog = weather === "fog";
     const top = new THREE.Color(night ? 0x050b1a : dusk ? 0x2f4f8f : 0x2c6fc6);
     const hor = new THREE.Color(night ? 0x16223a : dusk ? 0xf0a26a : 0xd3e6f3);
     if (wet) { top.lerp(new THREE.Color(0x6b7681), 0.75); hor.lerp(new THREE.Color(0x9aa3ab), 0.7); if (night) { top.multiplyScalar(0.25); hor.multiplyScalar(0.3); } }
     else if (weather === "cloudy") { top.lerp(new THREE.Color(0x8fa3b8), 0.35); hor.lerp(new THREE.Color(0xc5ced6), 0.3); }
+    else if (fog) { top.lerp(new THREE.Color(0xaab4bd), 0.8); hor.lerp(new THREE.Color(0xc4c9cd), 0.92); if (night) { top.multiplyScalar(0.22); hor.multiplyScalar(0.26); } else if (dusk) hor.lerp(new THREE.Color(0xd9b49a), 0.25); }
     recolorSky(top, hor, new THREE.Color(night ? 0x0a0f18 : 0x6f7f8c));
     scene.fog.color.copy(hor);
-    scene.fog.near = wet ? 400 : cloudy ? 2500 : 3000; scene.fog.far = wet ? 4500 : cloudy ? 11000 : 14000;
-    hemi.intensity = night ? 0.16 : dusk ? 0.55 : wet ? 0.6 : 0.8;
+    scene.fog.near = fog ? 40 : wet ? 400 : cloudy ? 2500 : 3000; scene.fog.far = fog ? 1500 : wet ? 4500 : cloudy ? 11000 : 14000;
+    if (ENV.vis) { scene.fog.far = Math.min(scene.fog.far, ENV.vis); scene.fog.near = Math.min(scene.fog.near, ENV.vis * 0.04); }   // a mission can set its own visibility
+    hemi.intensity = night ? 0.16 : dusk ? 0.55 : wet || fog ? 0.6 : 0.8;
     hemi.color.set(night ? 0x6f86b3 : dusk ? 0xffd2b0 : 0xe4f3ff);
-    sun.intensity = night ? 0.08 : dusk ? 0.75 : wet ? 0.35 : cloudy ? 0.8 : 1.05;
+    sun.intensity = night ? 0.08 : dusk ? 0.75 : wet || fog ? 0.35 : cloudy ? 0.8 : 1.05;
     sun.color.set(night ? 0x8ea6d6 : dusk ? 0xffa060 : 0xfff0d8);
     SUN_DIR.set(-0.6, night ? 0.8 : dusk ? 0.12 : 1, 0.45).normalize();
     sun.target.position.set(0, 0, 0); sun.position.copy(SUN_DIR).multiplyScalar(1000);
-    sunDisc.visible = !night && !wet; sunDisc.material.color.set(dusk ? 0xffb070 : 0xfff6dc);
+    sunDisc.visible = !night && !wet && !fog; sunDisc.material.color.set(dusk ? 0xffb070 : 0xfff6dc);
     sunDisc.position.copy(SUN_DIR).multiplyScalar(15000); sunDisc.lookAt(0, 0, 0);
     stars.visible = night && !wet;
     rain.l.visible = wet;
     clouds.setWeather(weather, night, dusk);
-    waterMat.color.set(night ? 0x0b2233 : wet ? 0x2b5470 : 0x1d6c9c);
+    waterMat.color.set(night ? 0x0b2233 : wet || fog ? 0x2b5470 : 0x1d6c9c);
     if (towersMat) { towersMat.emissive.set(night ? 0xffe2a8 : 0x000000); towersMat.emissiveIntensity = night ? 0.6 : 0; }
     renderer.toneMappingExposure = 1;
   }
@@ -3496,6 +3669,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   }
   function curHdgDeg() { const f = V.fwd.set(0, 0, -1).applyQuaternion(S.q); return ((Math.atan2(f.x, -f.z) * 57.3) + 360) % 360; }
   function apEngage(on) {
+    if (on && S.mission && S.mission.noAP) { flash("Autopilot inoperative on this mission: fly it by hand", 2); return; }
     if (on && (S.grounded || S.mode !== "fly")) { flash("Take off first, then switch on the autopilot", 2); return; }
     AP.on = on; AP.flare = false;
     if (on) {
@@ -3521,7 +3695,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   if (phoneMQ.addEventListener) phoneMQ.addEventListener("change", syncApDock); else if (phoneMQ.addListener) phoneMQ.addListener(syncApDock);
   syncApDock();
   apEls.on.addEventListener("click", () => apEngage(!AP.on));
-  apEls.thr.addEventListener("click", () => { AP.athr = !AP.athr; if (AP.athr) AP.spd = Math.round(S.speed * MS2KT / 5) * 5 || AP.spd; apSync(); });
+  apEls.thr.addEventListener("click", () => { if (!AP.athr && S.mission && S.mission.noAP) { flash("Autothrottle inoperative on this mission", 2); return; } AP.athr = !AP.athr; if (AP.athr) AP.spd = Math.round(S.speed * MS2KT / 5) * 5 || AP.spd; apSync(); });
   apEls.nav.addEventListener("click", () => {
     if (!S.to) { flash("Pick a destination in the briefing to use NAV", 2); return; }
     AP.lat = AP.lat === "HDG" ? "NAV" : "HDG"; if (AP.lat === "HDG") AP.app = false; apSync();
@@ -3570,7 +3744,9 @@ vec3 liveryAt(vec3 p, out float fus) {
     }
     if (vsT === null) vsT = clamp((altT - S.pos.y) * 0.12, -AP.vs / M2FT / 60, AP.vs / M2FT / 60);
     const pitchT = Math.asin(clamp((vsT - S.sink) / Math.max(S.speed, 20), -0.3, 0.3));
-    const bankT = clamp(wrapA(hdgT - hdgNow) * 2, -0.44, 0.44);
+    // on the localizer the autopilot steers the ground track, so a crosswind no longer leaves it parked beside the centreline
+    const trkNow = AP.lat === "LOC" && S.gs > 20 ? Math.atan2(S.vel.x, -S.vel.z) : hdgNow;
+    const bankT = clamp(wrapA(hdgT - trkNow) * 2, -0.44, 0.44);
     return {
       pitch: clamp((pitchT - pitchNow) * 3.2 / (spec.pitch * auth), -1, 1),
       roll: clamp((bankT - bank) * 2.2 / (spec.roll * auth), -1, 1),
@@ -3649,6 +3825,268 @@ vec3 liveryAt(vec3 p, out float fus) {
   }
   const fpsMeter = { n: 0, t0: performance.now() };
 
+  // ================= MISSIONS =================
+  const START_LBL = { runway: "Runway start", approach: "On final", gate: "Gate start" }, TIME_LBL = { day: "Day", sunset: "Sunset", night: "Night" }, WX_LBL = { clear: "Clear", cloudy: "Cloudy", rain: "Rain", fog: "Fog" };
+  const misProg = () => readJSON("sw-missions", {});
+  const misStars = (m) => { const v = misProg()[m.id]; return Number.isFinite(v) ? clamp(Math.round(v), 0, 3) : 0; };
+  const misOpen = (i) => i === 0 || misStars(MISSIONS[i - 1]) > 0;
+  function missionMeta(m) {
+    const f = AP_BY[m.from], t = AP_BY[m.to];
+    return `${PLANES[m.plane].name} · ${m.from === m.to ? t.code : f.code + " → " + t.code} · ${START_LBL[m.start]} · ${TIME_LBL[m.time]} · ${WX_LBL[m.wx]}${m.vis ? ` ${m.vis} m` : ""} · wind ${m.wind[0]} kt`;
+  }
+  function goalText(m, g) {
+    if (g[0] === "centre") return `Touch down within ${g[1]} m of the centreline`;
+    if (g[0] === "stop") return "Stop on the runway (no overrun)";
+    if (g[0] === "time") return `Stop at ${m.to} within ${fmtTime(m.limit)}`;
+    if (g[0] === "fpm") return `Touch down softer than ${g[1]} ft/min`;
+    return String(g[0]);
+  }
+  function goalMet(m, g, d) {
+    if (g[0] === "centre") return Math.abs(d.off) <= g[1];
+    if (g[0] === "stop") return !!d.onRwy;
+    if (g[0] === "time") return S.flightT <= m.limit;
+    if (g[0] === "fpm") return d.fpm < g[1];
+    return true;
+  }
+  const missionGoals = (m) => [`Land at ${AP_BY[m.to].name}`].concat(m.goals.map((g) => goalText(m, g)), m.noAP ? ["No autopilot (inoperative)"] : [], m.engFail ? [`Engine failure at ${m.engFail} ft`] : []);
+  function syncGoLabel() { goBtn.textContent = briefTab === "missions" ? (briefCanResume ? "Restart mission" : "Start mission") : (briefCanResume ? "Restart flight" : "Take off"); }
+  function setTab(t) {
+    briefTab = t === "missions" ? "missions" : "free";
+    document.querySelector("#brief .panel").classList.toggle("tab-missions", briefTab === "missions");
+    $("briefTabs").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tab === briefTab)));
+    if (briefTab === "missions") renderMissions(); else if (ENV.vis && S.mode !== "fly" && S.mode !== "paused") { ENV.vis = null; applyEnv($("timeSel").value, $("wxSel").value); }
+    syncGoLabel(); updateSummary();
+  }
+  $("briefTabs").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    setTab(b.dataset.tab);
+    if (briefTab === "missions") briefTip.textContent = selMission.desc;
+    else briefTip.textContent = "Pick an aircraft and a route, or one of the featured routes, then take off.";
+  }));
+  function renderMissions() {
+    const list = $("missionList"); list.replaceChildren();
+    MISSIONS.forEach((m, i) => {
+      const open = misOpen(i), st = misStars(m), b = document.createElement("button");
+      b.type = "button"; b.className = "mis"; b.disabled = !open; b.setAttribute("aria-pressed", String(m === selMission));
+      const mn = document.createElement("span"); mn.className = "mn";
+      const n = document.createElement("span"); n.textContent = `MISSION ${i + 1}`;
+      const s2 = document.createElement("span"); s2.className = "st"; s2.textContent = open ? starStr(st) : "LOCKED"; s2.setAttribute("aria-label", open ? `${st} of 3 stars` : "locked");
+      mn.append(n, s2);
+      const tt = document.createElement("b"); tt.textContent = m.title;
+      const md = document.createElement("span"); md.className = "md"; md.textContent = open ? m.desc : `Pass mission ${i} to open this one.`;
+      const mm = document.createElement("span"); mm.className = "mm"; mm.textContent = missionMeta(m);
+      const ul = document.createElement("ul"); missionGoals(m).forEach((g) => { const li = document.createElement("li"); li.textContent = g; ul.append(li); });
+      b.append(mn, tt, md, mm, ul);
+      b.addEventListener("click", () => { selMission = m; renderMissions(); updateSummary(); briefTip.textContent = m.desc; });
+      list.append(b);
+    });
+  }
+  // the fuel needed to hold a 3° glide at the approach speed (assisted model), so an approach start begins stable
+  function approachThrottle(v, y) {
+    const G = 9.81, RHO0 = 1.225, A = 2 * G / (RHO0 * spec.stall * spec.stall * 1.45), CD0 = spec.thrust / (0.5 * RHO0 * spec.vmax * spec.vmax * A);
+    const rho = RHO0 * Math.exp(-Math.max(0, y) / 8500), q = 0.5 * rho * v * v, cl = G / Math.max(1, q * A);
+    const drag = q * A * (CD0 * (1 + 0.7 + 0.35) + cl * cl * 0.045);
+    return clamp((drag - G * TAN3) / (spec.thrust * Math.pow(rho / RHO0, 0.7)), 0.05, 1);
+  }
+  function spawnApproach(a, dist) {
+    const r = a.rwys[0], [x, z] = toWorld(a, -r.len / 2 - dist, r.off);
+    const vref = spec.stall * (1 - 0.28) * 1.3, v = vref * 1.1;
+    S.pos.set(x, a.elev + spec.gearH + (dist + 300) * TAN3, z);
+    S.q.setFromAxisAngle(AY, -a.hdg * Math.PI / 180);
+    const fwd = V.fwd.set(0, 0, -1).applyQuaternion(S.q);
+    S.vel.copy(fwd).multiplyScalar(v); S.vel.y = -v * TAN3; S.vel.x += S.wind.x; S.vel.z += S.wind.z;
+    const thr = approachThrottle(v, S.pos.y);
+    Object.assign(S, { grounded: false, flaps: 2, flapPos: 1, gearDown: true, gearPos: 1, throttle: thr, n1: thr, speed: v, ias: v, gs: Math.hypot(S.vel.x, S.vel.z), started: true, groundPitch: 0, alpha: TAN3, sink: 0 });
+  }
+  function startMission(m) {
+    const i = MISSIONS.indexOf(m), from = AP_BY[m.from], to = AP_BY[m.to];
+    if (i < 0 || !misOpen(i)) { briefTip.textContent = "That mission is still locked: pass the one before it first."; return; }
+    if (!from || !to || !setPlane(m.plane)) { briefTip.textContent = "This mission couldn't start. Try again."; return; }
+    goBtn.textContent = "Start mission";
+    S.from = from; S.to = to;
+    ENV.vis = m.vis || null; applyEnv(m.time, m.wx); ENV.model = "easy";
+    spawn(from);
+    if (hiddenParked) { hiddenParked.visible = true; hiddenParked = null; }
+    { const ref = m.start === "approach" ? to : from, f = (ref.hdg + m.wind[1]) * Math.PI / 180, ws = m.wind[0] / MS2KT; S.wind.set(-Math.sin(f) * ws, 0, Math.cos(f) * ws); S.gustV.set(0, 0, 0); }
+    S.lights = ENV.time !== "day";
+    if (m.start === "approach") spawnApproach(to, m.dist); else if (m.start === "gate") spawnAtGate(from);
+    S.mission = m; S.engOut = false; syncTouchKeys();
+    // AI traffic heading for the mission airport goes elsewhere, so nobody lands on top of you
+    for (const ai of AI) {
+      if (ai.to !== to || !["cruise", "final"].includes(ai.phase)) continue;
+      const alt = aiPorts(ai.kind).filter((p) => p !== to && p !== ai.at); if (!alt.length) continue;
+      ai.to = alt[Math.floor(Math.random() * alt.length)]; if (ai.phase === "final") { ai.phase = "goaround"; ai.wait = 30; }
+    }
+    recClear(); RADIO.length = 0; S.msgQ = [];
+    S.mode = "fly"; brief.hidden = true; keys.clear(); camSnap = true;
+    flash(`Mission ${i + 1}: ${m.title}. ${missionGoals(m).slice(0, 2).join(" · ")}`, 5);
+    if (m.start === "approach") S.msgQ.push([`On final to ${to.code} runway ${to.label}: ${Math.round(m.dist / 1000)} km out, gear down, flaps 2. Wind ${windText()}.`, 4.5]);
+    if (m.noAP) S.msgQ.push(["Autopilot and autothrottle are inoperative: fly it by hand.", 3.5]);
+    if (soundOn) initAudio();
+  }
+  function missionResult(landed, d) {
+    const m = S.mission, i = MISSIONS.indexOf(m), to = AP_BY[m.to];
+    const checks = [[`Land at ${to.name}`, landed]].concat(m.goals.map((g) => [goalText(m, g), landed && goalMet(m, g, d)]));
+    const ok = checks.every((c) => c[1]), stars = ok ? d.stars : 0;
+    const prog = misProg(), old = Number.isFinite(prog[m.id]) ? prog[m.id] : 0;
+    let saved = true; if (stars > old) { prog[m.id] = stars; saved = save("sw-missions", JSON.stringify(prog)); }
+    logFlight({ to: m.to, fpm: landed ? d.fpm : null, stars: ok ? stars : undefined, res: `Mission ${i + 1}: ${ok ? starStr(stars) : "failed"}`, ok });
+    const wrap = document.createElement("div"); wrap.style.display = "grid"; wrap.style.gap = "4px";
+    if (ok) { const st = document.createElement("div"); st.className = "stars"; st.textContent = starStr(stars); st.setAttribute("aria-label", `${stars} of 3 stars`); wrap.append(st); }
+    else { const p = document.createElement("p"); p.className = "result bad"; p.textContent = d.reason || "Not all the goals were met."; wrap.append(p); }
+    if (landed) {
+      const det = document.createElement("p"); det.className = "result"; det.style.opacity = "0.8";
+      det.textContent = `Touchdown ${d.fpm} ft/min · ${d.kt || "–"} kt · ${Math.round(d.tdz)} m past threshold · ${Math.abs(d.off) < 1 ? "on centreline" : `${Math.abs(d.off).toFixed(1)} m ${d.off > 0 ? "right" : "left"} of centreline`} · ${fmtTime(S.flightT)}`;
+      wrap.append(det);
+    }
+    const ul = document.createElement("ul"); ul.className = "goals";
+    for (const [t, met] of checks) { const li = document.createElement("li"); li.className = met ? "ok" : "no"; li.textContent = `${met ? "✓" : "✗"} ${t}`; ul.append(li); }
+    wrap.append(ul);
+    const next = MISSIONS[i + 1], pb = document.createElement("p"); pb.className = "result";
+    pb.textContent = !saved ? "Progress can't be saved: this browser blocks local storage" : ok && old === 0 && next ? `Mission ${i + 2} is now open: ${next.title}` : old ? `Your best on this mission: ${starStr(Math.max(old, stars))}` : ok ? "Mission passed" : "Try again: the briefing below has the plan";
+    wrap.append(pb);
+    const acts = document.createElement("div"); acts.className = "res-acts";
+    const mk = (label, cls, fn) => { const b = document.createElement("button"); b.type = "button"; b.className = cls; b.textContent = label; b.addEventListener("click", fn); acts.append(b); return b; };
+    mk("Retry", "btn alt", () => startMission(m));
+    if (next && misOpen(i + 1)) mk("Next mission", "btn", () => { selMission = next; startMission(next); });
+    wrap.append(acts);
+    selMission = ok && next ? next : m;
+    setTab("missions");
+    showBrief(ok ? "MISSION COMPLETE" : "MISSION FAILED", `${i + 1}. ${m.title}`, wrap, ok ? (next ? `Up next: ${next.title}. ${next.desc}` : "That was the last mission. Try for three stars on every one.") : m.desc, false);
+  }
+
+  // ---------- featured routes in the free-flight briefing ----------
+  function renderFeatured() {
+    const el = $("featured"); if (!el) return; el.replaceChildren();
+    for (const r of FEATURED) {
+      const f = AP_BY[r.f], t = AP_BY[r.to]; if (!f || !t) continue;
+      const b = document.createElement("button"); b.type = "button"; b.className = "feat";
+      b.setAttribute("aria-pressed", String(fromSel.value === String(AIRPORTS.indexOf(f)) && toSel.value === String(AIRPORTS.indexOf(t)) && chosen === r.plane));
+      const tt = document.createElement("b"); tt.textContent = r.t;
+      const s1 = document.createElement("span"); s1.textContent = `${f.code} → ${t.code} · ${routeKm(f, t)} km · RWY ${t.label} ${t.len} m`;
+      const s2 = document.createElement("span"); s2.textContent = `${PLANES[r.plane].name} · ${TIME_LBL[r.time]} · ${WX_LBL[r.wx]}`;
+      b.append(tt, s1, s2);
+      b.addEventListener("click", () => applyFeatured(r));
+      el.append(b);
+    }
+  }
+  function applyFeatured(r) {
+    const f = AP_BY[r.f], t = AP_BY[r.to];
+    if (r.plane !== chosen) { const inp = planesEl.querySelector(`input[value="${r.plane}"]`); if (inp) { inp.checked = true; inp.dispatchEvent(new Event("change")); } }
+    fromSel.value = String(AIRPORTS.indexOf(f)); toSel.value = String(AIRPORTS.indexOf(t)); S.from = f;
+    $("timeSel").value = r.time; $("wxSel").value = r.wx; ENV.vis = null; applyEnv(r.time, r.wx);
+    spawn(S.from); syncSegs(); renderBoard(); updateSummary(); renderFeatured();
+    briefTip.textContent = r.tip;
+  }
+
+  // ================= REPLAY =================
+  // A ring buffer keeps the last 90 s of the flight at 15 samples a second: your aircraft (position, attitude, controls,
+  // gear, flaps, spoilers, lights, crash) and every AI aircraft. Playback interpolates between samples; nothing is simulated.
+  const REC_HZ = 15, REC_MAX = 90 * REC_HZ, REC_P = 20, REC_AI = 8, REC_W = REC_P + AI.length * REC_AI;
+  const REC = { buf: new Float32Array(REC_MAX * REC_W), n: 0, head: 0, acc: 0, t: 0, kind: null };
+  const RP = { t: 0, t0: 0, t1: 0, playing: false, speed: 1, prevMode: "over", snap: null };
+  const replayBar = $("replayBar"), rpPlay = $("rpPlay"), rpSeek = $("rpSeek"), rpTime = $("rpTime"), rpCam = $("rpCam");
+  function recClear() { REC.n = 0; REC.head = 0; REC.acc = 0; REC.t = 0; REC.kind = null; }
+  const recPhys = (i) => ((REC.head - REC.n + i) % REC_MAX + REC_MAX) % REC_MAX;
+  const recT = (i) => REC.buf[recPhys(i) * REC_W];
+  const canReplay = () => REC.n >= 15 && !!model && REC.kind === model.userData.kind;
+  function recSample() {
+    const b = REC.buf, o = REC.head * REC_W;
+    b[o] = REC.t; b[o + 1] = S.pos.x; b[o + 2] = S.pos.y; b[o + 3] = S.pos.z; b[o + 4] = S.q.x; b[o + 5] = S.q.y; b[o + 6] = S.q.z; b[o + 7] = S.q.w;
+    b[o + 8] = S.throttle; b[o + 9] = S.gearPos; b[o + 10] = S.flapPos; b[o + 11] = S.spoiler || 0; b[o + 12] = S.lights ? 1 : 0;
+    b[o + 13] = S.inputs.pitch; b[o + 14] = S.inputs.roll; b[o + 15] = S.inputs.yaw; b[o + 16] = S.crashed ? 1 : 0; b[o + 17] = S.boomT || 0;
+    b[o + 18] = S.ias || S.speed || 0; b[o + 19] = S.grounded ? 0 : S.vs || 0;
+    for (let k = 0; k < AI.length; k++) {
+      const ai = AI[k], p = o + REC_P + k * REC_AI;
+      b[p] = ai.pos.x; b[p + 1] = ai.pos.y; b[p + 2] = ai.pos.z; b[p + 3] = ai.hdg; b[p + 4] = ai.pitch; b[p + 5] = ai.bank; b[p + 6] = ai.gear; b[p + 7] = ai.model.visible ? 1 : 0;
+    }
+    REC.head = (REC.head + 1) % REC_MAX; REC.n = Math.min(REC_MAX, REC.n + 1); REC.kind = model.userData.kind;
+  }
+  function recTick(dt) {
+    REC.t += dt; REC.acc += dt;
+    if (REC.n === 0 || REC.acc >= 1 / REC_HZ) { REC.acc = Math.min(REC.acc % (1 / REC_HZ), 1 / REC_HZ); recSample(); }
+  }
+  const _qa = new THREE.Quaternion(), _qb = new THREE.Quaternion();
+  function poseAI(ai) {
+    const m = ai.model, u = m.userData;
+    m.position.copy(ai.pos); m.rotation.set(ai.pitch, -ai.hdg, -ai.bank, "YXZ");
+    if (u.gear) { u.gear.scale.y = Math.max(0.02, ai.gear); u.gear.visible = ai.gear > 0.03 || !PLANES[ai.kind].retract; }
+  }
+  function recApply(t) {
+    const n = REC.n; if (!n) return;
+    let lo = 0, hi = n - 1;
+    while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (recT(mid) <= t) lo = mid; else hi = mid - 1; }
+    const b = REC.buf, o0 = recPhys(lo) * REC_W, o1 = recPhys(Math.min(n - 1, lo + 1)) * REC_W;
+    const k = b[o1] > b[o0] ? clamp((t - b[o0]) / (b[o1] - b[o0]), 0, 1) : 0, L = (j) => lerp(b[o0 + j], b[o1 + j], k);
+    S.pos.set(L(1), L(2), L(3));
+    _qa.set(b[o0 + 4], b[o0 + 5], b[o0 + 6], b[o0 + 7]); _qb.set(b[o1 + 4], b[o1 + 5], b[o1 + 6], b[o1 + 7]); S.q.copy(_qa).slerp(_qb, k);
+    S.throttle = L(8); S.gearPos = L(9); S.flapPos = L(10); S.flaps = Math.round(S.flapPos * 2); S.spoiler = b[o0 + 11]; S.lights = b[o0 + 12] > 0.5;
+    S.inputs.pitch = L(13); S.inputs.roll = L(14); S.inputs.yaw = L(15);
+    S.crashed = b[o0 + 16] > 0.5; S.boomT = L(17); S.ias = S.speed = L(18); S.vs = L(19); S.grounded = b[o0 + 19] === 0 && b[o1 + 19] === 0;
+    model.visible = !S.crashed; boom.visible = S.crashed;
+    if (S.crashed) { boom.position.copy(S.pos); boom.scale.setScalar(1 + S.boomT * 30 * (spec.big ? 2 : 1)); boom.material.opacity = Math.max(0, 0.9 - S.boomT * 0.7); }
+    for (let j = 0; j < AI.length; j++) {
+      const ai = AI[j], p0 = o0 + REC_P + j * REC_AI, p1 = o1 + REC_P + j * REC_AI;
+      const jump = Math.hypot(b[p1] - b[p0], b[p1 + 2] - b[p0 + 2]) > 400, kk = jump ? 0 : k;   // AI re-spawning at a holding point: no streak
+      ai.pos.set(lerp(b[p0], b[p1], kk), lerp(b[p0 + 1], b[p1 + 1], kk), lerp(b[p0 + 2], b[p1 + 2], kk));
+      ai.hdg = b[p0 + 3] + wrapA(b[p1 + 3] - b[p0 + 3]) * kk; ai.pitch = lerp(b[p0 + 4], b[p1 + 4], kk); ai.bank = lerp(b[p0 + 5], b[p1 + 5], kk); ai.gear = lerp(b[p0 + 6], b[p1 + 6], kk);
+      ai.model.visible = b[p0 + 7] > 0.5; poseAI(ai);
+    }
+  }
+  function snapState() {
+    const keys2 = ["throttle", "gearPos", "flapPos", "flaps", "spoiler", "lights", "crashed", "boomT", "ias", "speed", "vs", "grounded"], vals = {};
+    keys2.forEach((k) => (vals[k] = S[k]));
+    return { pos: S.pos.clone(), q: S.q.clone(), vals, inputs: Object.assign({}, S.inputs), mv: model.visible, bv: boom.visible, bp: boom.position.clone(), bs: boom.scale.x, bo: boom.material.opacity, cam: S.cam,
+      ai: AI.map((ai) => ({ p: ai.pos.clone(), hdg: ai.hdg, pitch: ai.pitch, bank: ai.bank, gear: ai.gear, vis: ai.model.visible })) };
+  }
+  function restoreState(sn) {
+    S.pos.copy(sn.pos); S.q.copy(sn.q); Object.assign(S, sn.vals); Object.assign(S.inputs, sn.inputs);
+    model.visible = sn.mv; boom.visible = sn.bv; boom.position.copy(sn.bp); boom.scale.setScalar(sn.bs); boom.material.opacity = sn.bo;
+    AI.forEach((ai, j) => { const a = sn.ai[j]; ai.pos.copy(a.p); ai.hdg = a.hdg; ai.pitch = a.pitch; ai.bank = a.bank; ai.gear = a.gear; ai.model.visible = a.vis; poseAI(ai); });
+  }
+  function rpSync() {
+    rpPlay.textContent = RP.playing ? "❚❚" : "▶"; rpPlay.setAttribute("aria-label", RP.playing ? "Pause replay" : "Play replay");
+    const span = Math.max(0.001, RP.t1 - RP.t0);
+    if (document.activeElement !== rpSeek || RP.playing) rpSeek.value = String(Math.round((RP.t - RP.t0) / span * 1000));
+    rpTime.value = rpTime.textContent = `${fmtTime(RP.t - RP.t0)} / ${fmtTime(span)}`;
+    const camLbl = `View: ${CAMS.find((c) => c[0] === S.cam)[1]}`; if (rpCam.textContent !== camLbl) rpCam.textContent = camLbl;
+    $("rpSpeed").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.s === RP.speed)));
+  }
+  function openReplay() {
+    if (!canReplay() || S.mode === "replay") return;
+    if (S.mode === "fly") pause();
+    RP.snap = snapState(); RP.prevMode = S.mode; RP.t0 = recT(0); RP.t1 = recT(REC.n - 1); RP.t = RP.t0; RP.playing = true; RP.speed = 1;
+    S.mode = "replay"; brief.hidden = true; logPanel.hidden = true; helpEl.hidden = true; $("moreMenu").hidden = true; keys.clear(); flyby.set = false;
+    replayBar.hidden = false; stage.classList.add("replaying");
+    recApply(RP.t); rpSync(); camSnap = true; rpPlay.focus();
+  }
+  function closeReplay() {
+    if (S.mode !== "replay") return;
+    restoreState(RP.snap); S.mode = RP.prevMode; S.cam = RP.snap.cam; setCam(S.cam); flyby.set = false;
+    replayBar.hidden = true; stage.classList.remove("replaying"); brief.hidden = false; keys.clear();
+    replayBtn.hidden = !canReplay(); replayBtn.focus();
+  }
+  function rpTick(dt) {
+    if (RP.playing) { RP.t += dt * RP.speed; if (RP.t >= RP.t1) { RP.t = RP.t1; RP.playing = false; } }
+    recApply(RP.t); rpSync();
+  }
+  function rpToggle() { if (!RP.playing && RP.t >= RP.t1 - 0.05) RP.t = RP.t0; RP.playing = !RP.playing; flyby.set = false; rpSync(); }
+  function rpSeekBy(s) { RP.t = clamp(RP.t + s, RP.t0, RP.t1); flyby.set = false; camSnap = true; rpSync(); }
+  rpPlay.addEventListener("click", rpToggle);
+  rpSeek.addEventListener("input", () => { RP.t = RP.t0 + (+rpSeek.value / 1000) * (RP.t1 - RP.t0); flyby.set = false; camSnap = true; recApply(RP.t); rpSync(); });
+  $("rpSpeed").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => { RP.speed = +b.dataset.s; rpSync(); }));
+  rpCam.addEventListener("click", () => { cycleCam(); rpSync(); });
+  $("rpExit").addEventListener("click", closeReplay);
+  replayBtn.addEventListener("click", openReplay);
+  function drawReplayHud(w, h) {
+    const fs = Math.max(12, Math.round(Math.min(w, h) / 46)), y = (phoneMQ.matches ? 76 : 70) + fs;
+    const kt = Math.round((S.ias || 0) * MS2KT), ft = Math.round(Math.max(0, S.pos.y - spec.gearH) * M2FT), vs = Math.round((S.vs || 0) * M2FT * 60 / 10) * 10;
+    hud.textAlign = "center"; hud.textBaseline = "middle";
+    hud.font = `bold ${Math.round(fs * 1.1)}px ${MONO}`; hud.fillStyle = HC.nav;
+    hud.fillText(`● REPLAY${RP.speed !== 1 ? ` ×${RP.speed}` : ""}${RP.playing ? "" : " · PAUSED"}`, w / 2, y);
+    hud.font = `${fs}px ${MONO}`; hud.fillStyle = HC.hud;
+    hud.fillText(S.crashed ? "CRASH" : `${kt} KT · ${ft.toLocaleString("en-US")} FT · VS ${vs > 0 ? "+" : ""}${vs}${S.gearPos > 0.98 ? " · GEAR DN" : ""} · FLAPS ${S.flaps}`, w / 2, y + fs * 1.5, w - 24);
+  }
+
   // ================= LOOP =================
   function resize() {
     const r = stage.getBoundingClientRect(), w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
@@ -3659,6 +4097,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   }
   new ResizeObserver(resize).observe(stage);
   if (!setPlane(chosen)) setPlane("b737"); spawn(S.from); resize();
+  renderFeatured(); renderMissions();
   applyEnv("day", "clear");
   applyQuality(qualName, false);
   for (const id of ["timeSel", "wxSel"]) $(id).addEventListener("change", () => applyEnv($("timeSel").value, $("wxSel").value));
@@ -3668,13 +4107,17 @@ vec3 liveryAt(vec3 p, out float fus) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     if (S.mode === "fly" && !S.crashed) { step(dt / 2); if (!S.crashed && S.mode === "fly") step(dt / 2); }
     else if (S.mode === "paused") readPad();
+    if (S.mode === "fly") recTick(dt);            // the replay recorder keeps the last 90 s (including a crash)
+    else if (S.mode === "replay") rpTick(dt);
     S.msgT -= dt;
     if (S.msgT <= 0 && S.msgQ && S.msgQ.length && S.mode === "fly") { const [t, d] = S.msgQ.shift(); flash(t, d); }
-    if (S.crashed && boom.visible) { S.boomT += dt; boom.scale.setScalar(1 + S.boomT * 30 * (spec.big ? 2 : 1)); boom.material.opacity = Math.max(0, 0.9 - S.boomT * 0.7); }
+    if (S.crashed && boom.visible && S.mode !== "replay") { S.boomT += dt; boom.scale.setScalar(1 + S.boomT * 30 * (spec.big ? 2 : 1)); boom.material.opacity = Math.max(0, 0.9 - S.boomT * 0.7); }
     animateModel(dt, now);
-    if (S.mode !== "paused") { AI.forEach((ai) => updateAI(ai, dt, now)); updateCars(dt); }
+    if (S.mode !== "paused" && S.mode !== "replay") AI.forEach((ai) => updateAI(ai, dt, now));
+    if (S.mode !== "paused") updateCars(dt);
     RADIO.forEach((r) => (r.t -= dt)); while (RADIO.length && RADIO[0].t <= 0) RADIO.shift();
     beacons.forEach((b) => (b.rotation.y += dt * 3));
+    for (const a of AIRPORTS) { const v = Math.hypot(camera.position.x - a.x, camera.position.z - a.z) < 7000 + Math.max(0, camera.position.y) * 2; if (a.detail.visible !== v) a.detail.visible = v; }
     if (S.mode !== "paused") updateCamera(dt, now);
     updateAlerts(now); updateSunShadow();
     scene.userData.sky.position.copy(camera.position);
