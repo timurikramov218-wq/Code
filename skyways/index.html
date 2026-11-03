@@ -464,10 +464,19 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       </ol>
       <ul class="airports" id="apList"></ul>
     </section>
+    <section class="card credits" aria-labelledby="credits">
+      <h2 id="credits">Model credits</h2>
+      <p class="tip">The Boeing 777-300ER is a 3D model from Sketchfab, used under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> license. It was rescaled, re-oriented and merged for the game.</p>
+      <ul class="airports">
+        <li><code>B777</code><span><a href="https://sketchfab.com/3d-models/boeing-777-cc7acd9727704b5dabcc4fed33aa0c4a" target="_blank" rel="noopener">Boeing-777-</a> by Chunky-baby69</span><span>CC BY 4.0</span></li>
+      </ul>
+    </section>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/BufferGeometryUtils.js"></script>
 <script>
 (() => {
   "use strict";
@@ -507,7 +516,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       rwys: [{ off: 0, len: 1250, w: 35, sfx: "" }], stands: ["aero", "commuter", "trainer"] },
   ];
   const WORLD = 16000;
-  const DIMS = { trainer: [11, 8.3], aero: [8, 6.6], islander: [35.8, 39.5], breeze: [27.1, 27.2], swift: [15.5, 17.7], atlas: [42.4, 45.1], arrow: [9.1, 14.4], regio: [28.7, 36.2], skyliner: [60.1, 62.8], jumbo: [64.4, 70.7], commuter: [17.7, 17.6], b772: [60.9, 63.7] };
+  const DIMS = { trainer: [11, 8.3], aero: [8, 6.6], islander: [35.8, 39.5], breeze: [27.1, 27.2], swift: [15.5, 17.7], atlas: [42.4, 45.1], arrow: [9.1, 14.4], regio: [28.7, 36.2], skyliner: [60.1, 62.8], jumbo: [64.4, 70.7], commuter: [17.7, 17.6], b772: [64.8, 73.9] };
   const swapLR = (s) => (s === "L" ? "R" : s === "R" ? "L" : "");
   for (const a of AIRPORTS) {
     const t = a.hdg * Math.PI / 180; a.s = Math.sin(t); a.c = Math.cos(t);
@@ -1382,7 +1391,6 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     regio: ["klmch", "jetblue", "azul"],
     skyliner: ["ba", "qantas", "ana", "turkish", "airnz"],
     jumbo: ["ba", "lufthansa", "klm", "qantas"],
-    b772: ["united", "ba", "emirates", "klm"],
     breeze: ["azul", "airnz"],
   };
   const livOf = (kind, id) => (id && id !== "house" && (LIVERIES[kind] || []).includes(id) ? LIV[id] : undefined);
@@ -1399,7 +1407,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     commuter: { name: "Beechcraft 1900D", type: "Commuter airliner · 2 × PT6A", build: buildCommuter, thrust: 7.6, vmax: 105, stall: 32, roll: 1.3, pitch: 0.8, yaw: 0.4, turn: 0.85, gearH: 2.0, retract: true, cam: [27, 6], cock: [0.45, -7.4], wingX: 8.8, brake: 5.5, shadow: 8, stats: [0.45, 0.6, 0.75] },
     regio: { name: "Embraer E190", type: "Regional jet · 2 × CF34", build: buildRegio, thrust: 6.9, vmax: 132, stall: 45, roll: 0.85, pitch: 0.52, yaw: 0.24, turn: 0.74, gearH: 3.2, retract: true, cam: [60, 13], cock: [0.85, -15], wingX: 14.4, brake: 4.5, shadow: 16, big: true, stats: [0.8, 0.35, 0.4] },
     skyliner: { name: "Boeing 787-9 Dreamliner", type: "Wide-body airliner · 2 × GEnx", build: buildSkyliner, thrust: 6.3, vmax: 146, stall: 53, roll: 0.62, pitch: 0.42, yaw: 0.2, turn: 0.68, gearH: 5.2, retract: true, cam: [106, 21], cock: [1.5, -25.9], wingX: 30, brake: 4, shadow: 32, big: true, stats: [1, 0.22, 0.28] },
-    b772: { name: "Boeing 777-200ER", type: "Wide-body airliner · 2 × GE90", build: build772, thrust: 6.4, vmax: 146, stall: 53, roll: 0.6, pitch: 0.42, yaw: 0.2, turn: 0.68, gearH: 5.6, retract: true, cam: [110, 22], cock: [1.6, -26.4], wingX: 30.4, brake: 4, shadow: 32, big: true, stats: [1, 0.22, 0.28] },
+    b772: { name: "Boeing 777-300ER", type: "Wide-body airliner · detailed 3D model", glb: "models/b777.json", length: 73.9, build: build772, thrust: 6.3, vmax: 146, stall: 54, roll: 0.58, pitch: 0.4, yaw: 0.2, turn: 0.66, gearH: 5.6, retract: true, cam: [124, 25], cock: [1.2, -37.6], wingX: 32.4, brake: 4, shadow: 34, big: true, stats: [1, 0.2, 0.26] },
     jumbo: { name: "Boeing 747-400", type: "Double-deck airliner · 4 × CF6", build: buildJumbo, thrust: 5.9, vmax: 148, stall: 55, roll: 0.58, pitch: 0.4, yaw: 0.18, turn: 0.66, gearH: 5.8, retract: true, cam: [120, 25], cock: [2.7, -29.2], wingX: 32.2, brake: 4, shadow: 34, big: true, stats: [1, 0.18, 0.25] },
   };
   for (const k of Object.keys(PLANES)) PLANES[k].kind = k;
@@ -1417,8 +1425,8 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
     }
   })();
   const CAT = { trainer: "light", aero: "light", swift: "light", islander: "airliner", breeze: "airliner", regio: "airliner", skyliner: "airliner", jumbo: "airliner", b772: "airliner", commuter: "airliner", atlas: "special", arrow: "special" };
-  const SEATS = { trainer: 4, aero: 2, swift: 9, islander: 189, breeze: 72, regio: 100, skyliner: 296, jumbo: 416, b772: 314, commuter: 19, atlas: 116, arrow: 1 };
-  const CRUISE = { trainer: 124, aero: 210, swift: 465, islander: 453, breeze: 275, regio: 447, skyliner: 488, jumbo: 490, b772: 482, commuter: 280, atlas: 421, arrow: 500 };
+  const SEATS = { trainer: 4, aero: 2, swift: 9, islander: 189, breeze: 72, regio: 100, skyliner: 296, jumbo: 416, b772: 396, commuter: 19, atlas: 116, arrow: 1 };
+  const CRUISE = { trainer: 124, aero: 210, swift: 465, islander: 453, breeze: 275, regio: 447, skyliner: 488, jumbo: 490, b772: 490, commuter: 280, atlas: 421, arrow: 500 };
   for (const k of Object.keys(PLANES)) { PLANES[k].cat = CAT[k] || "light"; PLANES[k].seats = SEATS[k] || 0; }
 
   // ================= DETAILED 3D MODELS (GLB) =================
