@@ -356,9 +356,10 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
   .stage.ap-mini { --dock: 62px; }
   .stage.ap-full .tbtns { bottom: calc(var(--sheet, 200px) + 8px); }
 }
-/* the push-back button must not sit on the trim/rudder block */
+/* the push-back button must not sit on the trim/rudder block, nor (phones) on the HUD centre: there it goes right of the stick */
 @media (pointer: coarse) { .pushbtn { bottom: calc(124px + var(--dock, 0px) + env(safe-area-inset-bottom, 0px)); } }
-@media (pointer: coarse) and (max-width: 480px) { .pushbtn { bottom: calc(292px + var(--dock, 0px) + env(safe-area-inset-bottom, 0px)); } }
+@media (pointer: coarse) and (max-width: 480px) { .pushbtn { left: 152px; transform: none; bottom: calc(100px + var(--dock, 0px) + env(safe-area-inset-bottom, 0px)); } .pushbtn span { padding: 9px 14px; font-size: 12px; } }
+@media (pointer: coarse) and (max-width: 380px) { .pushbtn { left: 128px; } }
 @keyframes sheet-up { from { transform: translateY(40%); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .ap { animation: none; } .stick, .throttle, .tbtns { transition: none; } }
 @media (prefers-reduced-motion: reduce) { .plane-card, .photo img, .chip, .btn { transition: none; } .plane-card.wait .photo { animation: none; } }
@@ -2920,7 +2921,26 @@ vec3 liveryAt(vec3 p, out float fus) {
     applyEnv(ENV.time, ENV.weather);
     if (announce && S.mode === "fly") flash(`Graphics: ${QS.label}`, 1.4);
   }
-  qualBtn.addEventListener("click", () => applyQuality(qualName === "low" ? "medium" : qualName === "medium" ? "high" : "low", true));
+  qualBtn.addEventListener("click", () => { qualManual = true; save("sw-quality-manual", "1"); save("sw-quality-auto", "0"); applyQuality(qualName === "low" ? "medium" : qualName === "medium" ? "high" : "low", true); });
+  // automatic quality: if the frame rate in flight averages under ~24 FPS for 6 s, step the graphics down one level, or only
+  // suggest it when the player chose the quality themselves (a saved non-default level from before counts as their choice).
+  // Sampled once a second from the frame count, so it costs nothing per frame.
+  let qualManual = load("sw-quality-manual") === "1" || (load("sw-quality-auto") !== "1" && qualName !== "medium");
+  const autoQ = { n: 0, t0: performance.now(), fps: [], mode: "", hold: 0, told: {} };
+  function autoQuality(now) {
+    autoQ.n++; if (now - autoQ.t0 < 1000) return;
+    const f = autoQ.n * 1000 / (now - autoQ.t0); autoQ.n = 0; autoQ.t0 = now;
+    if (S.mode !== autoQ.mode) { autoQ.mode = S.mode; autoQ.hold = now + 3000; }   // starting a flight compiles shaders: ignore the first seconds
+    if (S.mode !== "fly" || document.hidden || now < autoQ.hold) { autoQ.fps.length = 0; return; }
+    autoQ.fps.push(f); if (autoQ.fps.length > 6) autoQ.fps.shift();
+    const avg = autoQ.fps.reduce((a, b) => a + b, 0) / autoQ.fps.length;
+    if (autoQ.fps.length < 6 || avg >= 24 || qualName === "low") return;
+    autoQ.fps.length = 0;
+    const lower = qualName === "high" ? "medium" : "low", L = QUALITY[lower].label;
+    if (qualManual) { if (!autoQ.told[qualName]) { autoQ.told[qualName] = true; flash(`Low frame rate (${Math.max(1, Math.round(avg))} FPS). Graphics: ${L} in the ⋯ menu would run smoother`, 4.5); } return; }
+    applyQuality(lower, false); save("sw-quality-auto", "1"); autoQ.hold = now + 8000;
+    flash(`Low frame rate (${Math.max(1, Math.round(avg))} FPS): graphics lowered to ${L}. Change it in the ⋯ menu`, 4);
+  }
   let fpsOn = load("sw-fps") === "1";
   const syncFps = () => { fpsBtn.setAttribute("aria-pressed", String(fpsOn)); fpsOut.hidden = !fpsOn; };
   fpsBtn.addEventListener("click", () => { fpsOn = !fpsOn; save("sw-fps", fpsOn ? "1" : "0"); syncFps(); });
@@ -3067,14 +3087,14 @@ vec3 liveryAt(vec3 p, out float fus) {
       desc: "Pelican Isle sits alone in the western sea and the wind blows straight across its runway. Point the nose into the wind to track the centreline, then straighten up with the rudder (Q / E) just before touchdown." },
     { id: "m4", title: "Short field", plane: "b737", from: "CRK", to: "CRK", start: "approach", dist: 6000, time: "day", wx: "clear", wind: [8, -20], goals: [["stop"]],
       desc: "Coral Key has only 1250 m of runway. Fly the final slow and on the glide path, touch down early, then brake hard (Space), with spoilers (X) and reverse thrust (T)." },
-    { id: "m5", title: "Night ILS", plane: "b737", from: "EGT", to: "EGT", start: "approach", dist: 15000, time: "night", wx: "cloudy", wind: [10, 30], goals: [],
+    { id: "m5", title: "Night ILS", plane: "a321", from: "EGT", to: "EGT", start: "approach", dist: 15000, time: "night", wx: "cloudy", wind: [10, 30], goals: [],
       desc: "A dark, overcast night into Eastgate. The runway lights are all you'll see, so fly the ILS and keep both diamonds centred. The autopilot's APP mode is allowed." },
     { id: "m6", title: "Fog at Kingsbridge", plane: "b767", from: "KBI", to: "KBI", start: "approach", dist: 12000, time: "day", wx: "fog", vis: 900, wind: [4, 0], goals: [],
       desc: "Visibility is under a kilometre. You won't see the runway until the last seconds, so trust the instruments: the ILS diamonds, the 3° path and the radio-altitude callouts." },
     { id: "m7", title: "Engine failure", plane: "b737", from: "SNV", to: "SNV", start: "runway", time: "day", wx: "clear", wind: [6, 0], engFail: 400, goals: [],
       desc: "A normal departure from Sunvale, until the right engine quits at 400 ft. Keep flying: left rudder, wings level, speed up. Then turn back and land on the runway you just left." },
-    { id: "m8", title: "Against the clock", plane: "mh", from: "HBP", to: "EGT", start: "runway", time: "sunset", wx: "clear", wind: [8, 200], noAP: true, limit: 390, goals: [["time"]],
-      desc: "The autopilot is broken and Eastgate is waiting. Fly the whole trip by hand and come to a stop on its runway within 6:30. Turn onto the final early, a tight last turn costs more time than it saves." },
+    { id: "m8", title: "Against the clock", plane: "mh", from: "HBP", to: "EGT", start: "runway", time: "sunset", wx: "clear", wind: [8, 200], noAP: true, limit: 420, goals: [["time"]],
+      desc: "The autopilot is broken and Eastgate is waiting. Fly the whole trip by hand and come to a stop on its runway within 7:00. Turn onto the final early, a tight last turn costs more time than it saves." },
     { id: "m9", title: "Over the mountains", plane: "b737", from: "SPT", to: "GRP", start: "runway", time: "sunset", wx: "cloudy", wind: [9, 0], goals: [["stop"]],
       desc: "Granite Peak sits 830 m up between the eastern ridges, on a 1500 m runway. Climb early, clear the peaks, then follow the valley down to the field. Thin air means a faster touchdown, so brake firmly." },
     { id: "m10", title: "Heavy into Highmoor", plane: "b77w", from: "HMR", to: "HMR", start: "approach", dist: 11000, time: "day", wx: "rain", wind: [14, -60], goals: [["fpm", 600], ["stop"]],
@@ -3926,23 +3946,33 @@ vec3 liveryAt(vec3 p, out float fus) {
     // warnings + messages
     const blink = Math.floor(now / 300) % 2 === 0;
     hud.font = `bold ${Math.round(fs * 1.35)}px ${MONO}`;
-    if (AL.pull && blink) { hud.fillStyle = HC.warn; hud.fillText("PULL UP", cx, cy + 100 * sc); }
-    else if (AL.terrPull && blink) { hud.fillStyle = HC.warn; hud.fillText("TERRAIN · PULL UP", cx, cy + 100 * sc, w - 24); }
-    else if (stall && blink) { hud.fillStyle = HC.warn; hud.fillText("STALL", cx, cy + 100 * sc); }
-    else if (!S.grounded && spec.retract && S.gearPos < 0.5 && agl < 800 && S.vs < -1 && S.throttle < 0.6 && blink) { hud.fillStyle = HC.warn; hud.fillText("GEAR · press G", cx, cy + 100 * sc); }
-    else if (AL.terrain) { hud.fillStyle = HC.caution; hud.fillText("TERRAIN", cx, cy + 100 * sc); }
+    // short phones: the touch buttons cover the usual warning line, so warnings move up to the row of the speed-box labels
+    const warnLow = !(phoneMQ.matches && cy + 135 * sc + fs > (apDock.tbTop ?? 1e9)), warnY = warnLow ? cy + 100 * sc : cy - bh / 2 - fs * 0.6;
+    const warnTxt = (t, col, y) => { if (!warnLow) { const tw = Math.min(w - 20, hud.measureText(t).width + 14); hud.fillStyle = HC.box; hud.fillRect(cx - tw / 2, y - fs * 0.85, tw, fs * 1.7); } hud.fillStyle = col; hud.fillText(t, cx, y, w - 24); };
+    if (AL.pull && blink) warnTxt("PULL UP", HC.warn, warnY);
+    else if (AL.terrPull && blink) warnTxt("TERRAIN · PULL UP", HC.warn, warnY);
+    else if (stall && blink) warnTxt("STALL", HC.warn, warnY);
+    else if (!S.grounded && spec.retract && S.gearPos < 0.5 && agl < 800 && S.vs < -1 && S.throttle < 0.6 && blink) warnTxt("GEAR · press G", HC.warn, warnY);
+    else if (AL.terrain) warnTxt("TERRAIN", HC.caution, warnY);
+    // phones: messages and ATC calls share the text slot above the speed boxes: below the minimap when it has room,
+    // otherwise in the column beside the map; text wraps to the slot width instead of being squeezed
+    const phoneSlot = !phoneMQ.matches ? null : (() => {
+      const bot = cy - bh / 2 - fs * 1.05, below = showMap ? MY + MS + 6 : ty + 24 + fs * 3.9;
+      if (!showMap || bot - below >= fs * 7) return { x0: 12, x1: w - 12, top: below, bot };
+      return { x0: 12, x1: MX - 8, top: ty + 24 + fs * (S.grounded && S.taxiOut && !S.push ? 3.9 : S.to ? 2.7 : 1.5), bot };
+    })();
+    const wrapTo = (t, maxW) => { const out = []; let cur = ""; for (const word of String(t).split(" ")) { const tryL = cur ? cur + " " + word : word; if (cur && hud.measureText(tryL).width > maxW) { out.push(cur); cur = word; } else cur = tryL; } if (cur) out.push(cur); return out; };
     let msgBottom = 0;
     if (S.msgT > 0) {
       // long messages wrap onto a second line instead of being squeezed
       hud.font = `${Math.round(fs * 1.0)}px ${MONO}`; hud.fillStyle = HC.nav; hud.globalAlpha = clamp(S.msgT, 0, 1);
-      const lines = [], maxM = w - 28; let cur = "";
-      for (const word of String(S.msg).split(" ")) { const tryL = cur ? cur + " " + word : word; if (cur && hud.measureText(tryL).width > maxM) { lines.push(cur); cur = word; } else cur = tryL; }
-      if (cur) lines.push(cur);
-      const shownL = lines.slice(0, 3), lhM = fs * 1.2;
-      if (phoneMQ.matches) {
-        // phones: below the minimap, reading downwards, so it never sits on the map
-        const y0 = (showMap ? MY + MS : ty + 24 + fs * 3.2) + fs * 1.1;
-        shownL.forEach((ln, i) => hud.fillText(ln, cx, y0 + i * lhM, maxM)); msgBottom = y0 + (shownL.length - 1) * lhM + fs * 0.6;
+      const maxM = phoneSlot ? phoneSlot.x1 - phoneSlot.x0 : w - 28, lines = wrapTo(S.msg, maxM), lhM = fs * 1.2;
+      const shownL = lines.slice(0, phoneSlot ? clamp(Math.floor((phoneSlot.bot - phoneSlot.top) / lhM), 1, 3) : 3);
+      if (shownL.length < lines.length) shownL[shownL.length - 1] += "…";
+      if (phoneSlot) {
+        // phones: in the text slot, reading downwards, so it never sits on the map or the speed boxes
+        const y0 = phoneSlot.top + fs * 0.6, mx0 = (phoneSlot.x0 + phoneSlot.x1) / 2;
+        shownL.forEach((ln, i) => hud.fillText(ln, mx0, y0 + i * lhM, maxM)); msgBottom = y0 + (shownL.length - 1) * lhM + fs * 0.6;
       } else shownL.forEach((ln, i, arr) => hud.fillText(ln, cx, cy - 135 * sc - (arr.length - 1 - i) * lhM, maxM));
       hud.globalAlpha = 1;
     }
@@ -3962,15 +3992,24 @@ vec3 liveryAt(vec3 p, out float fus) {
       hud.font = `${Math.round(fs * 0.7)}px ${MONO}`; hud.textAlign = "left"; hud.textBaseline = "middle";
       hud.fillText(`${ai.cs}`, sx + 12, sy - 6); hud.fillText(`${(d / 1000).toFixed(1)} km ${dy >= 0 ? "+" : ""}${dy}`, sx + 12, sy + 8);
     }
-    if (threat && blink) { hud.font = `bold ${Math.round(fs * 1.25)}px ${MONO}`; hud.textAlign = "center"; hud.fillStyle = HC.warn; hud.fillText(`TRAFFIC · ${threat.cs}`, cx, cy + 135 * sc); }
+    if (threat && blink) { hud.font = `bold ${Math.round(fs * 1.25)}px ${MONO}`; hud.textAlign = "center"; warnTxt(`TRAFFIC · ${threat.cs}`, HC.warn, warnLow ? cy + 135 * sc : warnY + fs * 1.8); }
     if (RADIO.length) {
       const coarse = coarseMQ.matches, lh = Math.round(fs * 1.25), phoneR = phoneMQ.matches;
-      // phones: the bottom is full of controls, so the last two calls sit just above the speed and altitude boxes
-      // phones: the latest calls fill what is left of the text slot above the speed boxes (at least the newest one)
-      const slotBot = cy - bh / 2 - fs * 1.7, room = Math.floor((slotBot - Math.max(msgBottom, showMap ? MY + MS + 4 : 0)) / lh) + 1;
-      const shown = phoneR ? RADIO.slice(-clamp(room, 1, 2)) : RADIO;
-      let ry = phoneR ? slotBot - (shown.length - 1) * lh : h - dashH - (sheetOpen ? stripB + rows.length * rowH + 16 : (coarse && !cock ? (narrowTouch ? 290 : 190) : 46) + ctlLift) - (RADIO.length - 1) * lh;
       hud.font = `${Math.round(fs * 0.78)}px ${MONO}`; hud.textAlign = "left"; hud.textBaseline = "middle";
+      if (phoneR && phoneSlot) {
+        // phones: the newest calls that fit in what is left of the text slot, each wrapped to its width (never onto the boxes)
+        const x0 = phoneSlot.x0 - 2, atcW = hud.measureText("ATC ").width + 8, tw = phoneSlot.x1 - x0 - atcW - 6, top = Math.max(phoneSlot.top, msgBottom + 4);
+        const pick = []; let used = 0;
+        for (let i = RADIO.length - 1; i >= 0; i--) { const ls = wrapTo(RADIO[i].text, tw); if (used + ls.length * lh > phoneSlot.bot - top) { if (!pick.length && phoneSlot.bot - top >= lh) { const n = Math.floor((phoneSlot.bot - top) / lh); ls.length = n; ls[n - 1] += "…"; pick.unshift([RADIO[i], ls]); } break; } pick.unshift([RADIO[i], ls]); used += ls.length * lh; }
+        let ry = top + lh / 2;
+        for (const [r, ls] of pick) {
+          hud.globalAlpha = clamp(r.t, 0, 1); hud.fillStyle = "rgba(15,15,17,0.62)"; hud.fillRect(x0, ry - lh / 2, phoneSlot.x1 - x0, ls.length * lh);
+          hud.fillStyle = HC.nav; hud.fillText("ATC", x0 + 4, ry); hud.fillStyle = HC.text; ls.forEach((ln, i) => hud.fillText(ln, x0 + 4 + atcW, ry + i * lh, tw)); ry += ls.length * lh;
+        }
+        hud.globalAlpha = 1;
+      }
+      const shown = phoneR ? [] : RADIO;
+      let ry = h - dashH - (sheetOpen ? stripB + rows.length * rowH + 16 : (coarse && !cock ? (narrowTouch ? 290 : 190) : 46) + ctlLift) - (RADIO.length - 1) * lh;
       for (const r of shown) {
         hud.globalAlpha = clamp(r.t, 0, 1); const tw = Math.min(hud.measureText(r.text).width, w - 40);
         hud.fillStyle = "rgba(15,15,17,0.62)"; hud.fillRect(10, ry - lh / 2, Math.min(tw + hud.measureText("ATC ").width + 26, w - 20), lh);
@@ -4283,7 +4322,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   function apEngage(on) {
     if (on && S.mission && S.mission.noAP) { flash("Autopilot inoperative on this mission: fly it by hand", 2); return; }
     if (on && (S.grounded || S.mode !== "fly")) { flash("Take off first, then switch on the autopilot", 2); return; }
-    AP.on = on; AP.flare = false; AP.thrI = 0; AP.terrOn = false;
+    AP.on = on; AP.flare = false; AP.thrI = 0; AP.terrOn = false; AP.terrMsgT = null;
     if (on) {
       AP.hdg = Math.round(curHdgDeg()); AP.alt = Math.max(1000, Math.round(S.pos.y * M2FT / 100) * 100);
       if (!AP.athr) { AP.athr = true; AP.spd = Math.max(Math.round(spec.stall * 1.45 * MS2KT / 5) * 5, Math.round(S.speed * MS2KT / 5) * 5); }
@@ -4301,6 +4340,8 @@ vec3 liveryAt(vec3 p, out float fus) {
     apDock.open = !p.hidden && phoneMQ.matches; apDock.mini = mini; apDock.h = apDock.open ? p.offsetHeight : 0;
     stage.style.setProperty("--sheet", `${apDock.h}px`);
     const tb = document.querySelector(".tbtns"); apDock.tb = tb ? tb.offsetHeight : 0;
+    apDock.tbTop = tb && tb.offsetHeight ? tb.getBoundingClientRect().top - stage.getBoundingClientRect().top : 1e9;
+    if (tb && !tb.dataset.tw) { tb.dataset.tw = "1"; tb.addEventListener("transitionend", syncApDock); }   // the buttons slide: measure where they stop
   }
   $("apToggle").addEventListener("click", () => { apEls.panel.hidden = !apEls.panel.hidden; $("apToggle").setAttribute("aria-pressed", String(!apEls.panel.hidden)); syncApDock(); });
   apGrip.addEventListener("click", () => { apEls.panel.classList.toggle("mini"); syncApDock(); });
@@ -4348,7 +4389,8 @@ vec3 liveryAt(vec3 p, out float fus) {
       if (AP.lat === "LOC") {
         hdgT = rwyH + clamp(-(ac - r.off) / 350, -0.55, 0.55);
         const toTd = (-r.len / 2 + 300) - al, glide = a.elev + spec.gearH + Math.max(0, toTd) * TAN3;
-        if (S.pos.y < glide + 60 || toTd < FIX_DIST + 500) vsT = clamp((glide - S.pos.y) * 0.3 - (toTd > 0 ? S.gs * TAN3 : 0), -12, 4);
+        if (S.pos.y < glide + 60 || toTd < FIX_DIST + 500) vsT = clamp((glide - S.pos.y) * 0.3 - (toTd > 0 ? S.gs * TAN3 : 0), -12, S.pos.y < glide - 30 ? Math.max(4, AP.vs / M2FT / 60) : 4);
+        if (S.alerts && S.alerts.terrain && !AP.flare) vsT = Math.max(vsT, clamp((AP.terrVs || 0) * 1.4, 4, 25));   // far below the path and terrain ahead: climb
         // flare: starts lower the slower you sink (about 3 s before the wheels would touch), then the sink rate shrinks
         // in proportion to the height, aiming at ~140 ft/min (the wheels meet the runway at ~200); measured above the runway, never over terrain short of it
         const hR = S.pos.y - spec.gearH - a.elev, sinkNow = Math.max(1.2, -S.vs);
@@ -4360,11 +4402,15 @@ vec3 liveryAt(vec3 p, out float fus) {
     }
     // terrain protection: if the target altitude is less than 500 ft above the ground along the next 45 s of track, climb over it
     if (AP.lat !== "LOC" && AP.terrAlt != null) {
-      const on = AP.terrAlt > altT || (AP.terrOn && AP.terrAlt > altT - 30);
+      const on = AP.terrAlt > altT || (AP.terrOn && (AP.terrAlt > altT - 60 || S.flightT < AP.terrT + 10));
       if (on) altT = Math.max(altT, Math.ceil(AP.terrAlt * M2FT / 100) * 100 / M2FT);
-      if (on !== !!AP.terrOn) { AP.terrOn = on; flash(on ? `TERRAIN AHEAD · autopilot climbing to ${Math.round(altT * M2FT).toLocaleString("en-US")} ft` : `Terrain clear · autopilot back to ${AP.alt.toLocaleString("en-US")} ft`, 3); }
+      if (on !== !!AP.terrOn) {
+        AP.terrOn = on; if (on) AP.terrT = S.flightT;
+        if (S.flightT - (AP.terrMsgT ?? -1e9) > 12) { AP.terrMsgT = S.flightT; flash(on ? `TERRAIN AHEAD · autopilot climbing to ${Math.round(altT * M2FT).toLocaleString("en-US")} ft` : `Terrain clear · autopilot ${AP.app ? "resuming the approach" : `back to ${AP.alt.toLocaleString("en-US")} ft`}`, 3); }
+      }
     } else AP.terrOn = false;
-    if (vsT === null) { const vMax = (AP.terrOn ? Math.max(AP.vs, 3000) : AP.vs) / M2FT / 60; vsT = clamp((altT - S.pos.y) * 0.12, -AP.vs / M2FT / 60, vMax); }
+    // climbs as steeply as the terrain needs (at least 2000 ft/min), up to ~6000 ft/min
+    if (vsT === null) { const vMax = AP.terrOn ? clamp(Math.max(AP.vs / M2FT / 60, 10, (AP.terrVs || 0) * 1.4), 0, 30) : AP.vs / M2FT / 60; vsT = clamp((altT - S.pos.y) * 0.12, -AP.vs / M2FT / 60, vMax); }
     const pitchT = Math.asin(clamp((vsT - S.sink) / Math.max(S.speed, 20), -0.3, 0.3));
     // on the localizer the autopilot steers the ground track, so a crosswind no longer leaves it parked beside the centreline
     const trkNow = AP.lat === "LOC" && S.gs > 20 ? Math.atan2(S.vel.x, -S.vel.z) : hdgNow;
@@ -4430,25 +4476,29 @@ vec3 liveryAt(vec3 p, out float fus) {
   }
 
   // ================= ALERTS =================
-  // terrain look-ahead (5 times a second): the straight-line flight path for the next 30 s against the ground.
+  // terrain look-ahead (5 times a second): the flight path for the next 30 s (following the present turn) against the ground.
   // Airport ground is ignored, and inside a runway's approach corridor (where the hills are lowered under the 3° path)
-  // only a real impact counts, so a normal approach or climb-out stays quiet. The highest ground along the next 45 s
-  // of track also tells the autopilot how high it must be (AP.terrAlt: 500 ft above it).
-  function inCorridor(x, z) {
-    for (const a of AIRPORTS) { const [al, ac] = local(a, x, z), r = a.rwys[0], d = Math.abs(al) - r.len / 2; if (d > -r.len / 2 && d < 14500 && Math.abs(ac - r.off) < 350 + Math.max(0, d) * 0.12) return true; }
-    return false;
+  // only an impact within 10 s and well below the glide path counts (the corridor hills stay under 55% of it), so a normal approach or climb-out stays quiet. The highest ground along the next 45 s
+  // of track also tells the autopilot how high it must be (AP.terrAlt: 500 ft above it) and how fast to climb (AP.terrVs).
+  function corridorFloor(x, z) {   // inside an approach corridor: 75% of the 3° glide height there; otherwise null
+    for (const a of AIRPORTS) { const [al, ac] = local(a, x, z), r = a.rwys[0], d = Math.abs(al) - r.len / 2; if (d > -r.len / 2 && d < 14500 && Math.abs(ac - r.off) < 350 + Math.max(0, d) * 0.12) return a.elev + 2 + Math.max(0, d) * TAN3 * 0.75; }
+    return null;
   }
-  function terrainScan(A) {
-    const vx = S.vel.x, vz = S.vel.z, vy = S.vel.y, gsH = Math.hypot(vx, vz);
-    let ti = Infinity, maxG = -Infinity;
+  function terrainScan(A, now) {
+    const gsH = Math.hypot(S.vel.x, S.vel.z), trk = Math.atan2(S.vel.x, -S.vel.z), dtS = (now - (A.trkAt || -1e9)) / 1000;
+    A.om = dtS > 0 && dtS < 1 ? lerp(A.om || 0, clamp(wrapA(trk - A.trk) / dtS, -0.2, 0.2), 0.5) : 0; A.trk = trk; A.trkAt = now;
+    let ti = Infinity, maxG = -Infinity, needVs = 0, x = S.pos.x, z = S.pos.z, hd = trk;
     if (gsH > 15) for (let t = 1.5; t <= 45; t += 1.5) {
-      const x = S.pos.x + vx * t, z = S.pos.z + vz * t, g = Math.max(0, groundY(x, z));
-      maxG = Math.max(maxG, g);
-      if (t > 30 || ti < Infinity || airportMask(x, z)[0] > 0.5) continue;
-      if (S.pos.y + vy * t - spec.gearH - g < (inCorridor(x, z) ? 0 : 15)) ti = t;
+      if (Math.abs(A.om * t) < 2.1) hd += A.om * 1.5;   // follow the turn for up to ~120°
+      x += Math.sin(hd) * gsH * 1.5; z -= Math.cos(hd) * gsH * 1.5;
+      const g = Math.max(0, groundY(x, z));
+      maxG = Math.max(maxG, g); needVs = Math.max(needVs, (g + spec.gearH + 150 - S.pos.y) / Math.max(t, 6));
+      if (t > 30 || ti < Infinity || airportMask(x, z)[0] > 0.97) continue;
+      const yW = S.pos.y + S.vel.y * t - spec.gearH, fl = yW - g < 15 ? corridorFloor(x, z) : null;
+      if (fl === null ? yW - g < 15 : yW - g < 0 && yW < fl && t <= 10) ti = t;
     }
     A.terrain = ti <= 30; A.terrPull = ti <= 15;
-    AP.terrAlt = maxG > -Infinity ? maxG + spec.gearH + 150 : null;
+    AP.terrAlt = maxG > -Infinity ? maxG + spec.gearH + 150 : null; AP.terrVs = needVs;
   }
   // one place decides STALL / PULL UP / TERRAIN / TRAFFIC for the HUD, the sounds and the vibration
   function updateAlerts(now) {
@@ -4460,7 +4510,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     A.stall = stallNow;
     A.pull = flying && aglFt < 400 && S.vs < -10;
     if (!flying) { A.terrain = A.terrPull = false; AP.terrAlt = null; }
-    else if (!(now - A.terrAt < 200)) { A.terrAt = now; const was = A.terrPull; terrainScan(A); if (A.terrPull && !was) buzz([120, 60, 120]); }
+    else if (!(now - A.terrAt < 200)) { A.terrAt = now; const was = A.terrPull; terrainScan(A, now); if (A.terrPull && !was) buzz([120, 60, 120]); }
     let threat = null;
     if (flying) for (const ai of AI) { if (!ai.model.visible || ai.phase === "hold") continue; if (ai.pos.distanceTo(S.pos) < 1100 && Math.abs(ai.pos.y - S.pos.y) < 200) { threat = ai; break; } }
     A.traffic = threat;
@@ -4782,7 +4832,7 @@ vec3 liveryAt(vec3 p, out float fus) {
       engGain.gain.setTargetAtTime(soundOn && S.mode === "fly" && !S.crashed ? 0.02 + S.throttle * 0.05 : 0, ac.currentTime, 0.15);
       eng.frequency.setTargetAtTime((spec.big || spec.jetSound ? 90 : 50) + S.throttle * (spec.big || spec.jetSound ? 140 : 70), ac.currentTime, 0.2);
     }
-    renderer.render(scene, camera); drawHud(now);
+    renderer.render(scene, camera); drawHud(now); autoQuality(now);
     if (fpsOn) { fpsMeter.n++; if (now - fpsMeter.t0 >= 500) { fpsOut.textContent = `${Math.round(fpsMeter.n * 1000 / (now - fpsMeter.t0))} FPS`; fpsMeter.n = 0; fpsMeter.t0 = now; } }
     requestAnimationFrame(frame);
   }
