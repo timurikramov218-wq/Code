@@ -2733,13 +2733,15 @@ vec3 liveryAt(vec3 p, out float fus) {
     g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(vol, t0 + 0.015); g.gain.setValueAtTime(vol, t0 + Math.max(0.02, dur - 0.04)); g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
     o.connect(g).connect(ac.destination); o.start(t0); o.stop(t0 + dur + 0.05);
   }
-  // STALL: fast double buzz; PULL UP: two rising whoops; TRAFFIC: three high chirps. Highest priority first, each with its own repeat interval.
+  // STALL: fast double buzz; PULL UP: two rising whoops (plus "Terrain, pull up" for the look-ahead); TERRAIN: two beeps; TRAFFIC: three high chirps. Highest priority first, each with its own repeat interval.
   const ALERTS = [
     { id: "pull", every: 1.6, play() { tone(260, 820, 0.42, "square", 0.05); tone(260, 820, 0.42, "square", 0.05, 0.55); } },
+    { id: "tpull", every: 2.2, play() { tone(260, 820, 0.42, "square", 0.05); tone(260, 820, 0.42, "square", 0.05, 0.55); speak("Terrain. Pull up"); } },
     { id: "stall", every: 1.1, play() { tone(390, 390, 0.13, "sawtooth", 0.06); tone(390, 390, 0.13, "sawtooth", 0.06, 0.19); } },
+    { id: "terrain", every: 3.5, play() { tone(520, 520, 0.18, "square", 0.045); tone(520, 520, 0.18, "square", 0.045, 0.3); speak("Terrain. Terrain"); } },
     { id: "traffic", every: 4, play() { [0, 0.15, 0.3].forEach((t) => tone(1150, 1150, 0.09, "sine", 0.07, t)); } },
   ];
-  const alertNext = { pull: 0, stall: 0, traffic: 0 }; let alertBusy = 0;
+  const alertNext = { pull: 0, tpull: 0, stall: 0, terrain: 0, traffic: 0 }; let alertBusy = 0;
   function soundAlerts(active, now) {
     if (now < alertBusy) return;
     for (const a of ALERTS) {
@@ -3743,7 +3745,7 @@ vec3 liveryAt(vec3 p, out float fus) {
 
     // autopilot mode annunciator
     {
-      const modes = AP.on ? [`AP`, AP.athr ? `SPD ${AP.spd}` : "", AP.lat === "LOC" ? (AP.flare ? "FLARE" : "LOC · G/S") : AP.lat === "NAV" ? `NAV ${S.to ? S.to.code : ""}${AP.app ? " · APP ARM" : ""}` : `HDG ${String(Math.round(AP.hdg) % 360).padStart(3, "0")}`, AP.lat === "LOC" ? "" : `ALT ${AP.alt}`].filter(Boolean).join("  ·  ") : AP.athr ? `A/THR  ·  SPD ${AP.spd}` : "";
+      const modes = AP.on ? [`AP`, AP.athr ? `SPD ${AP.spd}` : "", AP.lat === "LOC" ? (AP.flare ? "FLARE" : "LOC · G/S") : AP.lat === "NAV" ? `NAV ${S.to ? S.to.code : ""}${AP.app ? " · APP ARM" : ""}` : `HDG ${String(Math.round(AP.hdg) % 360).padStart(3, "0")}`, AP.lat === "LOC" ? "" : AP.terrOn ? "TERR CLB" : `ALT ${AP.alt}`].filter(Boolean).join("  ·  ") : AP.athr ? `A/THR  ·  SPD ${AP.spd}` : "";
       if (modes) { hud.font = `${Math.round(fs * 0.8)}px ${MONO}`; hud.textAlign = "center"; hud.fillStyle = HC.box; const mw = hud.measureText(modes).width + 20; hud.fillRect(cx - mw / 2, ty - fs * 2.6, mw, fs * 1.4); hud.fillStyle = HC.hud; hud.fillText(modes, cx, ty - fs * 1.9); }
     }
     // taxi guidance from the gate
@@ -3863,8 +3865,10 @@ vec3 liveryAt(vec3 p, out float fus) {
     const blink = Math.floor(now / 300) % 2 === 0;
     hud.font = `bold ${Math.round(fs * 1.35)}px ${MONO}`;
     if (AL.pull && blink) { hud.fillStyle = HC.warn; hud.fillText("PULL UP", cx, cy + 100 * sc); }
+    else if (AL.terrPull && blink) { hud.fillStyle = HC.warn; hud.fillText("TERRAIN · PULL UP", cx, cy + 100 * sc, w - 24); }
     else if (stall && blink) { hud.fillStyle = HC.warn; hud.fillText("STALL", cx, cy + 100 * sc); }
     else if (!S.grounded && spec.retract && S.gearPos < 0.5 && agl < 800 && S.vs < -1 && S.throttle < 0.6 && blink) { hud.fillStyle = HC.warn; hud.fillText("GEAR · press G", cx, cy + 100 * sc); }
+    else if (AL.terrain) { hud.fillStyle = HC.caution; hud.fillText("TERRAIN", cx, cy + 100 * sc); }
     let msgBottom = 0;
     if (S.msgT > 0) {
       // long messages wrap onto a second line instead of being squeezed
@@ -4217,7 +4221,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   function apEngage(on) {
     if (on && S.mission && S.mission.noAP) { flash("Autopilot inoperative on this mission: fly it by hand", 2); return; }
     if (on && (S.grounded || S.mode !== "fly")) { flash("Take off first, then switch on the autopilot", 2); return; }
-    AP.on = on; AP.flare = false; AP.thrI = 0;
+    AP.on = on; AP.flare = false; AP.thrI = 0; AP.terrOn = false;
     if (on) {
       AP.hdg = Math.round(curHdgDeg()); AP.alt = Math.max(1000, Math.round(S.pos.y * M2FT / 100) * 100);
       if (!AP.athr) { AP.athr = true; AP.spd = Math.max(Math.round(spec.stall * 1.45 * MS2KT / 5) * 5, Math.round(S.speed * MS2KT / 5) * 5); }
@@ -4284,14 +4288,21 @@ vec3 liveryAt(vec3 p, out float fus) {
         const toTd = (-r.len / 2 + 300) - al, glide = a.elev + spec.gearH + Math.max(0, toTd) * TAN3;
         if (S.pos.y < glide + 60 || toTd < FIX_DIST + 500) vsT = clamp((glide - S.pos.y) * 0.3 - (toTd > 0 ? S.gs * TAN3 : 0), -12, 4);
         // flare: starts lower the slower you sink (about 3 s before the wheels would touch), then the sink rate shrinks
-        // in proportion to the height, down to ~190 ft/min at the wheels; measured above the runway, never over terrain short of it
+        // in proportion to the height, aiming at ~140 ft/min (the wheels meet the runway at ~200); measured above the runway, never over terrain short of it
         const hR = S.pos.y - spec.gearH - a.elev, sinkNow = Math.max(1.2, -S.vs);
         if (!AP.flare && al > -r.len / 2 - 450 && hR < clamp(sinkNow * 3, 4.5, 10)) { AP.flare = true; AP.flareH = Math.max(1, hR); AP.flareV = sinkNow; }
-        if (AP.flare) { vsT = -(0.95 + Math.max(0, AP.flareV - 0.95) * clamp(hR / AP.flareH, 0, 1)); S.throttle = Math.max(0, S.throttle - dt * 0.35); }   // and retard
-        if (AP.athr) AP.spd = Math.round(spec.stall * (1 - 0.28 * S.flapPos) * 1.3 * MS2KT);   // hold Vref
+        if (AP.flare) { vsT = -(0.7 + Math.max(0, AP.flareV - 0.7) * clamp(hR / AP.flareH, 0, 1)); S.throttle = Math.max(0, S.throttle - dt * 0.35); }   // and retard
+        // approach speed: Vref + 5 kt, plus a gust margin in cloud and rain (the stall warning stays quiet in turbulence)
+        if (AP.athr) AP.spd = Math.round(spec.stall * (1 - 0.28 * S.flapPos) * 1.3 * MS2KT) + (ENV.weather === "rain" ? 15 : ENV.weather === "cloudy" ? 9 : 5);
       }
     }
-    if (vsT === null) vsT = clamp((altT - S.pos.y) * 0.12, -AP.vs / M2FT / 60, AP.vs / M2FT / 60);
+    // terrain protection: if the target altitude is less than 500 ft above the ground along the next 45 s of track, climb over it
+    if (AP.lat !== "LOC" && AP.terrAlt != null) {
+      const on = AP.terrAlt > altT || (AP.terrOn && AP.terrAlt > altT - 30);
+      if (on) altT = Math.max(altT, Math.ceil(AP.terrAlt * M2FT / 100) * 100 / M2FT);
+      if (on !== !!AP.terrOn) { AP.terrOn = on; flash(on ? `TERRAIN AHEAD · autopilot climbing to ${Math.round(altT * M2FT).toLocaleString("en-US")} ft` : `Terrain clear · autopilot back to ${AP.alt.toLocaleString("en-US")} ft`, 3); }
+    } else AP.terrOn = false;
+    if (vsT === null) { const vMax = (AP.terrOn ? Math.max(AP.vs, 3000) : AP.vs) / M2FT / 60; vsT = clamp((altT - S.pos.y) * 0.12, -AP.vs / M2FT / 60, vMax); }
     const pitchT = Math.asin(clamp((vsT - S.sink) / Math.max(S.speed, 20), -0.3, 0.3));
     // on the localizer the autopilot steers the ground track, so a crosswind no longer leaves it parked beside the centreline
     const trkNow = AP.lat === "LOC" && S.gs > 20 ? Math.atan2(S.vel.x, -S.vel.z) : hdgNow;
@@ -4357,7 +4368,27 @@ vec3 liveryAt(vec3 p, out float fus) {
   }
 
   // ================= ALERTS =================
-  // one place decides STALL / PULL UP / TRAFFIC for the HUD, the sounds and the vibration
+  // terrain look-ahead (5 times a second): the straight-line flight path for the next 30 s against the ground.
+  // Airport ground is ignored, and inside a runway's approach corridor (where the hills are lowered under the 3° path)
+  // only a real impact counts, so a normal approach or climb-out stays quiet. The highest ground along the next 45 s
+  // of track also tells the autopilot how high it must be (AP.terrAlt: 500 ft above it).
+  function inCorridor(x, z) {
+    for (const a of AIRPORTS) { const [al, ac] = local(a, x, z), r = a.rwys[0], d = Math.abs(al) - r.len / 2; if (d > -r.len / 2 && d < 14500 && Math.abs(ac - r.off) < 350 + Math.max(0, d) * 0.12) return true; }
+    return false;
+  }
+  function terrainScan(A) {
+    const vx = S.vel.x, vz = S.vel.z, vy = S.vel.y, gsH = Math.hypot(vx, vz);
+    let ti = Infinity, maxG = -Infinity;
+    if (gsH > 15) for (let t = 1.5; t <= 45; t += 1.5) {
+      const x = S.pos.x + vx * t, z = S.pos.z + vz * t, g = Math.max(0, groundY(x, z));
+      maxG = Math.max(maxG, g);
+      if (t > 30 || ti < Infinity || airportMask(x, z)[0] > 0.5) continue;
+      if (S.pos.y + vy * t - spec.gearH - g < (inCorridor(x, z) ? 0 : 15)) ti = t;
+    }
+    A.terrain = ti <= 30; A.terrPull = ti <= 15;
+    AP.terrAlt = maxG > -Infinity ? maxG + spec.gearH + 150 : null;
+  }
+  // one place decides STALL / PULL UP / TERRAIN / TRAFFIC for the HUD, the sounds and the vibration
   function updateAlerts(now) {
     const A = S.alerts || (S.alerts = {});
     const flying = S.mode === "fly" && !S.crashed && !S.grounded;
@@ -4366,10 +4397,12 @@ vec3 liveryAt(vec3 p, out float fus) {
     if (stallNow && !A.stall && now - (A.stallBuzz || -1e9) > 3000) { buzz([50, 40, 50]); A.stallBuzz = now; }
     A.stall = stallNow;
     A.pull = flying && aglFt < 400 && S.vs < -10;
+    if (!flying) { A.terrain = A.terrPull = false; AP.terrAlt = null; }
+    else if (!(now - A.terrAt < 200)) { A.terrAt = now; const was = A.terrPull; terrainScan(A); if (A.terrPull && !was) buzz([120, 60, 120]); }
     let threat = null;
     if (flying) for (const ai of AI) { if (!ai.model.visible || ai.phase === "hold") continue; if (ai.pos.distanceTo(S.pos) < 1100 && Math.abs(ai.pos.y - S.pos.y) < 200) { threat = ai; break; } }
     A.traffic = threat;
-    if (S.mode === "fly" && !S.crashed) soundAlerts({ pull: A.pull, stall: A.stall, traffic: !!threat }, now / 1000);
+    if (S.mode === "fly" && !S.crashed) soundAlerts({ pull: A.pull, tpull: A.terrPull, stall: A.stall, terrain: A.terrain && !A.terrPull, traffic: !!threat }, now / 1000);
   }
   // High quality: a real shadow of your aircraft, cast by the sun into a small shadow map that follows it
   function updateSunShadow() {
