@@ -955,6 +955,9 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   const TILE = 4000, TN = Math.ceil(WORLD * 2 / TILE), tiles = [];
   const treeCone = new THREE.ConeGeometry(3.6, 15, 7); treeCone.translate(0, 7.5, 0);
   const treeBall = new THREE.IcosahedronGeometry(4.8, 1); treeBall.translate(0, 7, 0);
+  // distant forests use lighter tree shapes (a quarter of the triangles); near ones keep the full shapes
+  const treeConeLo = new THREE.ConeGeometry(3.6, 15, 5); treeConeLo.translate(0, 7.5, 0);
+  const treeBallLo = new THREE.IcosahedronGeometry(4.8, 0); treeBallLo.translate(0, 7, 0);
   const treeMatC = new THREE.MeshLambertMaterial(), treeMatB = new THREE.MeshLambertMaterial();
   for (let tj = 0; tj < TN; tj++) for (let ti = 0; ti < TN; ti++) {
     const x0 = -WORLD + ti * TILE, z0 = -WORLD + tj * TILE;
@@ -978,9 +981,9 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       const conifer = h > 260 ? hash(x, 3) < 0.85 : hash(x, 3) < 0.35; (conifer ? cones : balls).push([x, h, z]);
     }
     const grp = new THREE.Group();
-    [[cones, treeCone, treeMatC, 0.33, 0.4, 0.2], [balls, treeBall, treeMatB, 0.24, 0.45, 0.27]].forEach(([list, geo, mat, hu, sa, li]) => {
+    [[cones, treeCone, treeMatC, 0.33, 0.4, 0.2, treeConeLo], [balls, treeBall, treeMatB, 0.24, 0.45, 0.27, treeBallLo]].forEach(([list, geo, mat, hu, sa, li, lo]) => {
       if (!list.length) return;
-      const im = new THREE.InstancedMesh(geo, mat, list.length);
+      const im = new THREE.InstancedMesh(geo, mat, list.length); im.userData.lod = [geo, lo];
       list.forEach(([x, h, z], n) => { const sc = 0.7 + hash(z, x) * 0.9; m.makeScale(sc, sc * (0.9 + hash(x, 5) * 0.4), sc); m.setPosition(x, h - 0.8, z); im.setMatrixAt(n, m); im.setColorAt(n, col.setHSL(hu + hash(n, 1) * 0.06, sa, li + hash(n, 2) * 0.09).convertSRGBToLinear()); });
       grp.add(im);
     });
@@ -992,7 +995,10 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       const d = Math.hypot(cam.x - t.cx, cam.z - t.cz), alt = Math.max(0, cam.y - 600);
       const want = d < QS.hi + alt * 2;
       if (want && !t.hi && d < bd) { bd = d; best = t; }
-      if (t.hi) { t.hi.visible = d < QS.vis; t.lo.visible = !t.hi.visible; t.trees.visible = d < QS.trees; }
+      if (t.hi) {
+        t.hi.visible = d < QS.vis; t.lo.visible = !t.hi.visible; t.trees.visible = d < QS.trees;
+        const near = d < 3400; if (t.trees.userData.near !== near) { t.trees.userData.near = near; t.trees.children.forEach((im) => { if (im.userData.lod) im.geometry = im.userData.lod[near ? 0 : 1]; }); }
+      }
     }
     if (best) { buildHiTile(best); best.lo.visible = false; }
   }
@@ -1277,6 +1283,49 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     pivot.add(new THREE.Mesh(cg, ctlMat || mat)); g.add(pivot);
     g.userData.tip = new THREE.Vector3(o.span, o.dih || 0, o.sweep);
     return { g, pivot };
+  }
+  // Static geometry merging: meshes that never move relative to `group` are baked into one mesh per material, so a
+  // whole airport (or a set of landing gear) costs a handful of draw calls instead of hundreds. `skip` keeps subtrees
+  // that move, hide or carry model-space shaders (aircraft liveries) as they are.
+  function mergeStatic(group, skip = () => false) {
+    group.updateMatrixWorld(true);
+    const inv = new THREE.Matrix4().copy(group.matrixWorld).invert(), buckets = new Map(), M2 = new THREE.Matrix4(), N3 = new THREE.Matrix3();
+    const visit = (o) => {
+      if (o !== group && skip(o)) return;
+      if (o.isMesh && !o.isInstancedMesh && o.visible && !Array.isArray(o.material) && !o.material.userData.u && !o.material.userData.fac && !o.userData.keepAlone && o.geometry.attributes.position) {
+        const g = o.geometry, names = Object.keys(g.attributes).filter((n) => n === "position" || n === "normal" || n === "uv" || n === "color").sort();
+        const key = o.material.uuid + "|" + names.join(",");
+        if (!buckets.has(key)) buckets.set(key, { mat: o.material, names, list: [] });
+        buckets.get(key).list.push(o);
+      }
+      o.children.slice().forEach(visit);
+    };
+    visit(group);
+    let merged = 0;
+    for (const { mat, names, list } of buckets.values()) {
+      if (list.length < 2) continue;
+      let nv = 0, ni = 0; for (const o of list) { nv += o.geometry.attributes.position.count; ni += o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count; }
+      const out = {}; for (const n of names) out[n] = new Float32Array(nv * list[0].geometry.attributes[n].itemSize);
+      const idx = nv > 65535 ? new Uint32Array(ni) : new Uint16Array(ni); let vo = 0, io = 0;
+      for (const o of list) {
+        const g = o.geometry, cnt = g.attributes.position.count; M2.multiplyMatrices(inv, o.matrixWorld); N3.getNormalMatrix(M2);
+        const v = new THREE.Vector3();
+        for (const n of names) {
+          const a = g.attributes[n], sz = a.itemSize, dst = out[n];
+          for (let i = 0; i < cnt; i++) {
+            if (n === "position") { v.fromBufferAttribute(a, i).applyMatrix4(M2); dst[(vo + i) * 3] = v.x; dst[(vo + i) * 3 + 1] = v.y; dst[(vo + i) * 3 + 2] = v.z; }
+            else if (n === "normal") { v.fromBufferAttribute(a, i).applyMatrix3(N3).normalize(); dst[(vo + i) * 3] = v.x; dst[(vo + i) * 3 + 1] = v.y; dst[(vo + i) * 3 + 2] = v.z; }
+            else for (let k = 0; k < sz; k++) dst[(vo + i) * sz + k] = a.array[i * sz + k];
+          }
+        }
+        if (g.index) for (let i = 0; i < g.index.count; i++) idx[io++] = g.index.array[i] + vo; else for (let i = 0; i < cnt; i++) idx[io++] = vo + i;
+        vo += cnt; o.parent.remove(o);
+      }
+      const mg = new THREE.BufferGeometry(); for (const n of names) mg.setAttribute(n, new THREE.BufferAttribute(out[n], list[0].geometry.attributes[n].itemSize));
+      mg.setIndex(new THREE.BufferAttribute(idx, 1)); mg.computeBoundingSphere();
+      const mm = new THREE.Mesh(mg, mat); mm.castShadow = list[0].castShadow; mm.receiveShadow = list[0].receiveShadow; group.add(mm); merged += list.length;
+    }
+    return merged;
   }
   function wheel(r, w) { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, w, 14), M.tire); m.geometry.rotateZ(Math.PI / 2); return m; }
   function strut(x0, y0, z0, x1, y1, z1, r, mat) {
@@ -2443,6 +2492,7 @@ vec3 liveryAt(vec3 p, out float fus) {
         if (o.bogie && !nose) { const beam = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, o.six ? 3.2 : 1.6), M.metal); beam.position.set(x, -gh + rr, z); gearG.add(beam); }
       }
     }
+    mergeStatic(gearG);   // struts and tyres: one mesh per material
     const dummy = () => new THREE.Object3D();
     return finishModel(root, { prop: null, gear: gearG, ail: [dummy(), dummy()], elev: [dummy()], rud: dummy(), strobes: [], fans: [] });
   }
@@ -2761,6 +2811,10 @@ vec3 liveryAt(vec3 p, out float fus) {
     grp.add(det); a.detail = det;
     grp.updateMatrixWorld(true);
     a.tower = cab.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 1.5, 0));
+    // bake the static buildings, markings, vehicles and signs into a few meshes; parked aircraft and turning things stay apart
+    const moving = new Set([...beacons]); for (const st of stands) if (st.model) moving.add(st.model);
+    det.children.forEach((ch) => { if (ch.userData && (ch.userData.strobes || ch.userData.gear)) moving.add(ch); });
+    mergeStatic(det, (o) => moving.has(o));
   }
   AIRPORTS.forEach(buildAirport);
 
@@ -4296,16 +4350,20 @@ vec3 liveryAt(vec3 p, out float fus) {
     im.count = N; scene.add(im); return im;
   })();
   const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _p = new THREE.Vector3(), _one = new THREE.Vector3(1, 1, 1);
+  let carTick = 0;
   function updateCars(dt) {
+    carTick++;
     CARS.forEach((c, i) => {
       c.s += c.v * c.dir * dt;
       if (c.s > c.r.len) { c.s = c.r.len; c.dir = -1; } else if (c.s < 0) { c.s = 0; c.dir = 1; }
-      const { pts, cum } = c.r; let k = 1; while (k < cum.length - 1 && cum[k] < c.s) k++;
+      const { pts, cum } = c.r; let k = c.k || 1;
+      while (k < cum.length - 1 && cum[k] < c.s) k++; while (k > 1 && cum[k - 1] > c.s) k--; c.k = k;
       const t = (c.s - cum[k - 1]) / Math.max(0.001, cum[k] - cum[k - 1]);
       const x0 = pts[k - 1][0], z0 = pts[k - 1][1], x1 = pts[k][0], z1 = pts[k][1], dx = x1 - x0, dz = z1 - z0, l = Math.hypot(dx, dz) || 1;
       const x = lerp(x0, x1, t) - dz / l * 2.3 * c.dir, z = lerp(z0, z1, t) + dx / l * 2.3 * c.dir;
       _q.setFromAxisAngle(AY, Math.atan2(dx * c.dir, dz * c.dir));
-      _m4.compose(_p.set(x, groundY(x, z) + 0.45, z), _q, _one); carMesh.setMatrixAt(i, _m4);
+      if (c.gy === undefined || (i + carTick) % 12 === 0) c.gy = groundY(x, z);   // ground height refreshed a few cars per frame
+      _m4.compose(_p.set(x, c.gy + 0.45, z), _q, _one); carMesh.setMatrixAt(i, _m4);
     });
     carMesh.instanceMatrix.needsUpdate = true;
   }
