@@ -408,7 +408,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
   <header class="masthead">
     <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="currentColor"/></svg></span>
       <h1>Skyways <span>Flight Sim</span></h1></div>
-    <p class="tagline">8 aircraft · 17 airports · 10 missions · replays · 32 km world · day, sunset and night</p>
+    <p class="tagline">10 aircraft · 17 airports · 10 missions · replays · 32 km world · day, sunset and night</p>
   </header>
 
   <div class="stage" id="stage">
@@ -609,6 +609,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
         <li><code>A320</code><span><a href="https://sketchfab.com/3d-models/1400-boeing-737-airplane-for-free-f39ca33a81f14613a3d562d6b74c466a" target="_blank" rel="noopener">1/400 Boeing 737 Airplane For Free</a> by businessyuen</span><span>CC BY 4.0</span></li>
         <li><code>B767</code><span><a href="https://sketchfab.com/3d-models/boeing-767-200er-41d1b62ed48c4212bf3ef7cd1fca3995" target="_blank" rel="noopener">Boeing 767-200ER</a> by beanz_ncheese</span><span>CC BY 4.0</span></li>
         <li><code>B777 · 77W · B763</code><span>Built for this game from the Boeing 767-200ER model above (scaled, lengthened fuselage sections, six-wheel bogies)</span><span>CC BY 4.0</span></li>
+        <li><code>A350 · B773</code><span>Built from the Boeing 767-200ER model above (scaled, lengthened, wider wings; curled wingtips on the A350)</span><span>CC BY 4.0</span></li>
         <li><code>A321</code><span>Built from the A320 model above with lengthened fuselage sections</span><span>CC BY 4.0</span></li>
         <li><code>B739</code><span>Built from the 737 model above with lengthened fuselage sections</span><span>CC BY 4.0</span></li>
         <li><code>737</code><span><a href="https://sketchfab.com/3d-models/medium-haul-plane-low-poly-226d0f39a9154db9922fcbdd56efe0f5" target="_blank" rel="noopener">Medium haul plane (low poly)</a> by reeledzin</span><span>CC BY 4.0</span></li>
@@ -648,7 +649,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     { code: "EGT", name: "Eastgate Intl", x: 6500, z: -6750, hdg: 140, elev: 88, kind: "intl",
       rwys: [{ off: 0, len: 2600, w: 50, sfx: "" }], stands: ["b77w", "a321", "mh", "b763", "b737", "b739", "b777"] },
     { code: "SNV", name: "Sunvale Intl", x: 2000, z: 10750, hdg: 90, elev: 126, kind: "intl",
-      rwys: [{ off: 0, len: 2400, w: 50, sfx: "" }], stands: ["b737", "mh", "b777", "b737", "mh"] },
+      rwys: [{ off: 0, len: 2400, w: 50, sfx: "" }], stands: ["b737", "mh", "a350", "b737", "b773"] },
     { code: "HMR", name: "Highmoor", x: 12500, z: 2500, hdg: 30, elev: 185, kind: "regional",
       rwys: [{ off: 0, len: 1800, w: 45, sfx: "" }], stands: ["mh", "b767", "b737"] },
     { code: "BYF", name: "Bayford", x: -4250, z: 11500, hdg: 170, elev: 50, kind: "regional",
@@ -676,7 +677,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       rwys: [{ off: 0, len: 1300, w: 35, sfx: "" }], stands: ["b737", "mh"] },
   ];
   const WORLD = 16000;
-  const DIMS = { b77w: [64.8, 73.6], b763: [47.6, 55.2], a321: [35.8, 46.5], b739: [37.8, 43.0], b777: [60.9, 63.7], trainer: [11, 8.3], aero: [8, 6.6], islander: [35.8, 39.5], breeze: [27.1, 27.2], swift: [15.5, 17.7], atlas: [42.4, 45.1], arrow: [9.1, 14.4], regio: [28.7, 36.2], skyliner: [60.1, 62.8], jumbo: [64.4, 70.7], commuter: [17.7, 17.6], b772: [64.8, 73.9], b737: [35.8, 39.7], mh: [37.8, 35.5], b767: [47.6, 48.5] };
+  const DIMS = { b773: [60.9, 73.6], a350: [64.8, 66.9], b77w: [64.8, 73.6], b763: [47.6, 55.2], a321: [35.8, 46.5], b739: [37.8, 43.0], b777: [60.9, 63.7], trainer: [11, 8.3], aero: [8, 6.6], islander: [35.8, 39.5], breeze: [27.1, 27.2], swift: [15.5, 17.7], atlas: [42.4, 45.1], arrow: [9.1, 14.4], regio: [28.7, 36.2], skyliner: [60.1, 62.8], jumbo: [64.4, 70.7], commuter: [17.7, 17.6], b772: [64.8, 73.9], b737: [35.8, 39.7], mh: [37.8, 35.5], b767: [47.6, 48.5] };
   const swapLR = (s) => (s === "L" ? "R" : s === "R" ? "L" : "");
   for (const a of AIRPORTS) {
     const t = a.hdg * Math.PI / 180; a.s = Math.sin(t); a.c = Math.cos(t);
@@ -1588,18 +1589,26 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     thy: { name: "Turkish Airlines", fin: ["#c8102e"], stripe2: ["#c8102e", -0.27, -0.19], engine: "#d9dcdf", title: ["TURKISH AIRLINES", "#c8102e", "700", "sans", 0.05] },
     afl: { name: "Aeroflot", body: "#eef1f4", stripe2: ["#0b4ea2", -0.29, -0.16], fin: ["#ffffff", "#0039a6", "#d52b1e"], finMode: 1, engine: "#0b4ea2", title: ["AEROFLOT", "#0b4ea2", "800", "sans", 0.12] },
     s7: { name: "S7 Airlines", body: "#b5d334", wing: "#c9cfd4", fin: ["#8fb31d"], engine: "#8fb31d", title: ["S7 AIRLINES", "#36520f", "900", "sans", 0.08] },
+    afr: { name: "Air France", fin: ["#ffffff", "#002157", "#e51937"], finMode: 6, title: ["AIRFRANCE", "#002157", "800", "sans", 0.1] },
+    vir: { name: "Virgin Atlantic", body: "#eceef0", fin: ["#da0530"], engine: "#da0530", title: ["virgin atlantic", "#da0530", "700", "serif"] },
+    cpa: { name: "Cathay Pacific", fin: ["#006564"], engine: "#e2e5e7", title: ["CATHAY PACIFIC", "#006564", "600", "sans", 0.08] },
+    kal: { name: "Korean Air", top: "#a9d2ee", topY: -0.32, belly: "#c9ced3", bellyY: -0.45, stripe2: ["#1b3f8b", -0.36, -0.32], fin: ["#ffffff"], engine: "#a9d2ee", title: ["KOREAN AIR", "#1b3f8b", "700", "sans", 0.08] },
+    swr: { name: "Swiss", fin: ["#e3000f", "#ffffff"], finMode: 5, title: ["SWISS", "#111111", "900", "sans", 0.12] },
+    wzz: { name: "Wizz Air", fin: ["#c6007e"], engine: "#c6007e", belly: "#3b1c5a", bellyY: -0.55, rise: 0.2, title: ["wizzair", "#c6007e", "900", "sans"] },
     sia: { name: "Singapore Airlines", stripe2: ["#f2a900", -0.3, -0.17], fin: ["#0b2a5b"], engine: "#d9dcdf", title: ["SINGAPORE AIRLINES", "#0b2a5b", "600", "serif", 0.04] },
   };
   for (const [id, a] of Object.entries(AIRLINE)) LIV[id] = Object.assign({ id, pack: true }, a);
   for (const [id, a] of Object.entries(AIRLINE)) LIV[id] = Object.assign({ id, pack: true }, a);
   const LIVERIES = {
-    b737: ["dlh", "baw", "ezy", "thy", "afl", "s7", "aal", "dal", "ual", "qtr"],
+    b737: ["dlh", "baw", "ezy", "thy", "afl", "s7", "aal", "dal", "ual", "qtr", "wzz", "afr", "swr", "kal"],
     mh: ["ryr", "ual", "aal", "dal", "klm", "thy", "s7", "afl", "sia"],
     b767: ["dal", "ual", "aal", "baw", "uae", "qtr", "afl", "klm"],
     b777: ["uae", "ual", "aal", "baw", "qtr", "klm", "afl", "sia", "thy", "dal"],
-    b77w: ["uae", "ual", "aal", "baw", "qtr", "klm", "afl", "sia", "thy", "dal"],
+    b77w: ["uae", "ual", "aal", "baw", "qtr", "klm", "afl", "sia", "thy", "afr", "cpa", "kal", "swr", "vir"],
+    b773: ["cpa", "kal", "sia", "uae", "thy", "baw", "afr", "swr"],
+    a350: ["qtr", "dlh", "afl", "sia", "cpa", "afr", "dal", "ual", "baw", "kal", "thy", "vir", "klm"],
     b763: ["dal", "ual", "aal", "baw", "qtr", "afl", "klm", "thy"],
-    a321: ["dlh", "baw", "ezy", "thy", "afl", "s7", "aal", "dal", "ual", "qtr"],
+    a321: ["dlh", "baw", "ezy", "thy", "afl", "s7", "aal", "dal", "ual", "qtr", "wzz", "afr", "swr", "kal"],
     b739: ["ual", "dal", "aal", "klm", "thy", "s7", "afl", "ryr"],
     islander: ["ryanair", "klm", "turkish", "qantas", "lufthansa"],
     regio: ["klmch", "jetblue", "azul"],
@@ -1615,6 +1624,8 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     b767: { name: "Boeing 767-200ER", type: "Wide-body airliner · 3D model", packed: true, build: build767model, thrust: 6.6, vmax: 140, stall: 50, roll: 0.68, pitch: 0.45, yaw: 0.22, turn: 0.7, gearH: 4.2, retract: true, cam: [90, 18], cock: [1.2, -24.85], wingX: 23.6, brake: 4.2, shadow: 26, big: true, stats: [0.9, 0.25, 0.3] },
     b777: { name: "Boeing 777-200ER", type: "Long-haul wide-body · 3D model", packed: true, build: build777model, thrust: 6.9, vmax: 145, stall: 52, roll: 0.6, pitch: 0.42, yaw: 0.2, turn: 0.65, gearH: 5.3, retract: true, cam: [112, 22], cock: [1.55, -33.2], wingX: 30.2, brake: 4.0, shadow: 33, big: true, stats: [0.95, 0.22, 0.28] },
     b77w: { name: "Boeing 777-300ER", type: "Long-haul wide-body · stretched 777", packed: true, build: build77Wmodel, thrust: 7.0, vmax: 146, stall: 54, roll: 0.55, pitch: 0.4, yaw: 0.19, turn: 0.62, gearH: 5.3, retract: true, cam: [128, 24], cock: [1.55, -38.2], wingX: 31.9, brake: 3.9, shadow: 37, big: true, stats: [0.97, 0.2, 0.26] },
+    b773: { name: "Boeing 777-300", type: "Wide-body airliner · 73.9 m, 60.9 m span", packed: true, build: build773model, thrust: 6.8, vmax: 145, stall: 54, roll: 0.56, pitch: 0.4, yaw: 0.19, turn: 0.62, gearH: 5.3, retract: true, cam: [126, 24], cock: [1.55, -38.2], wingX: 30.2, brake: 3.9, shadow: 36, big: true, stats: [0.95, 0.2, 0.26] },
+    a350: { name: "Airbus A350-900", type: "Long-haul wide-body · curled wingtips", packed: true, build: buildA350model, thrust: 7.0, vmax: 147, stall: 51, roll: 0.6, pitch: 0.42, yaw: 0.2, turn: 0.65, gearH: 5.0, retract: true, cam: [118, 22], cock: [1.45, -34.0], wingX: 32.3, brake: 4.0, shadow: 34, big: true, stats: [0.96, 0.22, 0.28] },
     b763: { name: "Boeing 767-300ER", type: "Wide-body airliner · stretched 767", packed: true, build: build763model, thrust: 6.7, vmax: 140, stall: 51, roll: 0.65, pitch: 0.44, yaw: 0.21, turn: 0.68, gearH: 4.2, retract: true, cam: [98, 19], cock: [1.2, -28.2], wingX: 23.6, brake: 4.1, shadow: 28, big: true, stats: [0.92, 0.24, 0.29] },
     a321: { name: "Airbus A321", type: "Narrow-body airliner · stretched A320", packed: true, build: buildA321model, thrust: 7.1, vmax: 128, stall: 48, roll: 0.75, pitch: 0.48, yaw: 0.24, turn: 0.72, gearH: 3.2, retract: true, cam: [72, 14], cock: [1.0, -23.8], wingX: 17.9, brake: 4.4, shadow: 19, big: true, stats: [0.84, 0.28, 0.33] },
     b739: { name: "Boeing 737-900ER", type: "Narrow-body airliner · stretched 737", packed: true, build: build739model, thrust: 7.1, vmax: 130, stall: 48, roll: 0.75, pitch: 0.48, yaw: 0.24, turn: 0.72, gearH: 3.0, retract: true, cam: [70, 14], cock: [1.0, -21.8], wingX: 18.9, brake: 4.4, shadow: 19, big: true, stats: [0.84, 0.28, 0.33] },
@@ -1634,9 +1645,9 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       sp.gearH *= f; sp.wingX *= f; sp.shadow *= f; sp.cam = sp.cam.map((v) => v * f); sp.cock = sp.cock.map((v) => v * f);
     }
   })();
-  const CAT = { b77w: "airliner", b763: "airliner", a321: "airliner", b739: "airliner", b777: "airliner", b767: "airliner", b737: "airliner", mh: "airliner", trainer: "light", aero: "light", swift: "light", islander: "airliner", breeze: "airliner", regio: "airliner", skyliner: "airliner", jumbo: "airliner", b772: "airliner", commuter: "airliner", atlas: "special", arrow: "special" };
-  const SEATS = { b77w: 396, b763: 269, a321: 220, b739: 215, b777: 314, b767: 224, b737: 180, mh: 189, trainer: 4, aero: 2, swift: 9, islander: 189, breeze: 72, regio: 100, skyliner: 296, jumbo: 416, b772: 396, commuter: 19, atlas: 116, arrow: 1 };
-  const CRUISE = { b77w: 484, b763: 459, a321: 447, b739: 453, b777: 482, b767: 459, b737: 447, mh: 453, trainer: 124, aero: 210, swift: 465, islander: 453, breeze: 275, regio: 447, skyliner: 488, jumbo: 490, b772: 490, commuter: 280, atlas: 421, arrow: 500 };
+  const CAT = { b773: "airliner", a350: "airliner", b77w: "airliner", b763: "airliner", a321: "airliner", b739: "airliner", b777: "airliner", b767: "airliner", b737: "airliner", mh: "airliner", trainer: "light", aero: "light", swift: "light", islander: "airliner", breeze: "airliner", regio: "airliner", skyliner: "airliner", jumbo: "airliner", b772: "airliner", commuter: "airliner", atlas: "special", arrow: "special" };
+  const SEATS = { b773: 368, a350: 325, b77w: 396, b763: 269, a321: 220, b739: 215, b777: 314, b767: 224, b737: 180, mh: 189, trainer: 4, aero: 2, swift: 9, islander: 189, breeze: 72, regio: 100, skyliner: 296, jumbo: 416, b772: 396, commuter: 19, atlas: 116, arrow: 1 };
+  const CRUISE = { b773: 480, a350: 488, b77w: 484, b763: 459, a321: 447, b739: 453, b777: 482, b767: 459, b737: 447, mh: 453, trainer: 124, aero: 210, swift: 465, islander: 453, breeze: 275, regio: 447, skyliner: 488, jumbo: 490, b772: 490, commuter: 280, atlas: 421, arrow: 500 };
   for (const k of Object.keys(PLANES)) { PLANES[k].cat = CAT[k] || "light"; PLANES[k].seats = SEATS[k] || 0; }
 
   // ================= DETAILED 3D MODELS (GLB) =================
@@ -1754,6 +1765,9 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   var DERIVED = {
     b777: { from: "b767", s: 1.28, fx: 3.4, plugs: [[-12.25, 2 * 0.557]] },
     b77w: { from: "b767", s: 1.28, fx: 3.4, plugs: [[-12.25, 9 * 0.557], [4.85, 7 * 0.557]], span: [3.4, 1.064] },
+    b773: { from: "b767", s: 1.28, fx: 3.4, plugs: [[-12.25, 9 * 0.557], [4.85, 7 * 0.557]] },
+    // A350-900: 66.8 m long, 64.8 m span, wingtips curling up
+    a350: { from: "b767", s: 1.2, fx: 3.4, plugs: [[-12.25, 7 * 0.557], [4.85, 6 * 0.557]], span: [3.4, 1.156], curl: [21.2, 23.6, 1.5] },
     b763: { from: "b767", s: 1, fx: 3.4, plugs: [[-12.25, 6 * 0.557], [4.85, 6 * 0.557]] },
     a321: { from: "b737", s: 1, fx: 2.7, plugs: [[-9.7, 7 * 0.4855], [1.49, 7 * 0.4855]] },
     b739: { from: "mh", s: 1, fx: 2.6, plugs: [[-9.67, 6 * 0.58], [1.67, 7 * 0.58]] },
@@ -1764,6 +1778,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     if (fus) for (const [z0, add] of d.plugs) { if (z0 < 0 && z < z0) o -= add; if (z0 > 0 && z > z0) o += add; }
     return o * d.s;
   }
+  function deriveCurl(d, x) { if (!d.curl) return 0; const t = (Math.abs(x) - d.curl[0]) / (d.curl[1] - d.curl[0]); return t > 0 ? t * t * d.curl[2] : 0; }
   function deriveX(d, x) { let a = Math.abs(x); if (d.span && a > d.span[0]) a = d.span[0] + (a - d.span[0]) * d.span[1]; return Math.sign(x) * a * d.s; }
   function derivePart(d, pt) {
     const src = pt.g, P0 = src.attributes.position.array, N0 = src.attributes.normal.array, I0 = src.index.array, C0 = src.attributes.color ? src.attributes.color.array : null;
@@ -1790,7 +1805,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const n = nb + bridge.length * 3, P = new Float32Array(n * 3), N = new Float32Array(n * 3), C = C0 ? new Float32Array(n * 3) : null, VC = pt.vc ? new Float32Array(n * 3) : null;
     const put = (dst, v, back, cy) => {
       const x = P0[v * 3], y = P0[v * 3 + 1], z = P0[v * 3 + 2], f = Math.abs(x) < d.fx;
-      let zz = deriveZ(d, z, f) + back * d.s, xx = deriveX(d, x), yy = y * d.s;
+      let zz = deriveZ(d, z, f) + back * d.s, xx = deriveX(d, x), yy = (y + deriveCurl(d, x)) * d.s;
       if (back) { const rx = xx, ry = yy - cy * d.s, rl = Math.hypot(rx, ry) || 1; xx += rx / rl * 0.012; yy += ry / rl * 0.012; }   // copies sit a hair above the skin
       P[dst * 3] = xx; P[dst * 3 + 1] = yy; P[dst * 3 + 2] = zz;
       for (let j = 0; j < 3; j++) { N[dst * 3 + j] = N0[v * 3 + j]; if (C) C[dst * 3 + j] = C0[v * 3 + j]; if (VC) VC[dst * 3 + j] = pt.vc[v * 3 + j]; }
@@ -1818,7 +1833,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     if (DERIVED[key]) {
       const d = DERIVED[key], src = decodePack(d.from);
       const parts = src.parts.map((pt) => derivePart(d, pt));
-      return (PACK_CACHE[key] = { tip: [deriveX(d, src.tip[0]), src.tip[1] * d.s, src.tip[2] * d.s], parts });
+      return (PACK_CACHE[key] = { tip: [deriveX(d, src.tip[0]), (src.tip[1] + deriveCurl(d, src.tip[0])) * d.s, src.tip[2] * d.s], parts });
     }
     const D = window.SKY_PACKS[key], raw = atob(D.data), bin = new Uint8Array(raw.length);
     for (let i = 0; i < raw.length; i++) bin[i] = raw.charCodeAt(i);
@@ -1871,7 +1886,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
 uniform vec4 uGeo; uniform vec4 uZ; uniform vec4 uLn; uniform vec4 uLn2; uniform vec4 uTb; uniform vec4 uFl;
 uniform vec3 uBody; uniform vec3 uBelly; uniform vec3 uTop; uniform vec3 uStr; uniform vec3 uStr2; uniform vec3 uFin1; uniform vec3 uFin2; uniform vec3 uFin3; uniform vec3 uWing; uniform vec3 uNose; uniform vec3 uLead;
 uniform sampler2D uTitle; uniform float uCabin;
-uniform vec4 uFg0; uniform vec4 uFg1; uniform vec4 uEng; uniform vec4 uEz; uniform vec3 uEngC; uniform vec3 uLip;
+uniform vec4 uFg0; uniform vec4 uFg1; uniform vec4 uEng; uniform vec4 uEz; uniform vec3 uEngC; uniform vec3 uLip; uniform float uMask;
 vec3 liveryAt(vec3 p, out float fus) {
   fus = 0.0;
   float cy = uGeo.x, R = uGeo.y, finY = uGeo.z, finTop = uGeo.w;
@@ -1884,7 +1899,10 @@ vec3 liveryAt(vec3 p, out float fus) {
       if (m < 1.5) return vc > 0.6667 ? uFin1 : (vc > 0.3333 ? uFin2 : uFin3);
       if (m < 2.5) { float t = vc + uf * 0.55; return t > 1.0 ? uFin1 : (t > 0.6 ? uFin2 : uFin3); }
       if (m < 3.5) { if (uf < 0.26) return uLead; return vc > 0.6667 ? uFin1 : (vc > 0.3333 ? uFin2 : uFin3); }
-      return (uf + (1.0 - vc) * 0.9 > 1.15) ? uFin2 : uFin1;
+      if (m < 4.5) return (uf + (1.0 - vc) * 0.9 > 1.15) ? uFin2 : uFin1;
+      if (m < 5.5) { float cu = abs(uf - 0.55), cv = abs(vc - 0.5); return ((cu < 0.07 && cv < 0.2) || (cv < 0.06 && cu < 0.24)) ? uFin2 : uFin1; }   // white cross on red
+      float d = vc * 0.85 - (1.0 - uf) * 0.55;                                                                                   // streamers rising aft
+      return (d > -0.32 && d < -0.22) ? uFin2 : ((d > -0.18 && d < -0.08) ? uFin3 : uFin1);
     }
   }
   // engine nacelles: painted cowling, bare metal intake lip
@@ -1901,6 +1919,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     if (f > 0.05 && v > uLn.z + rise && v < uLn.w + rise) c = uStr;
     if (f > 0.05 && f < 0.97 && v > uLn2.x && v < uLn2.y) c = uStr2;
     if (uFl.y > 0.5 && f < 0.05 - v * 0.03) c = uNose;
+    if (uMask > 0.5) { float mf = (f - 0.046) / 0.026, mv = (v - 0.2) / 0.24; if (mf * mf + mv * mv < 1.0 && abs(p.x) > R * 0.05) c = vec3(0.012, 0.013, 0.015); }   // A350 "mask" round the cockpit windows
     if (uFg1.w > 0.5) { float va = (p.y - cy) / R, z0 = uFg0.z - (uZ.y - uZ.x) * 0.14; if (va > 0.3 && p.z > z0 + (1.0 - va) * (uZ.y - uZ.x) * 0.12) c = uFin1; }
     if (uFl.x > 0.5 && abs(p.x) > R * 0.4) {
       float tu = (p.z - uTb.x) / (uTb.y - uTb.x); if (p.x > 0.0) tu = 1.0 - tu;
@@ -1937,7 +1956,7 @@ vec3 liveryAt(vec3 p, out float fus) {
       uTitle: { value: L.title ? titleTex(L) : BLANK_TEX }, uCabin: cabin || { value: 0 },
       uFg0: { value: new THREE.Vector4(o.fin[0], o.fin[1], o.fin[2], o.fin[3]) }, uFg1: { value: new THREE.Vector4(o.fin[4], o.fin[5], 0.35 * o.R, L.spine ? 1 : 0) },
       uEng: { value: new THREE.Vector4(o.eng[0], o.eng[1], o.eng[2], 1) }, uEz: { value: new THREE.Vector4(o.eng[3], o.eng[4], 0, 0) },
-      uEngC: V3(L.engine || "#eef0f2"), uLip: V3("#c3c7cc"),
+      uEngC: V3(L.engine || "#eef0f2"), uLip: V3("#c3c7cc"), uMask: { value: o.mask ? 1 : 0 },
     };
     const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, metalness: Math.min(pt.m, 0.3), roughness: clamp(pt.r, 0.3, 0.55), side: THREE.DoubleSide, envMapIntensity: 0.9 });
     mat.userData.u = u; mat.onBeforeCompile = liveryCompile;
@@ -2058,6 +2077,8 @@ vec3 liveryAt(vec3 p, out float fus) {
   function build763model(liv) { return buildPacked("b763", packOpts("b763"), liv); }
   function buildA321model(liv) { return buildPacked("a321", packOpts("a321"), liv); }
   function build739model(liv) { return buildPacked("b739", packOpts("b739"), liv); }
+  function build773model(liv) { return buildPacked("b773", packOpts("b773", { gearH: 5.3, wheelR: 0.68, six: true }), liv); }
+  function buildA350model(liv) { return buildPacked("a350", packOpts("a350", { gearH: 5.0, wheelR: 0.64, mask: true }), liv); }
   function buildPlane(kind, livId) {
     const sp = PLANES[kind];
     if (sp.glb) return GLB[kind] && GLB[kind].status === "ready" ? GLB[kind].make() : null;
@@ -3546,7 +3567,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   const TAN3 = Math.tan(3 * Math.PI / 180);
   const AI_FLEET = [["mh", "OCEANA 301"], ["b777", "OCEANA 88"], ["b737", "ISLA 214"], ["mh", "ISLANDER 52"], ["b767", "SOUTHWIND 640"], ["b737", "ISLANDER 17"], ["mh", "SKYLARK 42"], ["b777", "FALCON 7"], ["b737", "PACIFICA 12"],
     ["mh", "EASTGATE 410"], ["b763", "SUNVALE 9"], ["a321", "NORTHCAPE 77"], ["b739", "ISLANDER 63"], ["b777", "OCEANA 515"], ["b737", "SKYLARK 18"], ["mh", "FALCON 22"],
-    ["b767", "BREEZE 301"], ["a321", "REGIO 190"], ["b739", "REGIO 44"], ["b77w", "SKYLINER 35"], ["b737", "JUMBO 1"], ["mh", "COMMUTER 9"], ["b767", "BREEZE 88"], ["b737", "SWIFT 6"], ["mh", "ATLAS 4"], ["b777", "ARROW 1"]];
+    ["a350", "BREEZE 301"], ["a321", "REGIO 190"], ["b739", "REGIO 44"], ["b77w", "SKYLINER 35"], ["b737", "JUMBO 1"], ["mh", "COMMUTER 9"], ["b773", "BREEZE 88"], ["b737", "SWIFT 6"], ["mh", "ATLAS 4"], ["b777", "ARROW 1"]];
   const wrapA = (a) => { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; };
   function radio(text, where) { if (S.mode !== "fly" || where.distanceTo(S.pos) > 7000) return; RADIO.push({ text, t: 10 }); if (RADIO.length > 4) RADIO.shift(); }
   const aiPorts = (kind) => AIRPORTS.filter((a) => (PLANES[kind].big ? a.kind !== "ga" : true));
