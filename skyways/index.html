@@ -409,7 +409,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
   <header class="masthead">
     <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="currentColor"/></svg></span>
       <h1>Skyways <span>Flight Sim</span></h1></div>
-    <p class="tagline">7 aircraft · 17 airports · 10 missions · replays · 32 km world · day, sunset and night</p>
+    <p class="tagline">6 aircraft · 17 airports · 10 missions · replays · 32 km world · day, sunset and night</p>
   </header>
 
   <div class="stage" id="stage">
@@ -608,7 +608,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       <p class="tip">The five source aircraft models are from Sketchfab, used under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> license. They were rescaled, re-oriented, merged, packed into a lighter format and repainted (plain white, or fan-made airline colour schemes without logos) for the game; the 737 and 767 models have no wheels of their own, so the game adds separate landing gear under them.</p>
       <ul class="airports">
         <li><code>A320</code><span><a href="https://sketchfab.com/3d-models/1400-boeing-737-airplane-for-free-f39ca33a81f14613a3d562d6b74c466a" target="_blank" rel="noopener">1/400 Boeing 737 Airplane For Free</a> by businessyuen</span><span>CC BY 4.0</span></li>
-        <li><code>B767</code><span><a href="https://sketchfab.com/3d-models/boeing-767-200er-41d1b62ed48c4212bf3ef7cd1fca3995" target="_blank" rel="noopener">Boeing 767-200ER</a> by beanz_ncheese</span><span>CC BY 4.0</span></li>
+        <li><code>767 source</code><span><a href="https://sketchfab.com/3d-models/boeing-767-200er-41d1b62ed48c4212bf3ef7cd1fca3995" target="_blank" rel="noopener">Boeing 767-200ER</a> by beanz_ncheese</span><span>CC BY 4.0</span></li>
         <li><code>B77W</code><span><a href="https://sketchfab.com/3d-models/b777-mesh-boeing-plane-bbc3df310c284096a1e39cd8e74afeeb" target="_blank" rel="noopener">B777 Mesh boeing plane</a> by yes (MrModels) — landing gear and painted windows added for the game</span><span>CC BY 4.0</span></li>
         <li><code>B763</code><span>Built for this game from the Boeing 767-200ER model above (lengthened fuselage sections)</span><span>CC BY 4.0</span></li>
         <li><code>B747</code><span><a href="https://sketchfab.com/3d-models/boeing-747-400f-1982339cb5d147cf969b7cd0b01a2e69" target="_blank" rel="noopener">Boeing 747-400f</a> by Aviation_Liker 3D (landing gear added for the game)</span><span>CC BY 4.0</span></li>
@@ -638,38 +638,38 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   // ================= WORLD DATA =================
   const AIRPORTS = [
     { code: "HBP", name: "Harbor Point Intl", x: -200, z: -1250, hdg: 20, elev: 12, kind: "intl",
-      rwys: [{ off: 0, len: 2400, w: 50, sfx: "R" }, { off: -380, len: 2000, w: 45, sfx: "L" }], stands: ["a321", "mh", "b77w", "b737", "mh", "b763", "b737", "b77w", "b767", "a321"] },
+      rwys: [{ off: 0, len: 2400, w: 50, sfx: "R" }, { off: -380, len: 2000, w: 45, sfx: "L" }], stands: ["a321", "mh", "b77w", "b737", "mh", "b763", "b737", "b77w", "b763", "a321"] },
     { code: "SPT", name: "Southport", x: 3100, z: 1300, hdg: 120, elev: 20, kind: "intl",
-      rwys: [{ off: 0, len: 1900, w: 45, sfx: "" }], stands: ["mh", "b767", "b737", "mh", "b767"] },
+      rwys: [{ off: 0, len: 1900, w: 45, sfx: "" }], stands: ["mh", "b763", "b737", "mh", "b763"] },
     { code: "WFD", name: "Westfield Regional", x: -2900, z: 2350, hdg: 160, elev: 148, kind: "regional",
-      rwys: [{ off: 0, len: 1700, w: 45, sfx: "" }], stands: ["b767", "b737", "mh", "b767"] },
+      rwys: [{ off: 0, len: 1700, w: 45, sfx: "" }], stands: ["b763", "b737", "mh", "b763"] },
     { code: "CDR", name: "Cedar Ridge", x: 3100, z: -2900, hdg: 60, elev: 192, kind: "ga",
-      rwys: [{ off: 0, len: 1300, w: 35, sfx: "" }], stands: ["b737", "mh", "b767", "b737"] },
+      rwys: [{ off: 0, len: 1300, w: 35, sfx: "" }], stands: ["b737", "mh", "b763", "b737"] },
     { code: "CRK", name: "Coral Key", x: -2300, z: -3050, hdg: 300, elev: 6, kind: "ga",
-      rwys: [{ off: 0, len: 1250, w: 35, sfx: "" }], stands: ["mh", "b767"] },
+      rwys: [{ off: 0, len: 1250, w: 35, sfx: "" }], stands: ["mh", "b763"] },
     { code: "EGT", name: "Eastgate Intl", x: 6500, z: -6750, hdg: 140, elev: 88, kind: "intl",
       rwys: [{ off: 0, len: 2600, w: 50, sfx: "" }], stands: ["b77w", "a321", "mh", "b763", "b737", "mh", "b77w"] },
     { code: "SNV", name: "Sunvale Intl", x: 2000, z: 10750, hdg: 90, elev: 126, kind: "intl",
       rwys: [{ off: 0, len: 2400, w: 50, sfx: "" }], stands: ["b737", "mh", "b747", "b737", "b77w"] },
     { code: "HMR", name: "Highmoor", x: 12500, z: 2500, hdg: 30, elev: 185, kind: "regional",
-      rwys: [{ off: 0, len: 1800, w: 45, sfx: "" }], stands: ["mh", "b767", "b737"] },
+      rwys: [{ off: 0, len: 1800, w: 45, sfx: "" }], stands: ["mh", "b763", "b737"] },
     { code: "BYF", name: "Bayford", x: -4250, z: 11500, hdg: 170, elev: 50, kind: "regional",
-      rwys: [{ off: 0, len: 1700, w: 45, sfx: "" }], stands: ["b767", "b737", "mh", "b767"] },
+      rwys: [{ off: 0, len: 1700, w: 45, sfx: "" }], stands: ["b763", "b737", "mh", "b763"] },
     { code: "NCP", name: "Northcape", x: 2500, z: -12750, hdg: 70, elev: 27, kind: "regional",
       rwys: [{ off: 0, len: 1700, w: 45, sfx: "" }], stands: ["b737", "mh"] },
     { code: "PMW", name: "Port Merrow", x: -6000, z: -7250, hdg: 250, elev: 13, kind: "ga",
-      rwys: [{ off: 0, len: 1300, w: 35, sfx: "" }], stands: ["mh", "b767", "b737"] },
+      rwys: [{ off: 0, len: 1300, w: 35, sfx: "" }], stands: ["mh", "b763", "b737"] },
     { code: "FRC", name: "Far Reach", x: -12250, z: 5250, hdg: 10, elev: 33, kind: "ga",
-      rwys: [{ off: 0, len: 1250, w: 35, sfx: "" }], stands: ["b767", "b737", "mh"] },
+      rwys: [{ off: 0, len: 1250, w: 35, sfx: "" }], stands: ["b763", "b737", "mh"] },
     // mountain field 830 m up between the eastern ridges: thin air, short runway, snow on the peaks around it
     { code: "GRP", name: "Granite Peak", x: 11250, z: -4000, hdg: 30, elev: 830, kind: "regional",
       rwys: [{ off: 0, len: 1500, w: 40, sfx: "" }], stands: ["b737", "mh"] },
     // a runway on its own little island far out in the western sea
     { code: "PLC", name: "Pelican Isle", x: -8250, z: 5000, hdg: 60, elev: 4, kind: "regional",
-      rwys: [{ off: 0, len: 1900, w: 45, sfx: "" }], stands: ["mh", "b737", "b767"] },
+      rwys: [{ off: 0, len: 1900, w: 45, sfx: "" }], stands: ["mh", "b737", "b763"] },
     // the big new hub on the eastern coastal plain, with two parallel runways
     { code: "KBI", name: "Kingsbridge Intl", x: 6750, z: 4000, hdg: 90, elev: 30, kind: "intl",
-      rwys: [{ off: 0, len: 2800, w: 50, sfx: "R" }, { off: -400, len: 2500, w: 45, sfx: "L" }], stands: ["b77w", "b737", "mh", "b767", "b77w", "b737", "mh", "b767"] },
+      rwys: [{ off: 0, len: 2800, w: 50, sfx: "R" }, { off: -400, len: 2500, w: 45, sfx: "L" }], stands: ["b77w", "b737", "mh", "b763", "b77w", "b737", "mh", "b763"] },
     // small regional strip on the central plateau
     { code: "MLB", name: "Millbrook", x: 7500, z: -1500, hdg: 105, elev: 240, kind: "regional",
       rwys: [{ off: 0, len: 1400, w: 40, sfx: "" }], stands: ["mh", "b737"] },
@@ -1689,7 +1689,6 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   let chosenLiv = {}; try { chosenLiv = JSON.parse(load("sw-liv") || "{}") || {}; } catch { chosenLiv = {}; }
   const PLANES = {
     b737: { name: "Airbus A320", type: "Narrow-body airliner · detailed 3D model", packed: true, build: build737model, thrust: 7.0, vmax: 128, stall: 46, roll: 0.8, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 3.2, retract: true, cam: [64, 13], cock: [1.0, -17.4], wingX: 17.9, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.3, 0.35] },
-    b767: { name: "Boeing 767-200ER", type: "Wide-body airliner · 3D model", packed: true, build: build767model, thrust: 6.6, vmax: 140, stall: 50, roll: 0.68, pitch: 0.45, yaw: 0.22, turn: 0.7, gearH: 4.2, retract: true, cam: [90, 18], cock: [1.2, -21.0], wingX: 23.6, brake: 4.2, shadow: 26, big: true, stats: [0.9, 0.25, 0.3] },
     b77w: { name: "Boeing 777-300ER", type: "Long-haul wide-body · twin GE90", packed: true, build: build77Wmodel, thrust: 7.0, vmax: 146, stall: 54, roll: 0.55, pitch: 0.4, yaw: 0.19, turn: 0.62, gearH: 5.3, retract: true, cam: [128, 24], cock: [2.6, -31.6], wingX: 32.4, brake: 3.9, shadow: 37, big: true, stats: [0.97, 0.2, 0.26] },
     b747: { name: "Boeing 747-400F", type: "Jumbo freighter · four engines", packed: true, freighter: true, cargo: 113, build: build747model, thrust: 6.6, vmax: 148, stall: 55, roll: 0.5, pitch: 0.38, yaw: 0.18, turn: 0.6, gearH: 5.2, retract: true, cam: [132, 27], cock: [3.5, -28.4], wingX: 31.2, brake: 3.8, shadow: 38, big: true, stats: [0.96, 0.18, 0.24] },
     b763: { name: "Boeing 767-300ER", type: "Wide-body airliner · stretched 767", packed: true, build: build763model, thrust: 6.7, vmax: 140, stall: 51, roll: 0.65, pitch: 0.44, yaw: 0.21, turn: 0.68, gearH: 4.2, retract: true, cam: [98, 19], cock: [1.2, -24.3], wingX: 23.6, brake: 4.1, shadow: 28, big: true, stats: [0.92, 0.24, 0.29] },
@@ -2635,7 +2634,7 @@ vec3 liveryAt(vec3 p, out float fus) {
       buildHangar(grp, hx, hz, dd, w, hh, names[k]);
       flat(grp, 44, w + 10, MAT.apron, hx - dd / 2 - 22, 0.04, hz);
       // an aircraft in for maintenance, nose in
-      const kinds = Object.keys(PLANES).filter((kk) => PLANES[kk].packed && DIMS[kk][0] < w - 8 && DIMS[kk][1] < dd + 25 && (kk === "b737" || kk === "mh" || kk === "a321" || kk === "b767" || kk === "a350"));
+      const kinds = Object.keys(PLANES).filter((kk) => PLANES[kk].packed && DIMS[kk][0] < w - 8 && DIMS[kk][1] < dd + 25 && (kk === "b737" || kk === "mh" || kk === "a321" || kk === "b763" || kk === "a350"));
       if (!ga && kinds.length && (k === 0 || (intl && k === 2))) {
         const kk = k === 2 ? kinds.filter((q) => DIMS[q][0] > 40)[0] || kinds[0] : kinds[Math.floor(hash(a.x, k) * kinds.length)], sp = PLANES[kk];
         const mdl = sp.build(livOf(kk, randomLiv(kk))); mdl.rotation.y = -Math.PI / 2; mdl.position.set(hx - dd / 2 + DIMS[kk][1] * 0.42, sp.gearH + 0.05, hz);
@@ -3089,7 +3088,7 @@ vec3 liveryAt(vec3 p, out float fus) {
       desc: "Coral Key has only 1250 m of runway. Fly the final slow and on the glide path, touch down early, then brake hard (Space), with spoilers (X) and reverse thrust (T)." },
     { id: "m5", title: "Night ILS", plane: "a321", from: "EGT", to: "EGT", start: "approach", dist: 15000, time: "night", wx: "cloudy", wind: [10, 30], goals: [],
       desc: "A dark, overcast night into Eastgate. The runway lights are all you'll see, so fly the ILS and keep both diamonds centred. The autopilot's APP mode is allowed." },
-    { id: "m6", title: "Fog at Kingsbridge", plane: "b767", from: "KBI", to: "KBI", start: "approach", dist: 12000, time: "day", wx: "fog", vis: 900, wind: [4, 0], goals: [],
+    { id: "m6", title: "Fog at Kingsbridge", plane: "b763", from: "KBI", to: "KBI", start: "approach", dist: 12000, time: "day", wx: "fog", vis: 900, wind: [4, 0], goals: [],
       desc: "Visibility is under a kilometre. You won't see the runway until the last seconds, so trust the instruments: the ILS diamonds, the 3° path and the radio-altitude callouts." },
     { id: "m7", title: "Engine failure", plane: "b737", from: "SNV", to: "SNV", start: "runway", time: "day", wx: "clear", wind: [6, 0], engFail: 400, goals: [],
       desc: "A normal departure from Sunvale, until the right engine quits at 400 ft. Keep flying: left rudder, wings level, speed up. Then turn back and land on the runway you just left." },
@@ -3105,7 +3104,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   const FEATURED = [
     { t: "Out to sea", f: "WFD", to: "PLC", plane: "mh", time: "day", wx: "clear", tip: "Pelican Isle is a lone island runway west of Westfield: nothing but water under the final approach." },
     { t: "Ridge hop", f: "MLB", to: "GRP", plane: "b737", time: "day", wx: "cloudy", tip: "From the Millbrook plateau up to Granite Peak, 830 m high on a 1500 m runway. Climb straight away." },
-    { t: "Twin-runway hub", f: "HBP", to: "KBI", plane: "b767", time: "sunset", wx: "clear", tip: "Harbor Point to the new Kingsbridge hub on the eastern plain. Land on 09R, the longer of its two parallel runways." },
+    { t: "Twin-runway hub", f: "HBP", to: "KBI", plane: "b763", time: "sunset", wx: "clear", tip: "Harbor Point to the new Kingsbridge hub on the eastern plain. Land on 09R, the longer of its two parallel runways." },
     { t: "Coast to coast", f: "NCP", to: "SNV", plane: "b77w", time: "day", wx: "cloudy", tip: "The longest trip on the map, from the north cape to Sunvale in the far south. A good one for the autopilot's NAV and APP." },
     { t: "Foggy arrival", f: "KBI", to: "HMR", plane: "b737", time: "day", wx: "fog", tip: "Fog closes in on Highmoor. Use the ILS: the runway only shows up in the last kilometre." },
     { t: "Hill country", f: "BYF", to: "HLC", plane: "mh", time: "sunset", wx: "clear", tip: "A short evening hop from Bayford to the hill-top strip at Hillcrest: only 1300 m, so come in slow." },
@@ -4090,7 +4089,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   // Other aircraft fly real circuits: hold at the runway, take off, climb, cruise to another airport, fly a 3° final, land, and go again.
   const AI = [], RADIO = [];
   const TAN3 = Math.tan(3 * Math.PI / 180);
-  const AI_FLEET = [["mh", "OCEANA 301"], ["b77w", "OCEANA 88"], ["b737", "ISLA 214"], ["mh", "ISLANDER 52"], ["b767", "SOUTHWIND 640"], ["b737", "ISLANDER 17"], ["mh", "SKYLARK 42"], ["b77w", "FALCON 7"], ["b737", "PACIFICA 12"],
+  const AI_FLEET = [["mh", "OCEANA 301"], ["b77w", "OCEANA 88"], ["b737", "ISLA 214"], ["mh", "ISLANDER 52"], ["b763", "SOUTHWIND 640"], ["b737", "ISLANDER 17"], ["mh", "SKYLARK 42"], ["b77w", "FALCON 7"], ["b737", "PACIFICA 12"],
     ["mh", "EASTGATE 410"], ["b763", "SUNVALE 9"], ["a321", "NORTHCAPE 77"], ["mh", "ISLANDER 63"], ["b77w", "OCEANA 515"], ["b737", "SKYLARK 18"], ["mh", "FALCON 22"],
     ["b747", "BREEZE 301"], ["a321", "REGIO 190"], ["mh", "REGIO 44"], ["b77w", "SKYLINER 35"], ["b737", "JUMBO 1"], ["mh", "COMMUTER 9"], ["b77w", "BREEZE 88"], ["b737", "SWIFT 6"], ["mh", "ATLAS 4"], ["b77w", "ARROW 1"]];
   const wrapA = (a) => { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; };
