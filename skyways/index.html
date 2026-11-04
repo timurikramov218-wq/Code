@@ -1783,30 +1783,30 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   // Lines are in fuselage radii, measured from the window line (+ up): belly / top / stripe (rises with the belly line) / stripe2 (straight).
   // fin: up to three colours top→bottom; finMode 0 solid, 1 bands, 2 sloped bands. title: name on the forward fuselage.
   const AIRLINE = {
-    dal: { name: "Delta", belly: "#0e1f3f", bellyY: -0.4, rise: 0.25, fin: ["#c8102e", "#7c1630"], finMode: 4, engine: "#0e1f3f", title: ["DELTA", "#0e1f3f", "900", "sans", 0.12] },
-    ual: { name: "United", belly: "#0033a0", bellyY: -0.28, rise: 0.3, stripe: ["#8a9bb0", -0.34, -0.28], fin: ["#0b2d6e"], engine: "#0033a0", title: ["UNITED", "#0b2d6e", "800", "sans", 0.18] },
-    aal: { name: "American", body: "#c6ccd2", wing: "#b8bec4", fin: ["#c30019", "#ffffff", "#0a3a79"], finMode: 2, engine: "#c6ccd2", title: ["American", "#36495a", "700", "sans"] },
-    uae: { name: "Emirates", fin: ["#00843d", "#ffffff", "#111111"], finMode: 3, finLead: "#d71921", title: ["Emirates", "#b5985a", "700", "serif"] },
-    qtr: { name: "Qatar Airways", body: "#eceeef", fin: ["#5c0632"], spine: true, engine: "#d6d9dc", title: ["QATAR AIRWAYS", "#5c0632", "700", "sans", 0.1] },
-    dlh: { name: "Lufthansa", fin: ["#05164d"], engine: "#f4f6f8", title: ["Lufthansa", "#05164d", "700", "serif"] },
-    baw: { name: "British Airways", belly: "#13306b", bellyY: -0.45, rise: 0.2, stripe: ["#c8102e", -0.52, -0.45], fin: ["#c8102e", "#ffffff", "#13306b"], finMode: 2, engine: "#a9b1b9", title: ["BRITISH AIRWAYS", "#13306b", "600", "sans", 0.06] },
-    klm: { name: "KLM", top: "#00a1de", topY: -0.1, stripe2: ["#003082", -0.18, -0.09], fin: ["#00a1de"], engine: "#00a1de", title: ["KLM", "#ffffff", "900", "sans", 0.15] },
-    ryr: { name: "Ryanair", belly: "#073590", bellyY: -0.33, rise: 0.3, stripe: ["#f1c933", -0.4, -0.33], fin: ["#073590"], engine: "#073590", title: ["RYANAIR", "#073590", "900", "sans"] },
-    ezy: { name: "easyJet", fin: ["#ff6600"], nose: "#ff6600", engine: "#ff6600", title: ["easyJet", "#ff6600", "900", "sans"] },
-    thy: { name: "Turkish Airlines", fin: ["#c8102e"], stripe2: ["#c8102e", -0.27, -0.19], engine: "#d9dcdf", title: ["TURKISH AIRLINES", "#c8102e", "700", "sans", 0.05] },
-    afl: { name: "Aeroflot", body: "#eef1f4", stripe2: ["#0b4ea2", -0.29, -0.16], fin: ["#ffffff", "#0039a6", "#d52b1e"], finMode: 1, engine: "#0b4ea2", title: ["AEROFLOT", "#0b4ea2", "800", "sans", 0.12] },
-    s7: { name: "S7 Airlines", body: "#b5d334", wing: "#c9cfd4", fin: ["#8fb31d"], engine: "#8fb31d", title: ["S7 AIRLINES", "#36520f", "900", "sans", 0.08] },
-    afr: { name: "Air France", fin: ["#ffffff", "#002157", "#e51937"], finMode: 6, title: ["AIRFRANCE", "#002157", "800", "sans", 0.1] },
-    vir: { name: "Virgin Atlantic", body: "#eceef0", fin: ["#da0530"], engine: "#da0530", title: ["virgin atlantic", "#da0530", "700", "serif"] },
-    cpa: { name: "Cathay Pacific", fin: ["#006564"], engine: "#e2e5e7", title: ["CATHAY PACIFIC", "#006564", "600", "sans", 0.08] },
-    kal: { name: "Korean Air", top: "#a9d2ee", topY: -0.32, belly: "#c9ced3", bellyY: -0.45, stripe2: ["#1b3f8b", -0.36, -0.32], fin: ["#ffffff"], engine: "#a9d2ee", title: ["KOREAN AIR", "#1b3f8b", "700", "sans", 0.08] },
-    swr: { name: "Swiss", fin: ["#e3000f", "#ffffff"], finMode: 5, title: ["SWISS", "#111111", "900", "sans", 0.12] },
-    wzz: { name: "Wizz Air", fin: ["#c6007e"], engine: "#c6007e", belly: "#3b1c5a", bellyY: -0.55, rise: 0.2, title: ["wizzair", "#c6007e", "900", "sans"] },
-    lhc: { name: "Lufthansa Cargo", fin: ["#05164d"], title: ["Lufthansa Cargo", "#05164d", "700", "serif"] },
-    ups: { name: "UPS", belly: "#4a2c1d", bellyY: -0.2, rise: 0.35, fin: ["#4a2c1d"], title: ["UPS", "#4a2c1d", "900", "sans", 0.2] },
-    abc: { name: "AirBridgeCargo", fin: ["#d0202f", "#ffffff", "#1d3d8f"], finMode: 2, engine: "#1d3d8f", title: ["AirBridgeCargo", "#1d3d8f", "700", "sans"] },
-    atl: { name: "Atlas Air", fin: ["#0e2a5b"], stripe2: ["#c7a34b", -0.3, -0.24], title: ["ATLAS AIR", "#0e2a5b", "800", "sans", 0.12] },
-    sia: { name: "Singapore Airlines", stripe2: ["#f2a900", -0.3, -0.17], fin: ["#0b2a5b"], engine: "#d9dcdf", title: ["SINGAPORE AIRLINES", "#0b2a5b", "600", "serif", 0.04] },
+    dal: { name: "Delta", reg: "N671US", belly: "#0e1f3f", bellyY: -0.4, rise: 0.25, fin: ["#c8102e", "#7c1630"], finMode: 4, engine: "#0e1f3f", title: ["DELTA", "#0e1f3f", "900", "sans", 0.12] },
+    ual: { name: "United", reg: "N2749U", emb: ["globe", "#ffffff", 0.55, 0.5, 0.2], belly: "#0033a0", bellyY: -0.28, rise: 0.3, stripe: ["#8a9bb0", -0.34, -0.28], fin: ["#0b2d6e"], engine: "#0033a0", title: ["UNITED", "#0b2d6e", "800", "sans", 0.18] },
+    aal: { name: "American", reg: "N718AN", body: "#c6ccd2", wing: "#b8bec4", fin: ["#c30019", "#ffffff", "#0a3a79"], finMode: 2, engine: "#c6ccd2", title: ["American", "#36495a", "700", "sans"] },
+    uae: { name: "Emirates", reg: "A6-EGO", fin: ["#00843d", "#ffffff", "#111111"], finMode: 3, finLead: "#d71921", title: ["Emirates", "#b5985a", "700", "serif"] },
+    qtr: { name: "Qatar Airways", reg: "A7-BEB", body: "#eceeef", fin: ["#5c0632"], spine: true, engine: "#d6d9dc", title: ["QATAR AIRWAYS", "#5c0632", "700", "sans", 0.1] },
+    dlh: { name: "Lufthansa", reg: "D-ABYA", emb: ["ring", "#ffffff", 0.55, 0.55, 0.2], fin: ["#05164d"], engine: "#f4f6f8", title: ["Lufthansa", "#05164d", "700", "serif"] },
+    baw: { name: "British Airways", reg: "G-CIVB", belly: "#13306b", bellyY: -0.45, rise: 0.2, stripe: ["#c8102e", -0.52, -0.45], fin: ["#c8102e", "#ffffff", "#13306b"], finMode: 2, engine: "#a9b1b9", title: ["BRITISH AIRWAYS", "#13306b", "600", "sans", 0.06] },
+    klm: { name: "KLM", reg: "PH-BFA", regCol: "#ffffff", emb: ["text", "#ffffff", 0.55, 0.55, 0.12, 0, "KLM"], top: "#00a1de", topY: -0.1, stripe2: ["#003082", -0.18, -0.09], fin: ["#00a1de"], engine: "#00a1de", title: ["KLM", "#ffffff", "900", "sans", 0.15] },
+    ryr: { name: "Ryanair", reg: "EI-DCL", belly: "#073590", bellyY: -0.33, rise: 0.3, stripe: ["#f1c933", -0.4, -0.33], fin: ["#073590"], engine: "#073590", title: ["RYANAIR", "#073590", "900", "sans"] },
+    ezy: { name: "easyJet", reg: "G-EZWA", emb: ["text", "#ffffff", 0.5, 0.42, 0.15, 0, "easyJet"], fin: ["#ff6600"], nose: "#ff6600", engine: "#ff6600", title: ["easyJet", "#ff6600", "900", "sans"] },
+    thy: { name: "Turkish Airlines", reg: "TC-JJA", emb: ["disc", "#ffffff", 0.55, 0.55, 0.17], fin: ["#c8102e"], stripe2: ["#c8102e", -0.27, -0.19], engine: "#d9dcdf", title: ["TURKISH AIRLINES", "#c8102e", "700", "sans", 0.05] },
+    afl: { name: "Aeroflot", reg: "RA-73181", body: "#eef1f4", stripe2: ["#0b4ea2", -0.29, -0.16], fin: ["#ffffff", "#0039a6", "#d52b1e"], finMode: 1, engine: "#0b4ea2", title: ["AEROFLOT", "#0b4ea2", "800", "sans", 0.12] },
+    s7: { name: "S7 Airlines", reg: "VQ-BCM", emb: ["text", "#ffffff", 0.55, 0.5, 0.11, 0, "S7"], body: "#b5d334", wing: "#c9cfd4", fin: ["#8fb31d"], engine: "#8fb31d", title: ["S7 AIRLINES", "#36520f", "900", "sans", 0.08] },
+    afr: { name: "Air France", reg: "F-GSQA", fin: ["#ffffff", "#002157", "#e51937"], finMode: 6, title: ["AIRFRANCE", "#002157", "800", "sans", 0.1] },
+    vir: { name: "Virgin Atlantic", reg: "G-VXLG", body: "#eceef0", fin: ["#da0530"], engine: "#da0530", title: ["virgin atlantic", "#da0530", "700", "serif"] },
+    cpa: { name: "Cathay Pacific", reg: "B-HUJ", fin: ["#006564"], engine: "#e2e5e7", title: ["CATHAY PACIFIC", "#006564", "600", "sans", 0.08] },
+    kal: { name: "Korean Air", reg: "HL7461", emb: ["split", "#c8102e", 0.55, 0.5, 0.17, "#0b3c8c"], top: "#a9d2ee", topY: -0.32, belly: "#c9ced3", bellyY: -0.45, stripe2: ["#1b3f8b", -0.36, -0.32], fin: ["#ffffff"], engine: "#a9d2ee", title: ["KOREAN AIR", "#1b3f8b", "700", "sans", 0.08] },
+    swr: { name: "Swiss", reg: "HB-JNA", fin: ["#e3000f", "#ffffff"], finMode: 5, title: ["SWISS", "#111111", "900", "sans", 0.12] },
+    wzz: { name: "Wizz Air", reg: "HA-LXA", emb: ["text", "#ffffff", 0.55, 0.5, 0.13, 0, "wizz"], fin: ["#c6007e"], engine: "#c6007e", belly: "#3b1c5a", bellyY: -0.55, rise: 0.2, title: ["wizzair", "#c6007e", "900", "sans"] },
+    lhc: { name: "Lufthansa Cargo", reg: "D-ALCA", emb: ["ring", "#ffffff", 0.55, 0.55, 0.2], fin: ["#05164d"], title: ["Lufthansa Cargo", "#05164d", "700", "serif"] },
+    ups: { name: "UPS", reg: "N571UP", emb: ["text", "#f2b100", 0.55, 0.5, 0.11, 0, "UPS"], belly: "#4a2c1d", bellyY: -0.2, rise: 0.35, fin: ["#4a2c1d"], title: ["UPS", "#4a2c1d", "900", "sans", 0.2] },
+    abc: { name: "AirBridgeCargo", reg: "VP-BIG", fin: ["#d0202f", "#ffffff", "#1d3d8f"], finMode: 2, engine: "#1d3d8f", title: ["AirBridgeCargo", "#1d3d8f", "700", "sans"] },
+    atl: { name: "Atlas Air", reg: "N464MC", fin: ["#0e2a5b"], stripe2: ["#c7a34b", -0.3, -0.24], title: ["ATLAS AIR", "#0e2a5b", "800", "sans", 0.12] },
+    sia: { name: "Singapore Airlines", reg: "9V-SPA", emb: ["disc", "#f2a900", 0.6, 0.55, 0.13], stripe2: ["#f2a900", -0.3, -0.17], fin: ["#0b2a5b"], engine: "#d9dcdf", title: ["SINGAPORE AIRLINES", "#0b2a5b", "600", "serif", 0.04] },
   };
   for (const [id, a] of Object.entries(AIRLINE)) LIV[id] = Object.assign({ id, pack: true }, a);
   for (const [id, a] of Object.entries(AIRLINE)) LIV[id] = Object.assign({ id, pack: true }, a);
@@ -2132,12 +2132,21 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const t = new THREE.CanvasTexture(cv); t.anisotropy = 4; t.generateMipmaps = true;
     return (PACK_CACHE[ck] = t);
   }
+  // small lettering textures: the registration and tail lettering (cached per airline)
+  function textTexAlpha(ck, text, col, weight, fam, W = 512, H = 128) {
+    if (PACK_CACHE[ck]) return PACK_CACHE[ck];
+    const cv = document.createElement("canvas"); cv.width = W; cv.height = H; const g = cv.getContext("2d");
+    let px = H * 0.78; const font = () => `${fam === "serif" ? "italic " : ""}${weight} ${px}px ${fam === "serif" ? "Georgia, serif" : "'Helvetica Neue', Arial, sans-serif"}`; g.font = font();
+    while (g.measureText(text).width > W * 0.94 && px > 10) { px -= 2; g.font = font(); }
+    g.fillStyle = col; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(text, W / 2, H * 0.54);
+    const t = new THREE.CanvasTexture(cv); t.anisotropy = 4; return (PACK_CACHE[ck] = t);
+  }
   const LIV_VERT = "varying vec3 vLp;\n";
   const LIV_FRAG = `varying vec3 vLp;
 uniform vec4 uGeo; uniform vec4 uZ; uniform vec4 uLn; uniform vec4 uLn2; uniform vec4 uTb; uniform vec4 uFl;
 uniform vec3 uBody; uniform vec3 uBelly; uniform vec3 uTop; uniform vec3 uStr; uniform vec3 uStr2; uniform vec3 uFin1; uniform vec3 uFin2; uniform vec3 uFin3; uniform vec3 uWing; uniform vec3 uNose; uniform vec3 uLead;
 uniform sampler2D uTitle; uniform float uCabin;
-uniform vec4 uFg0; uniform vec4 uFg1; uniform vec4 uEng; uniform vec4 uEz; uniform vec3 uEngC; uniform vec3 uLip; uniform vec4 uMask; uniform vec4 uEng2; uniform vec4 uEz2; uniform float uPaintWin; uniform vec4 uUp; uniform float uHump;
+uniform vec4 uFg0; uniform vec4 uFg1; uniform vec4 uEng; uniform vec4 uEz; uniform vec3 uEngC; uniform vec3 uLip; uniform vec4 uMask; uniform vec4 uEng2; uniform vec4 uEz2; uniform float uPaintWin; uniform vec4 uUp; uniform float uHump; uniform vec4 uDoor; uniform vec2 uDoorB; uniform vec2 uWinR; uniform vec4 uEmb; uniform vec3 uEmbC; uniform vec3 uEmbC2; uniform sampler2D uFinTex; uniform sampler2D uRegTex; uniform float uHasReg;
 float gMask = 0.0, gGlass = 0.0;   // set when a pixel lies in the A350 mask: then even the model's own dark glass is repainted
 vec3 liveryAt(vec3 p, out float fus) {
   fus = 0.0;
@@ -2146,15 +2155,26 @@ vec3 liveryAt(vec3 p, out float fus) {
   { float vf = (p.y - uFg0.x) / (uFg0.y - uFg0.x), vc = clamp(vf, 0.0, 1.0);
     float le = mix(uFg0.z, uFg1.x, vc), te = mix(uFg0.w, uFg1.y, vc);
     if (abs(p.x) < uFg1.z && vf > -0.03 && p.z > le - 0.25 && p.z < te + 0.4 && p.z > uFg0.z - 0.6) {
-      float uf = clamp((p.z - le) / max(te - le, 0.3), 0.0, 1.0), m = uFl.w;
-      if (m < 0.5) return uFin1;
-      if (m < 1.5) return vc > 0.6667 ? uFin1 : (vc > 0.3333 ? uFin2 : uFin3);
-      if (m < 2.5) { float t = vc + uf * 0.55; return t > 1.0 ? uFin1 : (t > 0.6 ? uFin2 : uFin3); }
-      if (m < 3.5) { if (uf < 0.26) return uLead; return vc > 0.6667 ? uFin1 : (vc > 0.3333 ? uFin2 : uFin3); }
-      if (m < 4.5) return (uf + (1.0 - vc) * 0.9 > 1.15) ? uFin2 : uFin1;
-      if (m < 5.5) { float cu = abs(uf - 0.55), cv = abs(vc - 0.5); return ((cu < 0.07 && cv < 0.2) || (cv < 0.06 && cu < 0.24)) ? uFin2 : uFin1; }   // white cross on red
-      float d = vc * 0.85 - (1.0 - uf) * 0.55;                                                                                   // streamers rising aft
-      return (d > -0.32 && d < -0.22) ? uFin2 : ((d > -0.18 && d < -0.08) ? uFin3 : uFin1);
+      float uf = clamp((p.z - le) / max(te - le, 0.3), 0.0, 1.0), m = uFl.w; vec3 fc;
+      if (m < 0.5) fc = uFin1;
+      else if (m < 1.5) fc = vc > 0.6667 ? uFin1 : (vc > 0.3333 ? uFin2 : uFin3);
+      else if (m < 2.5) { float t = vc + uf * 0.55; fc = t > 1.0 ? uFin1 : (t > 0.6 ? uFin2 : uFin3); }
+      else if (m < 3.5) fc = uf < 0.26 ? uLead : (vc > 0.6667 ? uFin1 : (vc > 0.3333 ? uFin2 : uFin3));
+      else if (m < 4.5) fc = (uf + (1.0 - vc) * 0.9 > 1.15) ? uFin2 : uFin1;
+      else if (m < 5.5) { float cu = abs(uf - 0.55), cv = abs(vc - 0.5); fc = ((cu < 0.07 && cv < 0.2) || (cv < 0.06 && cu < 0.24)) ? uFin2 : uFin1; }   // white cross on red
+      else { float d = vc * 0.85 - (1.0 - uf) * 0.55; fc = (d > -0.32 && d < -0.22) ? uFin2 : ((d > -0.18 && d < -0.08) ? uFin3 : uFin1); }   // streamers rising aft
+      // tail emblem, measured in metres so circles stay round: 1 disc, 2 ring, 3 globe, 4 two-colour disc, 5 lettering
+      if (uEmb.x > 0.5) {
+        float ey = mix(uFg0.x, uFg0.y, uEmb.z), lz = mix(uFg0.z, uFg1.x, uEmb.z), tz = mix(uFg0.w, uFg1.y, uEmb.z), ez = mix(lz, tz, uEmb.y);
+        vec2 pm = vec2(p.z - ez, p.y - ey); float r = uEmb.w * (uFg0.y - uFg0.x), dd = length(pm);
+        if (uEmb.x < 1.5) { if (dd < r) fc = uEmbC; }
+        else if (uEmb.x < 2.5) { if (abs(dd - r * 0.85) < r * 0.13) fc = uEmbC; }
+        else if (uEmb.x < 3.5) { if (abs(dd - r * 0.88) < r * 0.09 || (dd < r * 0.8 && (abs(pm.y) < r * 0.05 || abs(abs(pm.y) - r * 0.45) < r * 0.05 || abs(length(vec2(pm.x * 1.9, pm.y)) - r * 0.82) < r * 0.07))) fc = uEmbC; }
+        else if (uEmb.x < 4.5) { if (dd < r) fc = (pm.y + sin(pm.x / r * 3.14) * r * 0.25 > 0.0) ? uEmbC : uEmbC2; }
+        else { float wdt = min(r * 6.0, (tz - lz) * 0.82), tu = pm.x / wdt + 0.5, tv = pm.y / (wdt / 4.0) + 0.5; if (p.x > 0.0) tu = 1.0 - tu;
+          if (tu > 0.0 && tu < 1.0 && tv > 0.0 && tv < 1.0) { vec4 tx = texture2D(uFinTex, vec2(tu, tv)); fc = mix(fc, pow(clamp(tx.rgb / max(tx.a, 0.02), 0.0, 1.0), vec3(2.2)), clamp(tx.a * 1.5, 0.0, 1.0)); } }
+      }
+      return fc;
     }
   }
   // engine nacelles: painted cowling, bare metal intake lip
@@ -2187,24 +2207,35 @@ vec3 liveryAt(vec3 p, out float fus) {
         if (gl > 0.5) { c = mix(vec3(0.012, 0.016, 0.022), vec3(0.03, 0.038, 0.05), smoothstep(0.3, 0.86, mv)); gGlass = 1.0; }   // glass: a touch bluer, and glossy
       }
     }
-    if (uPaintWin > 0.5 && abs(p.x) > R * 0.55) {
-      // window row (0.53 m pitch), skipped at five doors that are outlined instead; flight-deck windows at the nose
-      float len = uZ.y - uZ.x, wz = p.z - uZ.x;
-      float dmin = 1e3; for (int k = 0; k < 5; k++) { float dz = len * (k == 0 ? 0.1 : k == 1 ? 0.27 : k == 2 ? 0.47 : k == 3 ? 0.68 : 0.84); dmin = min(dmin, abs(wz - dz)); }
-      if (f > 0.12 && f < 0.9) {
-        float cell = fract(wz / 0.53), vv = v / 0.065;
-        if (dmin > 1.0 && abs(vv) < 1.0 && abs(cell - 0.5) < 0.24 * sqrt(1.0 - vv * vv * 0.35)) c = vec3(0.04, 0.05, 0.06);
+    if (uPaintWin > 0.5 && abs(p.x) > R * 0.5) {
+      // real proportions: 0.508 m window pitch (20 in), 0.25 x 0.37 m panes with round corners, 1.07 x 1.93 m doors
+      float len = uZ.y - uZ.x, wz = p.z - uZ.x, wy = p.y - (cy + uZ.z * R);
+      float dmin = 1e3, dz0 = 0.0;
+      for (int k = 0; k < 5; k++) { float dz = len * (k == 0 ? uDoor.x : k == 1 ? uDoor.y : k == 2 ? uDoor.z : k == 3 ? uDoor.w : uDoorB.x); float dd = abs(wz - dz); if (dd < dmin) { dmin = dd; dz0 = wz - dz; } }
+      if (f > uWinR.x && f < uWinR.y && dmin > 0.9) {
+        vec2 q = abs(vec2((fract(wz / 0.508) - 0.5) * 0.508, wy)) - vec2(0.04, 0.1); float rr = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 0.085;
+        if (rr < 0.0) c = mix(vec3(0.03, 0.04, 0.05), vec3(0.08, 0.1, 0.12), smoothstep(-0.18, 0.18, wy)); else if (rr < 0.016) c *= 0.84;
       }
-      if (dmin < 0.6 && dmin > 0.5 && v > -0.5 && v < 0.1) c = c * 0.6;                       // door outline: sides
-      if (dmin < 0.6 && abs(v - 0.1) < 0.012) c = c * 0.6;                                     // door top
-      if (dmin < 0.6 && abs(v + 0.5) < 0.012) c = c * 0.6;                                     // door sill
+      { vec2 q = abs(vec2(dz0, wy + 0.6)) - vec2(0.39, 0.82); float rr = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 0.15;
+        if (abs(rr) < 0.02) c *= 0.6;                                                          // door outline
+        if (dmin < 0.2 && abs(wy - 0.05) < 0.11 && abs(dz0) < 0.12) c = vec3(0.04, 0.05, 0.06); } // small door window
       float bot = 0.05 + (0.06 - f) * 2.2;
       if (uUp.w < 0.5 && f > 0.018 && f < 0.062 && v > bot && v < bot + 0.15 && abs(fract(f / 0.011) - 0.5) < 0.4) c = vec3(0.02, 0.024, 0.03);
     }
-    if (uUp.w > 0.5 && p.z > uUp.x && p.z < uUp.y && abs(p.y - uUp.z) < 0.19 && abs(p.x) > 0.8) {   // 747 upper-deck windows
-      float cell = fract((p.z - uUp.x) / 0.53); if (abs(cell - 0.5) < 0.22) c = vec3(0.04, 0.05, 0.06);
+    if (uUp.w > 0.5 && abs(p.x) > 0.8) {   // 747 upper deck: 20 windows a frame pair apart, and the upper-deck door
+      float uz = p.z - uUp.x, uy = p.y - uUp.z;
+      if (uz > 0.0 && uz < uUp.y) {
+        float cellI = floor(uz / 1.016), lx = (fract(uz / 1.016) - 0.5) * 1.016;
+        if (abs(cellI - uDoorB.y) > 0.5) { vec2 q = abs(vec2(lx, uy)) - vec2(0.04, 0.1); float rr = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 0.085; if (rr < 0.0) c = vec3(0.04, 0.05, 0.06); else if (rr < 0.016) c *= 0.84; }
+        else { vec2 q = abs(vec2(lx, uy + 0.55)) - vec2(0.3, 0.72); float rr = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 0.12; if (abs(rr) < 0.02) c *= 0.6; }
+      }
     }
     if (uFg1.w > 0.5) { float va = (p.y - cy) / R, z0 = uFg0.z - (uZ.y - uZ.x) * 0.14; if (va > 0.3 && p.z > z0 + (1.0 - va) * (uZ.y - uZ.x) * 0.12) c = uFin1; }
+    if (uHasReg > 0.5 && abs(p.x) > R * 0.4) {   // registration on the rear fuselage, 0.5 m letters
+      float len = uZ.y - uZ.x, rz = uZ.x + len * 0.84, wy = p.y - (cy + uZ.z * R) - 0.85, tu = (p.z - rz) / 5.6 + 0.5, tv = wy / 0.7 + 0.5;
+      if (p.x > 0.0) tu = 1.0 - tu;
+      if (tu > 0.0 && tu < 1.0 && tv > 0.0 && tv < 1.0) { vec4 tx = texture2D(uRegTex, vec2(tu, tv)); c = mix(c, pow(clamp(tx.rgb / max(tx.a, 0.02), 0.0, 1.0), vec3(2.2)), clamp(tx.a * 1.4, 0.0, 1.0)); }
+    }
     if (uFl.x > 0.5 && abs(p.x) > R * 0.4) {
       float tu = (p.z - uTb.x) / (uTb.y - uTb.x); if (p.x > 0.0) tu = 1.0 - tu;
       float tv = (v - uTb.z) / (uTb.w - uTb.z);
@@ -2240,10 +2271,15 @@ vec3 liveryAt(vec3 p, out float fus) {
       uBody: V3(L.body || white), uBelly: V3(L.belly || white), uTop: V3(L.top || white), uStr: V3(L.stripe ? L.stripe[0] : white), uStr2: V3(L.stripe2 ? L.stripe2[0] : white),
       uFin1: V3(fin[0]), uFin2: V3(fin[1] || fin[0]), uFin3: V3(fin[2] || fin[1] || fin[0]), uWing: V3(L.wing || "#d9dde1"), uNose: V3(L.nose || white), uLead: V3(L.finLead || white),
       uTitle: { value: L.title ? titleTex(L) : BLANK_TEX }, uCabin: cabin || { value: 0 },
+      uEmb: { value: L.emb ? new THREE.Vector4({ disc: 1, ring: 2, globe: 3, split: 4, text: 5 }[L.emb[0]], L.emb[2], L.emb[3], L.emb[4]) : new THREE.Vector4(0, 0, 0, 0) },
+      uEmbC: V3(L.emb ? L.emb[1] : white), uEmbC2: V3(L.emb && L.emb[5] ? L.emb[5] : white),
+      uFinTex: { value: L.emb && L.emb[0] === "text" ? textTexAlpha(`fin:${L.id}`, L.emb[6], L.emb[1], L.emb[7] || "900", L.emb[8] || "sans") : BLANK_TEX },
+      uRegTex: { value: L.reg ? textTexAlpha(`reg:${L.id}`, L.reg, L.regCol || "#2a2f36", "700", "sans", 512, 64) : BLANK_TEX }, uHasReg: { value: L.reg ? 1 : 0 },
       uFg0: { value: new THREE.Vector4(o.fin[0], o.fin[1], o.fin[2], o.fin[3]) }, uFg1: { value: new THREE.Vector4(o.fin[4], o.fin[5], 0.35 * o.R, L.spine ? 1 : 0) },
       uEng: { value: new THREE.Vector4(o.eng[0], o.eng[1], o.eng[2], 1) }, uEz: { value: new THREE.Vector4(o.eng[3], o.eng[4], 0, 0) },
       uEng2: { value: o.eng2 ? new THREE.Vector4(o.eng2[0], o.eng2[1], o.eng2[2], 1) : new THREE.Vector4(0, 0, 0, 0) }, uEz2: { value: new THREE.Vector4(o.eng2 ? o.eng2[3] : 0, o.eng2 ? o.eng2[4] : 0, 0, 0) },
-      uEngC: V3(L.engine || "#eef0f2"), uLip: V3("#c3c7cc"), uPaintWin: { value: o.paintWindows ? 1 : 0 }, uUp: { value: new THREE.Vector4(...(o.upper || [0, 0, 0, 0])) }, uHump: { value: o.hump || 0 }, uMask: { value: o.mask ? new THREE.Vector4(o.mask[0], o.mask[1], o.mask[2], o.mask[3]) : new THREE.Vector4(0, 0, 0, 0) },
+      uEngC: V3(L.engine || "#eef0f2"), uLip: V3("#c3c7cc"), uPaintWin: { value: o.paintWindows ? 1 : 0 }, uUp: { value: new THREE.Vector4(...(o.upper || [0, 0, 0, 0])) }, uHump: { value: o.hump || 0 },
+      uDoor: { value: new THREE.Vector4(...(o.doors || [0.13, 0.27, 0.47, 0.69, 0.855]).slice(0, 4)) }, uDoorB: { value: new THREE.Vector2((o.doors || [0, 0, 0, 0, 0.855])[4], o.upDoor ?? -9) }, uWinR: { value: new THREE.Vector2(...(o.winRange || [0.115, 0.9])) }, uMask: { value: o.mask ? new THREE.Vector4(o.mask[0], o.mask[1], o.mask[2], o.mask[3]) : new THREE.Vector4(0, 0, 0, 0) },
     };
     const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, metalness: Math.min(pt.m, 0.3), roughness: clamp(pt.r, 0.3, 0.55), side: THREE.DoubleSide, envMapIntensity: 0.9 });
     mat.userData.u = u; mat.onBeforeCompile = liveryCompile;
@@ -2561,7 +2597,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   function buildA321model(liv) { return buildPacked("a321", packOpts("a321"), liv); }
   function build739model(liv) { return buildPacked("mh", packOpts("mh"), liv); }
   function build747model(liv) { return buildPacked("b747", packOpts("b747"), liv); }
-  function build744model(liv) { return buildPacked("b744", packOpts("b744", { win: 0.24, paintWindows: true, upper: [-27.6, -8.5, 4.05, 1], hump: 1.4 }), liv); }
+  function build744model(liv) { return buildPacked("b744", packOpts("b744", { win: 0.24, paintWindows: true, upper: [-26.6, 21.3, 3.85, 1], upDoor: 16, hump: 1.4, doors: [0.14, 0.283, 0.453, 0.642, 0.793], winRange: [0.115, 0.84] }), liv); }
   function buildA350model(liv) {
     const d = DERIVED.a350, a = derivePoint(d, ...d.mask[0]), b = derivePoint(d, ...d.mask[1]);
     return buildPacked("a350", packOpts("a350", { gearH: 5.0, wheelR: 0.64, mask: [a[2], b[2], a[1], b[1]], zNose: derivePoint(d, 0, 0.2, -24.3)[2], noseZ: derivePoint(d, 0, -1, -18.3)[2], eng: [deriveX(d, 7.97), -2.37 * 1.2, 1.45 * 1.14 * 1.2, -8.8 * 1.2, -4.6 * 1.2] }), liv);
