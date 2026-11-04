@@ -873,9 +873,30 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     float det = (a - 0.5) * 0.55 + (b - 0.5) * 0.75 + (c - 0.5) * 0.9;
     diffuseColor.rgb *= max(0.0, 1.0 + det * uDk.x);
     float g = diffuseColor.g - max(diffuseColor.r, diffuseColor.b);        // only green ground gets the dry/lush tint
-    if (uTint > 0.0 && g > 0.0) diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.25, 1.06, 0.72), smoothstep(0.45, 0.85, c) * uTint * clamp(g * 12.0, 0.0, 1.0)); }`);
+    if (uTint > 0.0 && g > 0.0) diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.25, 1.06, 0.72), smoothstep(0.45, 0.85, c) * uTint * clamp(g * 12.0, 0.0, 1.0));
+    if (uTint > 0.0 && g > 0.0) {
+      // farmland: on flat lowland, a patchwork of crop fields with rows and hedgerows, the grid turning from region to region
+      vec3 nrm = normalize(cross(dFdx(vWp), dFdy(vWp)));
+      float flt = smoothstep(0.985, 0.996, abs(nrm.y)), low = smoothstep(4.0, 12.0, vWp.y) * (1.0 - smoothstep(120.0, 190.0, vWp.y));
+      float zone = smoothstep(0.42, 0.52, texture2D(uDetail, w / 3100.0).g);
+      float fm = flt * low * zone * clamp(g * 14.0, 0.0, 1.0);
+      if (fm > 0.01) {
+        float ang = texture2D(uDetail, w / 9000.0).r * 6.283; vec2 rw = mat2(cos(ang), -sin(ang), sin(ang), cos(ang)) * w;
+        vec2 cellSz = vec2(210.0, 140.0), id = floor(rw / cellSz), fr = fract(rw / cellSz);
+        float hsh = fract(sin(dot(id, vec2(12.9898, 78.233))) * 43758.5453), hsh2 = fract(hsh * 7.31 + 0.17);
+        vec3 crop = hsh < 0.25 ? vec3(0.42, 0.37, 0.15) : hsh < 0.45 ? vec3(0.2, 0.13, 0.07) : hsh < 0.7 ? vec3(0.16, 0.26, 0.07) : hsh < 0.85 ? vec3(0.3, 0.32, 0.12) : vec3(0.11, 0.2, 0.06);
+        crop *= 0.85 + 0.3 * hsh2;
+        float rowsA = 0.92 + 0.08 * sin((hsh2 > 0.5 ? rw.x : rw.y) * 1.05);
+        float edge = min(min(fr.x, 1.0 - fr.x) * cellSz.x, min(fr.y, 1.0 - fr.y) * cellSz.y);
+        vec3 fc = crop * rowsA * (0.85 + 0.3 * a);
+        fc = mix(vec3(0.05, 0.1, 0.03), fc, smoothstep(2.0, 6.0, edge));                 // hedgerows between fields
+        diffuseColor.rgb = mix(diffuseColor.rgb, fc, fm * 0.85);
+      }
+    }
+  }`);
   }
   const terrainMat = addDetail(new THREE.MeshLambertMaterial({ vertexColors: true }), 0.6, 7, 53, 410, 0.55);
+  terrainMat.extensions = { derivatives: true };   // dFdx/dFdy find flat ground for the fields (WebGL 1 needs the extension)
   function terrainGeo(x0, z0, size, seg, skirt) {
     const N = seg + 1, st = size / seg, W2 = N + 2, H = new Float32Array(W2 * W2);
     for (let j = -1; j <= N; j++) for (let i = -1; i <= N; i++) H[(j + 1) * W2 + i + 1] = heightAt(x0 + i * st, z0 + j * st);
@@ -1663,16 +1684,16 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   const randomLiv = (kind) => { const l = LIVERIES[kind]; return l && Math.random() < 0.85 ? l[Math.floor(Math.random() * l.length)] : "house"; };
   let chosenLiv = {}; try { chosenLiv = JSON.parse(load("sw-liv") || "{}") || {}; } catch { chosenLiv = {}; }
   const PLANES = {
-    b737: { name: "Airbus A320", type: "Narrow-body airliner · detailed 3D model", packed: true, build: build737model, thrust: 7.0, vmax: 128, stall: 46, roll: 0.8, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 3.2, retract: true, cam: [64, 13], cock: [1.0, -20.4], wingX: 17.9, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.3, 0.35] },
-    b767: { name: "Boeing 767-200ER", type: "Wide-body airliner · 3D model", packed: true, build: build767model, thrust: 6.6, vmax: 140, stall: 50, roll: 0.68, pitch: 0.45, yaw: 0.22, turn: 0.7, gearH: 4.2, retract: true, cam: [90, 18], cock: [1.2, -24.85], wingX: 23.6, brake: 4.2, shadow: 26, big: true, stats: [0.9, 0.25, 0.3] },
-    b777: { name: "Boeing 777-200ER", type: "Long-haul wide-body · 3D model", packed: true, build: build777model, thrust: 6.9, vmax: 145, stall: 52, roll: 0.6, pitch: 0.42, yaw: 0.2, turn: 0.65, gearH: 5.3, retract: true, cam: [112, 22], cock: [1.55, -33.2], wingX: 30.2, brake: 4.0, shadow: 33, big: true, stats: [0.95, 0.22, 0.28] },
-    b77w: { name: "Boeing 777-300ER", type: "Long-haul wide-body · stretched 777", packed: true, build: build77Wmodel, thrust: 7.0, vmax: 146, stall: 54, roll: 0.55, pitch: 0.4, yaw: 0.19, turn: 0.62, gearH: 5.3, retract: true, cam: [128, 24], cock: [1.55, -38.2], wingX: 31.9, brake: 3.9, shadow: 37, big: true, stats: [0.97, 0.2, 0.26] },
-    b773: { name: "Boeing 777-300", type: "Wide-body airliner · 73.9 m, 60.9 m span", packed: true, build: build773model, thrust: 6.8, vmax: 145, stall: 54, roll: 0.56, pitch: 0.4, yaw: 0.19, turn: 0.62, gearH: 5.3, retract: true, cam: [126, 24], cock: [1.55, -38.2], wingX: 30.2, brake: 3.9, shadow: 36, big: true, stats: [0.95, 0.2, 0.26] },
-    a350: { name: "Airbus A350-900", type: "Long-haul wide-body · curled wingtips", packed: true, build: buildA350model, thrust: 7.0, vmax: 147, stall: 51, roll: 0.6, pitch: 0.42, yaw: 0.2, turn: 0.65, gearH: 5.0, retract: true, cam: [118, 22], cock: [1.45, -34.0], wingX: 32.3, brake: 4.0, shadow: 34, big: true, stats: [0.96, 0.22, 0.28] },
-    b763: { name: "Boeing 767-300ER", type: "Wide-body airliner · stretched 767", packed: true, build: build763model, thrust: 6.7, vmax: 140, stall: 51, roll: 0.65, pitch: 0.44, yaw: 0.21, turn: 0.68, gearH: 4.2, retract: true, cam: [98, 19], cock: [1.2, -28.2], wingX: 23.6, brake: 4.1, shadow: 28, big: true, stats: [0.92, 0.24, 0.29] },
-    a321: { name: "Airbus A321", type: "Narrow-body airliner · stretched A320", packed: true, build: buildA321model, thrust: 7.1, vmax: 128, stall: 48, roll: 0.75, pitch: 0.48, yaw: 0.24, turn: 0.72, gearH: 3.2, retract: true, cam: [72, 14], cock: [1.0, -23.8], wingX: 17.9, brake: 4.4, shadow: 19, big: true, stats: [0.84, 0.28, 0.33] },
-    b739: { name: "Boeing 737-900ER", type: "Narrow-body airliner · stretched 737", packed: true, build: build739model, thrust: 7.1, vmax: 130, stall: 48, roll: 0.75, pitch: 0.48, yaw: 0.24, turn: 0.72, gearH: 3.0, retract: true, cam: [70, 14], cock: [1.0, -21.8], wingX: 18.9, brake: 4.4, shadow: 19, big: true, stats: [0.84, 0.28, 0.33] },
-    mh: { name: "Boeing 737", type: "Narrow-body airliner · low-poly 3D model", packed: true, build: buildMHmodel, thrust: 7.0, vmax: 130, stall: 46, roll: 0.82, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 3.0, retract: true, cam: [60, 13], cock: [1.0, -18.3], wingX: 18.9, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.32, 0.38] },
+    b737: { name: "Airbus A320", type: "Narrow-body airliner · detailed 3D model", packed: true, build: build737model, thrust: 7.0, vmax: 128, stall: 46, roll: 0.8, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 3.2, retract: true, cam: [64, 13], cock: [1.0, -17.4], wingX: 17.9, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.3, 0.35] },
+    b767: { name: "Boeing 767-200ER", type: "Wide-body airliner · 3D model", packed: true, build: build767model, thrust: 6.6, vmax: 140, stall: 50, roll: 0.68, pitch: 0.45, yaw: 0.22, turn: 0.7, gearH: 4.2, retract: true, cam: [90, 18], cock: [1.2, -21.0], wingX: 23.6, brake: 4.2, shadow: 26, big: true, stats: [0.9, 0.25, 0.3] },
+    b777: { name: "Boeing 777-200ER", type: "Long-haul wide-body · 3D model", packed: true, build: build777model, thrust: 6.9, vmax: 145, stall: 52, roll: 0.6, pitch: 0.42, yaw: 0.2, turn: 0.65, gearH: 5.3, retract: true, cam: [112, 22], cock: [1.55, -28.3], wingX: 30.2, brake: 4.0, shadow: 33, big: true, stats: [0.95, 0.22, 0.28] },
+    b77w: { name: "Boeing 777-300ER", type: "Long-haul wide-body · stretched 777", packed: true, build: build77Wmodel, thrust: 7.0, vmax: 146, stall: 54, roll: 0.55, pitch: 0.4, yaw: 0.19, turn: 0.62, gearH: 5.3, retract: true, cam: [128, 24], cock: [1.55, -33.3], wingX: 31.9, brake: 3.9, shadow: 37, big: true, stats: [0.97, 0.2, 0.26] },
+    b773: { name: "Boeing 777-300", type: "Wide-body airliner · 73.9 m, 60.9 m span", packed: true, build: build773model, thrust: 6.8, vmax: 145, stall: 54, roll: 0.56, pitch: 0.4, yaw: 0.19, turn: 0.62, gearH: 5.3, retract: true, cam: [126, 24], cock: [1.55, -33.3], wingX: 30.2, brake: 3.9, shadow: 36, big: true, stats: [0.95, 0.2, 0.26] },
+    a350: { name: "Airbus A350-900", type: "Long-haul wide-body · curled wingtips", packed: true, build: buildA350model, thrust: 7.0, vmax: 147, stall: 51, roll: 0.6, pitch: 0.42, yaw: 0.2, turn: 0.65, gearH: 5.0, retract: true, cam: [118, 22], cock: [1.3, -30.6], wingX: 32.3, brake: 4.0, shadow: 34, big: true, stats: [0.96, 0.22, 0.28] },
+    b763: { name: "Boeing 767-300ER", type: "Wide-body airliner · stretched 767", packed: true, build: build763model, thrust: 6.7, vmax: 140, stall: 51, roll: 0.65, pitch: 0.44, yaw: 0.21, turn: 0.68, gearH: 4.2, retract: true, cam: [98, 19], cock: [1.2, -24.3], wingX: 23.6, brake: 4.1, shadow: 28, big: true, stats: [0.92, 0.24, 0.29] },
+    a321: { name: "Airbus A321", type: "Narrow-body airliner · stretched A320", packed: true, build: buildA321model, thrust: 7.1, vmax: 128, stall: 48, roll: 0.75, pitch: 0.48, yaw: 0.24, turn: 0.72, gearH: 3.2, retract: true, cam: [72, 14], cock: [1.0, -20.8], wingX: 17.9, brake: 4.4, shadow: 19, big: true, stats: [0.84, 0.28, 0.33] },
+    b739: { name: "Boeing 737-900ER", type: "Narrow-body airliner · stretched 737", packed: true, build: build739model, thrust: 7.1, vmax: 130, stall: 48, roll: 0.75, pitch: 0.48, yaw: 0.24, turn: 0.72, gearH: 3.0, retract: true, cam: [70, 14], cock: [1.0, -19.1], wingX: 18.9, brake: 4.4, shadow: 19, big: true, stats: [0.84, 0.28, 0.33] },
+    mh: { name: "Boeing 737", type: "Narrow-body airliner · low-poly 3D model", packed: true, build: buildMHmodel, thrust: 7.0, vmax: 130, stall: 46, roll: 0.82, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 3.0, retract: true, cam: [60, 13], cock: [1.0, -15.6], wingX: 18.9, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.32, 0.38] },
   };
   for (const k of Object.keys(PLANES)) PLANES[k].kind = k;
   (function realScale() {
@@ -1810,7 +1831,10 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     b77w: { from: "b767", s: 1.28, fx: 3.4, plugs: [[-12.25, 9 * 0.557], [4.85, 7 * 0.557]], span: [3.4, 1.064] },
     b773: { from: "b767", s: 1.28, fx: 3.4, plugs: [[-12.25, 9 * 0.557], [4.85, 7 * 0.557]] },
     // A350-900: 66.8 m long, 64.8 m span, wingtips curling up
-    a350: { from: "b767", s: 1.2, fx: 3.4, plugs: [[-12.25, 7 * 0.557], [4.85, 6 * 0.557]], span: [3.4, 1.156], curl: [21.2, 23.6, 1.5] },
+    // A350-900: 66.8 m long, 64.8 m span; longer, pointed nose; bigger engines; wingtips curling up
+    a350: { from: "b767", s: 1.2, fx: 3.4, plugs: [[-12.25, 7 * 0.557], [4.85, 6 * 0.557]], span: [3.4, 1.156], curl: [21.2, 23.6, 1.5],
+      nose: { z: -24.3, len: 6.5, cy: 0.2, k: 0.74, ext: 1.7 }, engine: { x: 7.97, y: -2.37, r: 1.5, z0: -9.2, z1: -1.2, k: 1.14 },
+      mask: [[-1.5, 0.45, -23.6], [1.5, 1.7, -20.4]] },
     b763: { from: "b767", s: 1, fx: 3.4, plugs: [[-12.25, 6 * 0.557], [4.85, 6 * 0.557]] },
     a321: { from: "b737", s: 1, fx: 2.7, plugs: [[-9.7, 7 * 0.4855], [1.49, 7 * 0.4855]] },
     b739: { from: "mh", s: 1, fx: 2.6, plugs: [[-9.67, 6 * 0.58], [1.67, 7 * 0.58]] },
@@ -1822,6 +1846,23 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     return o * d.s;
   }
   function deriveCurl(d, x) { if (!d.curl) return 0; const t = (Math.abs(x) - d.curl[0]) / (d.curl[1] - d.curl[0]); return t > 0 ? t * t * d.curl[2] : 0; }
+  // reshapes a source point before the stretch: a longer, more pointed nose and larger engines (A350)
+  function deriveShape(d, x, y, z) {
+    if (d.nose && z < d.nose.z + d.nose.len) {
+      const n = d.nose, t = clamp((z - n.z) / n.len, 0, 1), sm = t * t * (3 - 2 * t), k = n.k + (1 - n.k) * sm;
+      x *= k; y = n.cy + (y - n.cy) * k; z -= Math.pow(1 - t, 1.5) * n.ext;
+    }
+    if (d.engine) {
+      const e = d.engine, a = Math.abs(x), dx = a - e.x, dy = y - e.y;
+      if (dx * dx + dy * dy < e.r * e.r && z > e.z0 && z < e.z1) { x = Math.sign(x) * (e.x + dx * e.k); y = e.y + dy * e.k; }
+    }
+    return [x, y, z];
+  }
+  // the whole source → derived mapping of one point
+  function derivePoint(d, x0, y0, z0) {
+    const [x, y, z] = deriveShape(d, x0, y0, z0), f = Math.abs(x0) < d.fx;
+    return [deriveX(d, x), (y + deriveCurl(d, x)) * d.s, deriveZ(d, z, f)];
+  }
   function deriveX(d, x) { let a = Math.abs(x); if (d.span && a > d.span[0]) a = d.span[0] + (a - d.span[0]) * d.span[1]; return Math.sign(x) * a * d.s; }
   function derivePart(d, pt) {
     const src = pt.g, P0 = src.attributes.position.array, N0 = src.attributes.normal.array, I0 = src.index.array, C0 = src.attributes.color ? src.attributes.color.array : null;
@@ -1847,8 +1888,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const nb = n0 + extra.length * 3;
     const n = nb + bridge.length * 3, P = new Float32Array(n * 3), N = new Float32Array(n * 3), C = C0 ? new Float32Array(n * 3) : null, VC = pt.vc ? new Float32Array(n * 3) : null;
     const put = (dst, v, back, cy) => {
-      const x = P0[v * 3], y = P0[v * 3 + 1], z = P0[v * 3 + 2], f = Math.abs(x) < d.fx;
-      let zz = deriveZ(d, z, f) + back * d.s, xx = deriveX(d, x), yy = (y + deriveCurl(d, x)) * d.s;
+      let [xx, yy, zz] = derivePoint(d, P0[v * 3], P0[v * 3 + 1], P0[v * 3 + 2]); zz += back * d.s;
       if (back) { const rx = xx, ry = yy - cy * d.s, rl = Math.hypot(rx, ry) || 1; xx += rx / rl * 0.012; yy += ry / rl * 0.012; }   // copies sit a hair above the skin
       P[dst * 3] = xx; P[dst * 3 + 1] = yy; P[dst * 3 + 2] = zz;
       for (let j = 0; j < 3; j++) { N[dst * 3 + j] = N0[v * 3 + j]; if (C) C[dst * 3 + j] = C0[v * 3 + j]; if (VC) VC[dst * 3 + j] = pt.vc[v * 3 + j]; }
@@ -1929,7 +1969,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
 uniform vec4 uGeo; uniform vec4 uZ; uniform vec4 uLn; uniform vec4 uLn2; uniform vec4 uTb; uniform vec4 uFl;
 uniform vec3 uBody; uniform vec3 uBelly; uniform vec3 uTop; uniform vec3 uStr; uniform vec3 uStr2; uniform vec3 uFin1; uniform vec3 uFin2; uniform vec3 uFin3; uniform vec3 uWing; uniform vec3 uNose; uniform vec3 uLead;
 uniform sampler2D uTitle; uniform float uCabin;
-uniform vec4 uFg0; uniform vec4 uFg1; uniform vec4 uEng; uniform vec4 uEz; uniform vec3 uEngC; uniform vec3 uLip; uniform float uMask;
+uniform vec4 uFg0; uniform vec4 uFg1; uniform vec4 uEng; uniform vec4 uEz; uniform vec3 uEngC; uniform vec3 uLip; uniform vec4 uMask;
 vec3 liveryAt(vec3 p, out float fus) {
   fus = 0.0;
   float cy = uGeo.x, R = uGeo.y, finY = uGeo.z, finTop = uGeo.w;
@@ -1962,7 +2002,10 @@ vec3 liveryAt(vec3 p, out float fus) {
     if (f > 0.05 && v > uLn.z + rise && v < uLn.w + rise) c = uStr;
     if (f > 0.05 && f < 0.97 && v > uLn2.x && v < uLn2.y) c = uStr2;
     if (uFl.y > 0.5 && f < 0.05 - v * 0.03) c = uNose;
-    if (uMask > 0.5) { float mf = (f - 0.046) / 0.026, mv = (v - 0.2) / 0.24; if (mf * mf + mv * mv < 1.0 && abs(p.x) > R * 0.05) c = vec3(0.012, 0.013, 0.015); }   // A350 "mask" round the cockpit windows
+    if (uMask.y > uMask.x) {   // A350 "mask": a black band round the cockpit windows that narrows to a point aft
+      float mt = (p.z - uMask.x) / (uMask.y - uMask.x), top = uMask.w - (uMask.w - uMask.z) * 0.45 * mt * mt, bot = uMask.z + (uMask.w - uMask.z) * 0.3 * mt;
+      if (mt > 0.0 && mt < 1.0 && p.y > bot && p.y < top) c = vec3(0.012, 0.013, 0.015);
+    }
     if (uFg1.w > 0.5) { float va = (p.y - cy) / R, z0 = uFg0.z - (uZ.y - uZ.x) * 0.14; if (va > 0.3 && p.z > z0 + (1.0 - va) * (uZ.y - uZ.x) * 0.12) c = uFin1; }
     if (uFl.x > 0.5 && abs(p.x) > R * 0.4) {
       float tu = (p.z - uTb.x) / (uTb.y - uTb.x); if (p.x > 0.0) tu = 1.0 - tu;
@@ -1999,7 +2042,7 @@ vec3 liveryAt(vec3 p, out float fus) {
       uTitle: { value: L.title ? titleTex(L) : BLANK_TEX }, uCabin: cabin || { value: 0 },
       uFg0: { value: new THREE.Vector4(o.fin[0], o.fin[1], o.fin[2], o.fin[3]) }, uFg1: { value: new THREE.Vector4(o.fin[4], o.fin[5], 0.35 * o.R, L.spine ? 1 : 0) },
       uEng: { value: new THREE.Vector4(o.eng[0], o.eng[1], o.eng[2], 1) }, uEz: { value: new THREE.Vector4(o.eng[3], o.eng[4], 0, 0) },
-      uEngC: V3(L.engine || "#eef0f2"), uLip: V3("#c3c7cc"), uMask: { value: o.mask ? 1 : 0 },
+      uEngC: V3(L.engine || "#eef0f2"), uLip: V3("#c3c7cc"), uMask: { value: o.mask ? new THREE.Vector4(o.mask[0], o.mask[1], o.mask[2], o.mask[3]) : new THREE.Vector4(0, 0, 0, 0) },
     };
     const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, metalness: Math.min(pt.m, 0.3), roughness: clamp(pt.r, 0.3, 0.55), side: THREE.DoubleSide, envMapIntensity: 0.9 });
     mat.userData.u = u; mat.onBeforeCompile = liveryCompile;
@@ -2093,7 +2136,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   function buildCockpit(eye, airbus) {
     const g = new THREE.Group(), E = eye;
     const mat = (c, e = 0.18) => new THREE.MeshLambertMaterial({ color: c, emissive: c, emissiveIntensity: e, side: THREE.DoubleSide });
-    const shellM = mat(0x30343a, 0.1), darkM = mat(0x202326, 0.08), panelGrey = mat(0x2c3035, 0.1), seatM = mat(0x24262a, 0.08), metalM = mat(0x8d939a, 0.15);
+    const shellM = mat(0x24272c, 0.08), darkM = mat(0x202326, 0.08), panelGrey = mat(0x2c3035, 0.1), seatM = mat(0x24262a, 0.08), metalM = mat(0x8d939a, 0.15);
     const B = (w, h, d, m, x, y, z, rx = 0, ry = 0, rz = 0) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.rotation.set(rx, ry, rz); g.add(b); return b; };
     const ex = E.x, ey = E.y, ez = E.z, cx = 0;                      // centreline
     const floorY = ey - 1.15, sill = ey - 0.2, roofY = ey + 0.42, front = ez - 1.3;
@@ -2307,7 +2350,10 @@ vec3 liveryAt(vec3 p, out float fus) {
   function buildA321model(liv) { return buildPacked("a321", packOpts("a321"), liv); }
   function build739model(liv) { return buildPacked("b739", packOpts("b739"), liv); }
   function build773model(liv) { return buildPacked("b773", packOpts("b773", { gearH: 5.3, wheelR: 0.68, six: true }), liv); }
-  function buildA350model(liv) { return buildPacked("a350", packOpts("a350", { gearH: 5.0, wheelR: 0.64, mask: true }), liv); }
+  function buildA350model(liv) {
+    const d = DERIVED.a350, a = derivePoint(d, ...d.mask[0]), b = derivePoint(d, ...d.mask[1]);
+    return buildPacked("a350", packOpts("a350", { gearH: 5.0, wheelR: 0.64, mask: [a[2], b[2], a[1], b[1]], zNose: derivePoint(d, 0, 0.2, -24.3)[2], noseZ: derivePoint(d, 0, -1, -18.3)[2], eng: [deriveX(d, 7.97), -2.37 * 1.2, 1.45 * 1.14 * 1.2, -8.8 * 1.2, -4.6 * 1.2] }), liv);
+  }
   function buildPlane(kind, livId) {
     const sp = PLANES[kind];
     if (sp.glb) return GLB[kind] && GLB[kind].status === "ready" ? GLB[kind].make() : null;
