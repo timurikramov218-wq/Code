@@ -409,7 +409,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
   <header class="masthead">
     <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="currentColor"/></svg></span>
       <h1>Skyways <span>Flight Sim</span></h1></div>
-    <p class="tagline">6 aircraft · 17 airports · 10 missions · replays · 32 km world · day, sunset and night</p>
+    <p class="tagline">7 aircraft · 17 airports · 10 missions · replays · 32 km world · day, sunset and night</p>
   </header>
 
   <div class="stage" id="stage">
@@ -480,7 +480,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
         <dt><kbd>R</kbd><kbd>F</kbd> or <kbd>Shift</kbd><kbd>Z</kbd></dt><dd>Throttle up / down</dd>
         <dt><kbd>Space</kbd></dt><dd>Wheel brakes</dd>
         <dt><kbd>V</kbd> · <kbd>G</kbd></dt><dd>Flaps (0, 1, 2) · landing gear</dd>
-        <dt><kbd>1</kbd>–<kbd>8</kbd> or <kbd>C</kbd></dt><dd>Camera views (drag to look around in Orbit and Cabin)</dd>
+        <dt><kbd>1</kbd>–<kbd>6</kbd> or <kbd>C</kbd></dt><dd>Camera views (drag to look around in Orbit)</dd>
         <dt><kbd>X</kbd> · <kbd>T</kbd></dt><dd>Spoilers (speed brakes) · reverse thrust on the ground</dd>
         <dt><kbd>[</kbd> <kbd>]</kbd> · <kbd>L</kbd> · <kbd>N</kbd></dt><dd>Pitch trim · landing lights · parking brake</dd>
         <dt><kbd>M</kbd> · <kbd>P</kbd> · <kbd>H</kbd></dt><dd>Map: local, whole world, off · pause · this help</dd>
@@ -577,7 +577,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
         <dt><kbd>Space</kbd></dt><dd>Wheel brakes</dd>
         <dt><kbd>V</kbd></dt><dd>Flaps: more lift at low speed for takeoff and landing</dd>
         <dt><kbd>G</kbd></dt><dd>Raise or lower the landing gear</dd>
-        <dt><kbd>1</kbd> Chase · <kbd>2</kbd> Cockpit · <kbd>3</kbd> Wing</dt><dd><kbd>4</kbd> Tower · <kbd>5</kbd> Orbit (drag + scroll) · <kbd>6</kbd> Fly-by · <kbd>7</kbd> Free camera (W A S D, Q / E, drag to look) · <kbd>8</kbd> Cabin (window seat, drag to look)</dd>
+        <dt><kbd>1</kbd> Chase · <kbd>2</kbd> Wing</dt><dd><kbd>3</kbd> Tower · <kbd>4</kbd> Orbit (drag + scroll) · <kbd>5</kbd> Fly-by · <kbd>6</kbd> Free camera (W A S D, Q / E, drag to look)</dd>
         <dt><kbd>X</kbd> Spoilers</dt><dd>Panels on top of the wing that kill lift and add drag. Use them to slow down or descend faster; airliners raise them by themselves on touchdown</dd>
         <dt><kbd>T</kbd> Reverse thrust</dt><dd>On the ground after landing, press T and add throttle to slow down hard</dd>
         <dt><kbd>[</kbd> <kbd>]</kbd> Trim</dt><dd>Holds the nose up or down a little so you don't have to keep pressing</dd>
@@ -650,7 +650,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     { code: "EGT", name: "Eastgate Intl", x: 6500, z: -6750, hdg: 140, elev: 88, kind: "intl",
       rwys: [{ off: 0, len: 2600, w: 50, sfx: "" }], stands: ["b77w", "a321", "mh", "b763", "b737", "mh", "b77w"] },
     { code: "SNV", name: "Sunvale Intl", x: 2000, z: 10750, hdg: 90, elev: 126, kind: "intl",
-      rwys: [{ off: 0, len: 2400, w: 50, sfx: "" }], stands: ["b737", "mh", "b747", "b737", "b77w"] },
+      rwys: [{ off: 0, len: 2400, w: 50, sfx: "" }], stands: ["b737", "mh", "b744", "b737", "b747"] },
     { code: "HMR", name: "Highmoor", x: 12500, z: 2500, hdg: 30, elev: 185, kind: "regional",
       rwys: [{ off: 0, len: 1800, w: 45, sfx: "" }], stands: ["mh", "b763", "b737"] },
     { code: "BYF", name: "Bayford", x: -4250, z: 11500, hdg: 170, elev: 50, kind: "regional",
@@ -678,7 +678,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       rwys: [{ off: 0, len: 1300, w: 35, sfx: "" }], stands: ["b737", "mh"] },
   ];
   const WORLD = 16000;
-  const DIMS = { b747: [64.4, 70.6], b773: [60.9, 73.6], a350: [64.8, 66.9], b77w: [64.8, 73.6], b763: [47.6, 55.2], a321: [35.8, 46.5], b739: [37.8, 43.0], b777: [60.9, 63.7], trainer: [11, 8.3], aero: [8, 6.6], islander: [35.8, 39.5], breeze: [27.1, 27.2], swift: [15.5, 17.7], atlas: [42.4, 45.1], arrow: [9.1, 14.4], regio: [28.7, 36.2], skyliner: [60.1, 62.8], jumbo: [64.4, 70.7], commuter: [17.7, 17.6], b772: [64.8, 73.9], b737: [35.8, 39.7], mh: [37.8, 35.5], b767: [47.6, 48.5] };
+  const DIMS = { b744: [64.4, 70.6], b747: [64.4, 70.6], b773: [60.9, 73.6], a350: [64.8, 66.9], b77w: [64.8, 73.6], b763: [47.6, 55.2], a321: [35.8, 46.5], b739: [37.8, 43.0], b777: [60.9, 63.7], trainer: [11, 8.3], aero: [8, 6.6], islander: [35.8, 39.5], breeze: [27.1, 27.2], swift: [15.5, 17.7], atlas: [42.4, 45.1], arrow: [9.1, 14.4], regio: [28.7, 36.2], skyliner: [60.1, 62.8], jumbo: [64.4, 70.7], commuter: [17.7, 17.6], b772: [64.8, 73.9], b737: [35.8, 39.7], mh: [37.8, 35.5], b767: [47.6, 48.5] };
   const swapLR = (s) => (s === "L" ? "R" : s === "R" ? "L" : "");
   for (const a of AIRPORTS) {
     const t = a.hdg * Math.PI / 180; a.s = Math.sin(t); a.c = Math.cos(t);
@@ -1003,6 +1003,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     if (best) { buildHiTile(best); best.lo.visible = false; }
   }
 
+  const WATER_T = { value: 0 };   // seconds, drives the moving surf
   // animated sea with a generated normal map
   const waterNormal = (function () {
     const S = 256, c = document.createElement("canvas"); c.width = c.height = S; const g = c.getContext("2d"), img = g.createImageData(S, S);
@@ -1024,6 +1025,32 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       color: 0x1d6c9c, specular: 0xcfeaff, shininess: 120, normalMap: waterNormal, normalScale: new THREE.Vector2(0.5, 0.5), transparent: true, opacity: 0.84,
     }));
     water.rotation.x = -Math.PI / 2; scene.add(water);
+    // depth map of the whole world (computed once): shallow turquoise water and surf along the coasts, dark blue offshore
+    const N = 256, dep = new Uint8Array(N * N * 4);
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      const x = (i / (N - 1) * 2 - 1) * WORLD, z = (j / (N - 1) * 2 - 1) * WORLD, d = clamp(-heightAt(x, z), 0, 60);
+      dep[(j * N + i) * 4] = Math.round(d / 60 * 255); dep[(j * N + i) * 4 + 3] = 255;
+    }
+    const depthTex = new THREE.DataTexture(dep, N, N, THREE.RGBAFormat); depthTex.magFilter = depthTex.minFilter = THREE.LinearFilter; depthTex.needsUpdate = true;
+    waterMat.userData.w = { uDepth: { value: depthTex }, uWorld: { value: WORLD }, uTime: WATER_T, uSky: { value: new THREE.Color(0x9cc4e4).convertSRGBToLinear() }, uDay: { value: 1 }, uDetail: { value: DETAIL } };
+    waterMat.onBeforeCompile = function (sh) {
+      Object.assign(sh.uniforms, this.userData.w);
+      sh.vertexShader = "varying vec3 vWp;\n" + sh.vertexShader.replace("#include <project_vertex>", "#include <project_vertex>\n  vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;");
+      sh.fragmentShader = "uniform sampler2D uDepth; uniform sampler2D uDetail; uniform float uWorld; uniform float uTime; uniform vec3 uSky; uniform float uDay; varying vec3 vWp; float gFoam = 0.0;\n" + sh.fragmentShader
+        .replace("#include <color_fragment>", `#include <color_fragment>
+  { vec2 uv = vWp.xz / (2.0 * uWorld) + 0.5; float inside = step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0);
+    float d = mix(60.0, texture2D(uDepth, uv).r * 60.0, inside);
+    vec3 shallow = vec3(0.06, 0.36, 0.36), mid = vec3(0.02, 0.17, 0.24), deep = vec3(0.008, 0.06, 0.13);
+    vec3 col = mix(shallow, mid, smoothstep(0.5, 9.0, d)); col = mix(col, deep, smoothstep(9.0, 45.0, d));
+    float n1 = texture2D(uDetail, vWp.xz / 23.0 + vec2(uTime * 0.012, uTime * 0.007)).r, n2 = texture2D(uDetail, vWp.xz / 61.0 - vec2(uTime * 0.006, -uTime * 0.01)).g;
+    float shore = 1.0 - smoothstep(0.15, 2.6, d), surf = 0.5 + 0.5 * sin(uTime * 1.3 - d * 2.6 + n2 * 6.0);
+    gFoam = shore * smoothstep(0.5, 0.82, n1 * 0.65 + surf * 0.55) + (1.0 - smoothstep(0.0, 0.35, d)) * 0.5;
+    col *= uDay;
+    diffuseColor.rgb = mix(col, vec3(0.92, 0.95, 0.96) * uDay, clamp(gFoam, 0.0, 1.0));
+    diffuseColor.a = clamp(mix(0.5, 0.94, smoothstep(0.4, 14.0, d)) + gFoam, 0.0, 1.0); }`)
+        .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
+  { float fr = pow(1.0 - abs(dot(normalize(vNormal), normalize(vViewPosition))), 4.0); totalEmissiveRadiance += uSky * fr * 0.55 * (1.0 - gFoam); }`);
+    };
   })();
 
   // ---------- roads (ribbons that follow the ground) ----------
@@ -1789,6 +1816,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     b767: ["dal", "ual", "aal", "baw", "uae", "qtr", "afl", "klm"],
     b77w: ["uae", "ual", "aal", "baw", "qtr", "klm", "afl", "sia", "thy", "afr", "cpa", "kal", "swr", "vir"],
     b747: ["lhc", "ups", "abc", "atl", "kal", "cpa", "sia", "klm", "baw"],
+    b744: ["baw", "klm", "dlh", "kal", "cpa", "sia", "vir", "ual", "dal", "afr", "thy", "afl"],
     a350: ["qtr", "dlh", "afl", "sia", "cpa", "afr", "dal", "ual", "baw", "kal", "thy", "vir", "klm"],
     b763: ["dal", "ual", "aal", "baw", "qtr", "afl", "klm", "thy"],
     a321: ["dlh", "baw", "ezy", "thy", "afl", "s7", "aal", "dal", "ual", "qtr", "wzz", "afr", "swr", "kal"],
@@ -1805,6 +1833,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   const PLANES = {
     b737: { name: "Airbus A320", type: "Narrow-body airliner · detailed 3D model", packed: true, build: build737model, thrust: 7.0, vmax: 128, stall: 46, roll: 0.8, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 3.2, retract: true, cam: [64, 13], cock: [1.0, -17.4], wingX: 17.9, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.3, 0.35] },
     b77w: { name: "Boeing 777-300ER", type: "Long-haul wide-body · twin GE90", packed: true, build: build77Wmodel, thrust: 7.0, vmax: 146, stall: 54, roll: 0.55, pitch: 0.4, yaw: 0.19, turn: 0.62, gearH: 5.3, retract: true, cam: [128, 24], cock: [2.6, -31.6], wingX: 32.4, brake: 3.9, shadow: 37, big: true, stats: [0.97, 0.2, 0.26] },
+    b744: { name: "Boeing 747-400", type: "Jumbo jet · upper deck · four engines", packed: true, build: build744model, thrust: 6.6, vmax: 148, stall: 55, roll: 0.5, pitch: 0.38, yaw: 0.18, turn: 0.6, gearH: 5.2, retract: true, cam: [132, 27], cock: [3.5, -28.4], wingX: 31.2, brake: 3.8, shadow: 38, big: true, stats: [0.96, 0.18, 0.24] },
     b747: { name: "Boeing 747-400F", type: "Jumbo freighter · four engines", packed: true, freighter: true, cargo: 113, build: build747model, thrust: 6.6, vmax: 148, stall: 55, roll: 0.5, pitch: 0.38, yaw: 0.18, turn: 0.6, gearH: 5.2, retract: true, cam: [132, 27], cock: [3.5, -28.4], wingX: 31.2, brake: 3.8, shadow: 38, big: true, stats: [0.96, 0.18, 0.24] },
     b763: { name: "Boeing 767-300ER", type: "Wide-body airliner · stretched 767", packed: true, build: build763model, thrust: 6.7, vmax: 140, stall: 51, roll: 0.65, pitch: 0.44, yaw: 0.21, turn: 0.68, gearH: 4.2, retract: true, cam: [98, 19], cock: [1.2, -24.3], wingX: 23.6, brake: 4.1, shadow: 28, big: true, stats: [0.92, 0.24, 0.29] },
     a321: { name: "Airbus A321", type: "Narrow-body airliner · stretched A320", packed: true, build: buildA321model, thrust: 7.1, vmax: 128, stall: 48, roll: 0.75, pitch: 0.48, yaw: 0.24, turn: 0.72, gearH: 3.2, retract: true, cam: [72, 14], cock: [1.0, -20.8], wingX: 17.9, brake: 4.4, shadow: 19, big: true, stats: [0.84, 0.28, 0.33] },
@@ -1824,9 +1853,9 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       sp.gearH *= f; sp.wingX *= f; sp.shadow *= f; sp.cam = sp.cam.map((v) => v * f); sp.cock = sp.cock.map((v) => v * f);
     }
   })();
-  const CAT = { b747: "airliner", b773: "airliner", a350: "airliner", b77w: "airliner", b763: "airliner", a321: "airliner", b739: "airliner", b777: "airliner", b767: "airliner", b737: "airliner", mh: "airliner", trainer: "light", aero: "light", swift: "light", islander: "airliner", breeze: "airliner", regio: "airliner", skyliner: "airliner", jumbo: "airliner", b772: "airliner", commuter: "airliner", atlas: "special", arrow: "special" };
-  const SEATS = { b773: 368, a350: 325, b77w: 396, b763: 269, a321: 220, b739: 215, b777: 314, b767: 224, b737: 180, mh: 189, trainer: 4, aero: 2, swift: 9, islander: 189, breeze: 72, regio: 100, skyliner: 296, jumbo: 416, b772: 396, commuter: 19, atlas: 116, arrow: 1 };
-  const CRUISE = { b747: 490, b773: 480, a350: 488, b77w: 484, b763: 459, a321: 447, b739: 453, b777: 482, b767: 459, b737: 447, mh: 453, trainer: 124, aero: 210, swift: 465, islander: 453, breeze: 275, regio: 447, skyliner: 488, jumbo: 490, b772: 490, commuter: 280, atlas: 421, arrow: 500 };
+  const CAT = { b744: "airliner", b747: "airliner", b773: "airliner", a350: "airliner", b77w: "airliner", b763: "airliner", a321: "airliner", b739: "airliner", b777: "airliner", b767: "airliner", b737: "airliner", mh: "airliner", trainer: "light", aero: "light", swift: "light", islander: "airliner", breeze: "airliner", regio: "airliner", skyliner: "airliner", jumbo: "airliner", b772: "airliner", commuter: "airliner", atlas: "special", arrow: "special" };
+  const SEATS = { b744: 416, b773: 368, a350: 325, b77w: 396, b763: 269, a321: 220, b739: 215, b777: 314, b767: 224, b737: 180, mh: 189, trainer: 4, aero: 2, swift: 9, islander: 189, breeze: 72, regio: 100, skyliner: 296, jumbo: 416, b772: 396, commuter: 19, atlas: 116, arrow: 1 };
+  const CRUISE = { b744: 490, b747: 490, b773: 480, a350: 488, b77w: 484, b763: 459, a321: 447, b739: 453, b777: 482, b767: 459, b737: 447, mh: 453, trainer: 124, aero: 210, swift: 465, islander: 453, breeze: 275, regio: 447, skyliner: 488, jumbo: 490, b772: 490, commuter: 280, atlas: 421, arrow: 500 };
   for (const k of Object.keys(PLANES)) { PLANES[k].cat = CAT[k] || "light"; PLANES[k].seats = SEATS[k] || 0; }
 
   // ================= DETAILED 3D MODELS (GLB) =================
@@ -1947,6 +1976,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     a350: { from: "b767", s: 1.2, fx: 3.4, plugs: [[-12.25, 7 * 0.557], [4.85, 6 * 0.557]], span: [3.4, 1.156], bend: { root: 4.1, c0: 27.2, tip: 32.3, ang: 1.15, flex: 1.5 },
       nose: { z: -24.3, len: 6.5, cy: 0.2, k: 0.74, ext: 1.7 }, engine: { x: 7.97, y: -2.37, r: 1.5, z0: -9.2, z1: -1.2, k: 1.14 },
       mask: [[-1.5, 0.5, -23.9], [1.5, 1.75, -20.2]] },
+    b744: { from: "b747", s: 1, fx: 4, plugs: [] },   // passenger 747-400: the freighter's airframe with windows painted on
     b763: { from: "b767", s: 1, fx: 3.4, plugs: [[-12.25, 6 * 0.557], [4.85, 6 * 0.557]] },
     a321: { from: "b737", s: 1, fx: 2.7, plugs: [[-9.7, 7 * 0.4855], [1.49, 7 * 0.4855]] },
     b739: { from: "mh", s: 1, fx: 2.6, plugs: [[-9.67, 6 * 0.58], [1.67, 7 * 0.58]] },
@@ -2107,7 +2137,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
 uniform vec4 uGeo; uniform vec4 uZ; uniform vec4 uLn; uniform vec4 uLn2; uniform vec4 uTb; uniform vec4 uFl;
 uniform vec3 uBody; uniform vec3 uBelly; uniform vec3 uTop; uniform vec3 uStr; uniform vec3 uStr2; uniform vec3 uFin1; uniform vec3 uFin2; uniform vec3 uFin3; uniform vec3 uWing; uniform vec3 uNose; uniform vec3 uLead;
 uniform sampler2D uTitle; uniform float uCabin;
-uniform vec4 uFg0; uniform vec4 uFg1; uniform vec4 uEng; uniform vec4 uEz; uniform vec3 uEngC; uniform vec3 uLip; uniform vec4 uMask; uniform vec4 uEng2; uniform vec4 uEz2; uniform float uPaintWin;
+uniform vec4 uFg0; uniform vec4 uFg1; uniform vec4 uEng; uniform vec4 uEz; uniform vec3 uEngC; uniform vec3 uLip; uniform vec4 uMask; uniform vec4 uEng2; uniform vec4 uEz2; uniform float uPaintWin; uniform vec4 uUp; uniform float uHump;
 float gMask = 0.0, gGlass = 0.0;   // set when a pixel lies in the A350 mask: then even the model's own dark glass is repainted
 vec3 liveryAt(vec3 p, out float fus) {
   fus = 0.0;
@@ -2133,7 +2163,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     float dx2 = abs(p.x) - uEng2.x, dy2 = p.y - uEng2.y;
     if (uEng2.w > 0.5 && dx2 * dx2 + dy2 * dy2 < uEng2.z * uEng2.z && p.z > uEz2.x - 0.3 && p.z < uEz2.y + 0.3) return (p.z - uEz2.x) / (uEz2.y - uEz2.x) < 0.07 ? uLip : uEngC;
   }
-  if (abs(p.x) < R * 1.12 && p.y > cy - R * 1.15 && p.y < cy + R * 1.2) {
+  if (abs(p.x) < R * 1.12 && p.y > cy - R * 1.15 && p.y < cy + R * 1.2 + uHump) {
     fus = 1.0;
     float v = (p.y - cy) / R - uZ.z, f = clamp((p.z - uZ.x) / (uZ.y - uZ.x), 0.0, 1.0);
     float rise = uLn2.z * smoothstep(0.55, 1.0, f) - uLn2.z * 0.35 * (1.0 - smoothstep(0.0, 0.18, f));
@@ -2169,7 +2199,10 @@ vec3 liveryAt(vec3 p, out float fus) {
       if (dmin < 0.6 && abs(v - 0.1) < 0.012) c = c * 0.6;                                     // door top
       if (dmin < 0.6 && abs(v + 0.5) < 0.012) c = c * 0.6;                                     // door sill
       float bot = 0.05 + (0.06 - f) * 2.2;
-      if (f > 0.018 && f < 0.062 && v > bot && v < bot + 0.15 && abs(fract(f / 0.011) - 0.5) < 0.4) c = vec3(0.02, 0.024, 0.03);
+      if (uUp.w < 0.5 && f > 0.018 && f < 0.062 && v > bot && v < bot + 0.15 && abs(fract(f / 0.011) - 0.5) < 0.4) c = vec3(0.02, 0.024, 0.03);
+    }
+    if (uUp.w > 0.5 && p.z > uUp.x && p.z < uUp.y && abs(p.y - uUp.z) < 0.19 && abs(p.x) > 0.8) {   // 747 upper-deck windows
+      float cell = fract((p.z - uUp.x) / 0.53); if (abs(cell - 0.5) < 0.22) c = vec3(0.04, 0.05, 0.06);
     }
     if (uFg1.w > 0.5) { float va = (p.y - cy) / R, z0 = uFg0.z - (uZ.y - uZ.x) * 0.14; if (va > 0.3 && p.z > z0 + (1.0 - va) * (uZ.y - uZ.x) * 0.12) c = uFin1; }
     if (uFl.x > 0.5 && abs(p.x) > R * 0.4) {
@@ -2210,7 +2243,7 @@ vec3 liveryAt(vec3 p, out float fus) {
       uFg0: { value: new THREE.Vector4(o.fin[0], o.fin[1], o.fin[2], o.fin[3]) }, uFg1: { value: new THREE.Vector4(o.fin[4], o.fin[5], 0.35 * o.R, L.spine ? 1 : 0) },
       uEng: { value: new THREE.Vector4(o.eng[0], o.eng[1], o.eng[2], 1) }, uEz: { value: new THREE.Vector4(o.eng[3], o.eng[4], 0, 0) },
       uEng2: { value: o.eng2 ? new THREE.Vector4(o.eng2[0], o.eng2[1], o.eng2[2], 1) : new THREE.Vector4(0, 0, 0, 0) }, uEz2: { value: new THREE.Vector4(o.eng2 ? o.eng2[3] : 0, o.eng2 ? o.eng2[4] : 0, 0, 0) },
-      uEngC: V3(L.engine || "#eef0f2"), uLip: V3("#c3c7cc"), uPaintWin: { value: o.paintWindows ? 1 : 0 }, uMask: { value: o.mask ? new THREE.Vector4(o.mask[0], o.mask[1], o.mask[2], o.mask[3]) : new THREE.Vector4(0, 0, 0, 0) },
+      uEngC: V3(L.engine || "#eef0f2"), uLip: V3("#c3c7cc"), uPaintWin: { value: o.paintWindows ? 1 : 0 }, uUp: { value: new THREE.Vector4(...(o.upper || [0, 0, 0, 0])) }, uHump: { value: o.hump || 0 }, uMask: { value: o.mask ? new THREE.Vector4(o.mask[0], o.mask[1], o.mask[2], o.mask[3]) : new THREE.Vector4(0, 0, 0, 0) },
     };
     const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, metalness: Math.min(pt.m, 0.3), roughness: clamp(pt.r, 0.3, 0.55), side: THREE.DoubleSide, envMapIntensity: 0.9 });
     mat.userData.u = u; mat.onBeforeCompile = liveryCompile;
@@ -2528,6 +2561,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   function buildA321model(liv) { return buildPacked("a321", packOpts("a321"), liv); }
   function build739model(liv) { return buildPacked("mh", packOpts("mh"), liv); }
   function build747model(liv) { return buildPacked("b747", packOpts("b747"), liv); }
+  function build744model(liv) { return buildPacked("b744", packOpts("b744", { win: 0.24, paintWindows: true, upper: [-27.6, -8.5, 4.05, 1], hump: 1.4 }), liv); }
   function buildA350model(liv) {
     const d = DERIVED.a350, a = derivePoint(d, ...d.mask[0]), b = derivePoint(d, ...d.mask[1]);
     return buildPacked("a350", packOpts("a350", { gearH: 5.0, wheelR: 0.64, mask: [a[2], b[2], a[1], b[1]], zNose: derivePoint(d, 0, 0.2, -24.3)[2], noseZ: derivePoint(d, 0, -1, -18.3)[2], eng: [deriveX(d, 7.97), -2.37 * 1.2, 1.45 * 1.14 * 1.2, -8.8 * 1.2, -4.6 * 1.2] }), liv);
@@ -2849,7 +2883,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     spec = PLANES[kind];
     if (model) scene.remove(model);
     model = m; model.userData.kind = kind; scene.add(model);
-    if (model.userData.cabin) {
+    if (model.userData.cabin && false) {   // cabin and flight-deck views are switched off
       model.traverse((o) => { if (o.isMesh && o.userData.remat) o.material = o.userData.remat(CABIN); });
       if (!spec.freighter) { const cg = buildCabin(model.userData.cabin); cg.visible = false; model.add(cg); model.userData.cabinG = cg; }
       const fd = buildCockpit(new THREE.Vector3(-0.55, spec.cock[0], spec.cock[1]), /Airbus/.test(spec.name), spec.kind === "b747" ? 4 : 2); fd.visible = false; model.add(fd); model.userData.deck = fd;
@@ -2942,7 +2976,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   // ================= INPUT =================
   const keys = new Set(); let invert = load("sw-invert") === "1", showMap = 1;
   const stick = { x: 0, y: 0 }; let touchBrake = false, touchYaw = 0;
-  const CAMS = [["chase", "Chase"], ["cockpit", "Cockpit"], ["wing", "Wing"], ["tower", "Tower"], ["orbit", "Orbit"], ["flyby", "Fly-by"], ["free", "Free"], ["cabin", "Cabin"]];
+  const CAMS = [["chase", "Chase"], ["wing", "Wing"], ["tower", "Tower"], ["orbit", "Orbit"], ["flyby", "Fly-by"], ["free", "Free"]];
   const freeCam = { pos: new THREE.Vector3(), yaw: 0, pitch: 0, speed: 40, on: false };
   const camWrap = $("cams");
   CAMS.forEach(([id, label], i) => {
@@ -2992,12 +3026,12 @@ vec3 liveryAt(vec3 p, out float fus) {
       if (e.repeat) return;
       if (k === "Space" && !onBtn) rpToggle();
       if (k === "Escape" || k === "KeyP") closeReplay();
-      if (/^Digit[1-8]$/.test(k)) setCam(CAMS[+k.slice(5) - 1][0]);
+      if (/^Digit[1-6]$/.test(k)) setCam(CAMS[+k.slice(5) - 1][0]);
       if (k === "KeyC") cycleCam();
       return;
     }
     if (e.repeat) return;
-    if (/^Digit[1-8]$/.test(k)) setCam(CAMS[+k.slice(5) - 1][0]);
+    if (/^Digit[1-6]$/.test(k)) setCam(CAMS[+k.slice(5) - 1][0]);
     if (k === "KeyC") cycleCam();
     if (k === "KeyG" && S.mode === "fly") toggleGear();
     if (k === "KeyV" && S.mode === "fly") cycleFlaps();
@@ -3742,7 +3776,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   }
 
   // ================= CAMERA =================
-  const tv = new THREE.Vector3(), look = new THREE.Vector3(), WUP = new THREE.Vector3(0, 1, 0);
+  const tv = new THREE.Vector3(), look = new THREE.Vector3(), WUP = new THREE.Vector3(0, 1, 0), camFwd = new THREE.Vector3(0, 0, -1);
   function nearestTower() { let best = null, bd = 1e9; for (const a of AIRPORTS) { const d = a.tower.distanceTo(S.pos); if (d < bd) { bd = d; best = a; } } return best.tower; }
   let camSnap = false;   // jump the chase camera into place (replay seek, mission start) instead of sweeping across the map
   function clampCam(p) { const g = Math.max(groundY(p.x, p.z), 0) + 1.5; if (p.y < g) p.y = g; }
@@ -3811,7 +3845,8 @@ vec3 liveryAt(vec3 p, out float fus) {
       camera.position.copy(flyby.p); camera.up.copy(WUP); camera.lookAt(S.pos); fov = clamp(2 * Math.atan2(spec.cam[0], d) * 57.3, 8, 65);
     } else {
       tv.copy(S.pos).addScaledVector(fwd, -spec.cam[0]).addScaledVector(up, spec.cam[1] * 0.5).addScaledVector(WUP, spec.cam[1] * 0.5);
-      clampCam(tv); camera.position.lerp(tv, camSnap ? 1 : 1 - Math.exp(-dt * 5)); look.copy(S.pos).addScaledVector(fwd, spec.cam[0] * 0.8);
+      clampCam(tv); camera.position.lerp(tv, camSnap ? 1 : 1 - Math.exp(-dt * 5));
+      camFwd.lerp(fwd, camSnap ? 1 : 1 - Math.exp(-dt * 6)).normalize(); look.copy(S.pos).addScaledVector(camFwd, spec.cam[0] * 0.8);   // the aim point follows the nose smoothly: no tremble from small pitch changes
       camera.up.copy(WUP); camera.lookAt(look);
     }
     if (Math.abs(camera.fov - fov) > 0.01) { camera.fov = S.cam === "tower" || S.cam === "flyby" ? fov : lerp(camera.fov, fov, 0.2); camera.updateProjectionMatrix(); }
@@ -4147,7 +4182,7 @@ vec3 liveryAt(vec3 p, out float fus) {
       const R = showMap === 1 ? 6000 : MAP_R, ox = showMap === 1 ? S.pos.x : 0, oz = showMap === 1 ? S.pos.z : 0;
       const px2 = (v) => (v / MAP_R + 1) / 2 * mapImg.width;
       hud.fillStyle = "#14324a"; hud.fillRect(mx, my, ms, ms);
-      hud.drawImage(mapImg, px2(ox - R), px2(oz - R), px2(R) - px2(0), px2(R) - px2(0), mx, my, ms, ms);
+      { const k = ms / (2 * R), full = 2 * MAP_R * k; hud.imageSmoothingEnabled = true; hud.drawImage(mapImg, mx + ms / 2 - (ox + MAP_R) * k, my + ms / 2 - (oz + MAP_R) * k, full, full); }   // fractional destination: glides instead of jumping a pixel at a time
       const P = (x, z) => [mx + ((x - ox) / R + 1) / 2 * ms, my + ((z - oz) / R + 1) / 2 * ms];
       for (const a of AIRPORTS) {
         const [x1, z1] = toWorld(a, -a.len / 2, 0), [x2, z2] = toWorld(a, a.len / 2, 0); const p1 = P(x1, z1), p2 = P(x2, z2);
@@ -4214,7 +4249,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   const TAN3 = Math.tan(3 * Math.PI / 180);
   const AI_FLEET = [["mh", "OCEANA 301"], ["b77w", "OCEANA 88"], ["b737", "ISLA 214"], ["mh", "ISLANDER 52"], ["b763", "SOUTHWIND 640"], ["b737", "ISLANDER 17"], ["mh", "SKYLARK 42"], ["b77w", "FALCON 7"], ["b737", "PACIFICA 12"],
     ["mh", "EASTGATE 410"], ["b763", "SUNVALE 9"], ["a321", "NORTHCAPE 77"], ["mh", "ISLANDER 63"], ["b77w", "OCEANA 515"], ["b737", "SKYLARK 18"], ["mh", "FALCON 22"],
-    ["b747", "BREEZE 301"], ["a321", "REGIO 190"], ["mh", "REGIO 44"], ["b77w", "SKYLINER 35"], ["b737", "JUMBO 1"], ["mh", "COMMUTER 9"], ["b77w", "BREEZE 88"], ["b737", "SWIFT 6"], ["mh", "ATLAS 4"], ["b77w", "ARROW 1"]];
+    ["b744", "BREEZE 301"], ["a321", "REGIO 190"], ["mh", "REGIO 44"], ["b77w", "SKYLINER 35"], ["b737", "JUMBO 1"], ["mh", "COMMUTER 9"], ["b77w", "BREEZE 88"], ["b737", "SWIFT 6"], ["mh", "ATLAS 4"], ["b77w", "ARROW 1"]];
   const wrapA = (a) => { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; };
   function radio(text, where) { if (S.mode !== "fly" || where.distanceTo(S.pos) > 7000) return; RADIO.push({ text, t: 10 }); if (RADIO.length > 4) RADIO.shift(); }
   const aiPorts = (kind) => AIRPORTS.filter((a) => (PLANES[kind].big ? a.kind !== "ga" : true));
@@ -4431,6 +4466,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     rain.l.visible = wet;
     clouds.setWeather(weather, night, dusk);
     waterMat.color.set(night ? 0x0b2233 : wet || fog ? 0x2b5470 : 0x1d6c9c);
+    if (waterMat.userData.w) { waterMat.userData.w.uDay.value = night ? 0.22 : dusk ? 0.75 : wet || fog ? 0.8 : 1; waterMat.userData.w.uSky.value.set(night ? 0x0a1626 : dusk ? 0xd29a74 : wet || fog ? 0x9aa5ae : 0xa9cde8).convertSRGBToLinear(); }
     CITY_NIGHT.value.x = night ? 1 : dusk ? 0.35 : 0;
     renderer.toneMappingExposure = 1;
   }
@@ -4957,7 +4993,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     updateAlerts(now); updateSunShadow();
     scene.userData.sky.position.copy(camera.position);
     updateTiles(camera.position); clouds.update(camera.quaternion); rain.update(dt, camera.position); updateLightPool();
-    waterNormal.offset.x += dt * 0.0025; waterNormal.offset.y += dt * 0.0012;
+    waterNormal.offset.x += dt * 0.0025; waterNormal.offset.y += dt * 0.0012; WATER_T.value += dt;
     if (engGain && ac) {
       engGain.gain.setTargetAtTime(soundOn && S.mode === "fly" && !S.crashed ? 0.02 + S.throttle * 0.05 : 0, ac.currentTime, 0.15);
       eng.frequency.setTargetAtTime((spec.big || spec.jetSound ? 90 : 50) + S.throttle * (spec.big || spec.jetSound ? 140 : 70), ac.currentTime, 0.2);
