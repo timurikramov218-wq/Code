@@ -761,7 +761,8 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   // ================= RENDERER =================
   const stage = $("stage"), worldCv = $("world"), hudCv = $("hud"), hud = hudCv.getContext("2d");
   let renderer;
-  try { renderer = new THREE.WebGLRenderer({ canvas: worldCv, antialias: true }); }
+  // logarithmic depth: no flicker between the runway, its markings and far terrain
+  try { renderer = new THREE.WebGLRenderer({ canvas: worldCv, antialias: true, logarithmicDepthBuffer: true }); }
   catch { $("briefTip").textContent = "This device can't run 3D graphics (WebGL is off)."; return; }
   // graphics quality: render resolution, how far detailed terrain and forests reach, cloud count, real-time shadow of your aircraft
   const QUALITY = {
@@ -775,6 +776,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   renderer.setPixelRatio(pixelRatioFor(QS));
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;   // filmic contrast instead of flat, toy-like colour
   const scene = new THREE.Scene();
   const HORIZON = new THREE.Color(0xd3e6f3);
   scene.fog = new THREE.Fog(HORIZON, 3000, 14000);
@@ -810,9 +812,9 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
 
   // terrain: streamed tiles. Every 4 km tile has a cheap low-detail mesh; detailed meshes (with forests) are built near the camera.
   const TC = {
-    deep: new THREE.Color(0x1f4c5c), shallow: new THREE.Color(0x8fbfa8), sand: new THREE.Color(0xdccf9f), grass: new THREE.Color(0x6b9646),
-    grass2: new THREE.Color(0x87a457), forest: new THREE.Color(0x2e5a2c), field: new THREE.Color(0xa9a35a), high: new THREE.Color(0x7c8656),
-    rock: new THREE.Color(0x7f786e), rock2: new THREE.Color(0x9a9286), snow: new THREE.Color(0xf3f6f9), mowed: new THREE.Color(0x76a356),
+    deep: new THREE.Color(0x1f4c5c), shallow: new THREE.Color(0x86b0a0), sand: new THREE.Color(0xcfc297), grass: new THREE.Color(0x5b7a3c),
+    grass2: new THREE.Color(0x768c4a), forest: new THREE.Color(0x2b4726), field: new THREE.Color(0x9c9558), high: new THREE.Color(0x6f7550),
+    rock: new THREE.Color(0x77716a), rock2: new THREE.Color(0x908a80), snow: new THREE.Color(0xf3f6f9), mowed: new THREE.Color(0x67874a),
   };
   const _c2 = new THREE.Color();
   function terrainColor(x, z, y, ny, c) {
@@ -832,7 +834,48 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     }
     return c.convertSRGBToLinear();
   }
-  const terrainMat = new THREE.MeshLambertMaterial({ vertexColors: true });
+  // ---------- surface detail ----------
+  // A tileable noise texture (three independent channels) sampled in world space at three scales, so grass, fields,
+  // rock and asphalt get grain up close and patchiness from the air instead of flat colour.
+  const DETAIL = (function () {
+    const N = 512, c = document.createElement("canvas"); c.width = c.height = N; const g = c.getContext("2d"), img = g.createImageData(N, N);
+    const layer = (seed, base) => {
+      const out = new Float32Array(N * N);
+      for (let o = 0, amp = 0.5, cells = base; o < 6; o++, amp *= 0.55, cells *= 2) {
+        const L = new Float32Array(cells * cells); for (let k = 0; k < L.length; k++) L[k] = hash(k + seed * 7919, o * 131 + seed);
+        for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+          const x = i / N * cells, y = j / N * cells, x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0;
+          const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy), at = (a, b) => L[(b % cells) * cells + (a % cells)];
+          out[j * N + i] += amp * (at(x0, y0) * (1 - sx) * (1 - sy) + at(x0 + 1, y0) * sx * (1 - sy) + at(x0, y0 + 1) * (1 - sx) * sy + at(x0 + 1, y0 + 1) * sx * sy);
+        }
+      }
+      let mn = 1e9, mx = -1e9; for (const v of out) { mn = Math.min(mn, v); mx = Math.max(mx, v); }
+      for (let k = 0; k < out.length; k++) out[k] = (out[k] - mn) / (mx - mn);
+      return out;
+    };
+    const R = layer(1, 8), G2 = layer(2, 4), B = layer(3, 2);
+    for (let k = 0; k < N * N; k++) img.data.set([R[k] * 255, G2[k] * 255, B[k] * 255, 255], k * 4);
+    g.putImageData(img, 0, 0);
+    const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return t;
+  })();
+  // k: strength; s: sizes in metres of the fine, medium and coarse layers; tint: dry/lush colour variation (terrain)
+  function addDetail(mat, k, s1, s2, s3, tint = 0) {
+    mat.userData.det = { uDetail: { value: DETAIL }, uDk: { value: new THREE.Vector4(k, 1 / s1, 1 / s2, 1 / s3) }, uTint: { value: tint } };
+    mat.onBeforeCompile = detailCompile;
+    return mat;
+  }
+  function detailCompile(sh) {
+    Object.assign(sh.uniforms, this.userData.det);
+    sh.vertexShader = "varying vec3 vWp;\n" + sh.vertexShader.replace("#include <project_vertex>", "#include <project_vertex>\n  vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;");
+    sh.fragmentShader = "uniform sampler2D uDetail; uniform vec4 uDk; uniform float uTint; varying vec3 vWp;\n" + sh.fragmentShader.replace("#include <color_fragment>", `#include <color_fragment>
+  { vec2 w = vWp.xz; float a = texture2D(uDetail, w * uDk.y).r, b = texture2D(uDetail, w * uDk.z).g, c = texture2D(uDetail, w * uDk.w).b;
+    float det = (a - 0.5) * 0.55 + (b - 0.5) * 0.75 + (c - 0.5) * 0.9;
+    diffuseColor.rgb *= max(0.0, 1.0 + det * uDk.x);
+    float g = diffuseColor.g - max(diffuseColor.r, diffuseColor.b);        // only green ground gets the dry/lush tint
+    if (uTint > 0.0 && g > 0.0) diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.25, 1.06, 0.72), smoothstep(0.45, 0.85, c) * uTint * clamp(g * 12.0, 0.0, 1.0)); }`);
+  }
+  const terrainMat = addDetail(new THREE.MeshLambertMaterial({ vertexColors: true }), 0.6, 7, 53, 410, 0.55);
   function terrainGeo(x0, z0, size, seg, skirt) {
     const N = seg + 1, st = size / seg, W2 = N + 2, H = new Float32Array(W2 * W2);
     for (let j = -1; j <= N; j++) for (let i = -1; i <= N; i++) H[(j + 1) * W2 + i + 1] = heightAt(x0 + i * st, z0 + j * st);
@@ -2089,7 +2132,7 @@ vec3 liveryAt(vec3 p, out float fus) {
   const beacons = [];
   const lam = (c, o = {}) => new THREE.MeshLambertMaterial(Object.assign({ color: c }, o));
   const MAT = {
-    asphalt: lam(0x474b52), taxi: lam(0x51555c), apron: lam(0x9fa2a4), shoulder: lam(0x6e7266), lot: lam(0x3c3f44),
+    asphalt: addDetail(lam(0x474b52), 0.35, 1.3, 9, 70), taxi: addDetail(lam(0x51555c), 0.35, 1.3, 9, 70), apron: addDetail(lam(0x9fa2a4), 0.22, 1.1, 7, 60), shoulder: addDetail(lam(0x6e7266), 0.4, 2, 12, 80), lot: addDetail(lam(0x3c3f44), 0.3, 1.3, 9, 70),
     yellow: new THREE.MeshBasicMaterial({ color: 0xf2c230 }), white: new THREE.MeshBasicMaterial({ color: 0xf3f3ef }),
     glass: std(0x2a5d8a, { roughness: 0.12, metalness: 0.7 }), wall: lam(0xe9e6df), wall2: lam(0xd4d7da), roof: lam(0x6f7780),
     red: lam(0xb7372c), tank: lam(0xf0f0ec), hangar: lam(0x9aa6b2), door: lam(0x5a636d),
@@ -2141,7 +2184,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     for (const r of a.rwys) {
       const num = String(a.num).padStart(2, "0") + r.sfx, recip = String(a.recip).padStart(2, "0") + swapLR(r.sfx);
       flat(grp, r.w + 14, r.len + 120, MAT.shoulder, r.off, 0.03, 0).userData.keep = true;
-      flat(grp, r.w, r.len, new THREE.MeshLambertMaterial({ map: runwayTexture(r, num, recip) }), r.off, 0.07, 0).userData.keep = true;
+      flat(grp, r.w, r.len, addDetail(new THREE.MeshLambertMaterial({ map: runwayTexture(r, num, recip) }), 0.3, 1.2, 8, 60), r.off, 0.07, 0).userData.keep = true;
       for (let z = -r.len / 2; z <= r.len / 2; z += 60) for (const sx of [-1, 1]) edgeL.push([r.off + sx * (r.w / 2 + 1.5), 0.3, z]);
       for (let i = 0; i < 12; i++) { const x = r.off - r.w / 2 + (i + 0.5) * r.w / 12; thrG.push([x, 0.3, r.len / 2 + 2]); thrR.push([x, 0.3, -r.len / 2 - 2]); thrG.push([x, 0.3, -r.len / 2 - 4]); thrR.push([x, 0.3, r.len / 2 + 4]); }
       // approach lights at both ends
@@ -2306,6 +2349,8 @@ vec3 liveryAt(vec3 p, out float fus) {
     if (typeof AP !== "undefined") { AP.on = false; AP.athr = false; AP.app = false; AP.lat = "HDG"; AP.flare = false; apSync(); pushBtn.hidden = true; }
     boom.visible = false; model.visible = true; flyby.set = false;
   }
+  // smooth pseudo-random wave in -1..1 (sum of incommensurate sines; seed picks the phases)
+  const wave = (t, seed) => Math.sin(t * 0.73 + seed * 1.9) * 0.5 + Math.sin(t * 1.41 + seed * 4.3) * 0.32 + Math.sin(t * 2.63 + seed * 7.1) * 0.18;
   function flash(t, s = 2.4) { S.msg = t; S.msgT = s; }
   // spoken callouts (only with sound on; quietly skipped where speech isn't available)
   function speak(t) {
@@ -2984,7 +3029,8 @@ vec3 liveryAt(vec3 p, out float fus) {
     const thrustAcc = (S.reverse ? -0.5 : 1) * S.n1 * thrMax * Math.pow(sigma, 0.7) * (S.engOut ? 0.5 : 1);
     // wind with gusts (stronger in cloud and rain)
     const gustAmp = ENV.weather === "rain" ? 1 : ENV.weather === "cloudy" ? 0.45 : 0.12;
-    S.gustV.lerp(V.tmp.set((Math.random() - 0.5) * 9 * gustAmp, (Math.random() - 0.5) * 5 * gustAmp * (agl > 8 ? 1 : 0.1), (Math.random() - 0.5) * 9 * gustAmp), Math.min(1, dt * 1.4));
+    // gusts follow smooth noise (a few slow waves), not a new random number every frame, so the aircraft sways instead of shaking
+    { const t = S.flightT; S.gustV.lerp(V.tmp.set(wave(t, 3) * 4.5 * gustAmp, wave(t, 4) * 2.5 * gustAmp * (agl > 8 ? 1 : 0.1), wave(t, 5) * 4.5 * gustAmp), Math.min(1, dt * 2)); }
     const wind = V.wind.copy(S.wind).add(S.gustV);
     if (agl < 30) wind.multiplyScalar(0.6 + 0.4 * Math.max(0, agl) / 30);   // wind is lighter near the ground
 
@@ -3063,7 +3109,7 @@ vec3 liveryAt(vec3 p, out float fus) {
       } else if (Math.abs(roll) < 0.05 && up.y > 0.25) rollRate += -right.y * 0.6;
       if (alpha > aCrit && Math.abs(S.inputs.roll) < 0.05) rollRate += Math.sin(S.flightT * 1.7) * 0.25 * (alpha - aCrit) * 10;  // wing drop in a deep stall
       const turb = ENV.weather === "rain" ? 1 : ENV.weather === "cloudy" ? 0.4 : 0;
-      if (turb) { rollRate += (Math.random() - 0.5) * 0.25 * turb; pitchRate += (Math.random() - 0.5) * 0.08 * turb; }
+      if (turb) { rollRate += wave(S.flightT * 1.6, 1) * 0.09 * turb; pitchRate += wave(S.flightT * 1.6, 2) * 0.03 * turb; }
       S.q.multiply(tmpQ.setFromAxisAngle(AX, pitchRate * dt));
       S.q.multiply(tmpQ.setFromAxisAngle(AZ, rollRate * dt));
       S.q.multiply(tmpQ.setFromAxisAngle(AY, yawRate * dt));
@@ -3781,7 +3827,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     clouds.setWeather(weather, night, dusk);
     waterMat.color.set(night ? 0x0b2233 : wet || fog ? 0x2b5470 : 0x1d6c9c);
     if (towersMat) { towersMat.emissive.set(night ? 0xffe2a8 : 0x000000); towersMat.emissiveIntensity = night ? 0.6 : 0; }
-    renderer.toneMappingExposure = 1;
+    renderer.toneMappingExposure = night ? 1.0 : 0.92;
   }
 
   // ================= AUTOPILOT =================
