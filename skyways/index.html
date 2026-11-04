@@ -1832,9 +1832,9 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     b773: { from: "b767", s: 1.28, fx: 3.4, plugs: [[-12.25, 9 * 0.557], [4.85, 7 * 0.557]] },
     // A350-900: 66.8 m long, 64.8 m span, wingtips curling up
     // A350-900: 66.8 m long, 64.8 m span; longer, pointed nose; bigger engines; wingtips curling up
-    a350: { from: "b767", s: 1.2, fx: 3.4, plugs: [[-12.25, 7 * 0.557], [4.85, 6 * 0.557]], span: [3.4, 1.156], curl: [21.2, 23.6, 1.5],
+    a350: { from: "b767", s: 1.2, fx: 3.4, plugs: [[-12.25, 7 * 0.557], [4.85, 6 * 0.557]], span: [3.4, 1.156], bend: { root: 4.1, c0: 27.2, tip: 32.3, ang: 1.15, flex: 1.5 },
       nose: { z: -24.3, len: 6.5, cy: 0.2, k: 0.74, ext: 1.7 }, engine: { x: 7.97, y: -2.37, r: 1.5, z0: -9.2, z1: -1.2, k: 1.14 },
-      mask: [[-1.5, 0.45, -23.6], [1.5, 1.7, -20.4]] },
+      mask: [[-1.5, 0.5, -23.9], [1.5, 1.75, -20.2]] },
     b763: { from: "b767", s: 1, fx: 3.4, plugs: [[-12.25, 6 * 0.557], [4.85, 6 * 0.557]] },
     a321: { from: "b737", s: 1, fx: 2.7, plugs: [[-9.7, 7 * 0.4855], [1.49, 7 * 0.4855]] },
     b739: { from: "mh", s: 1, fx: 2.6, plugs: [[-9.67, 6 * 0.58], [1.67, 7 * 0.58]] },
@@ -1861,7 +1861,27 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   // the whole source → derived mapping of one point
   function derivePoint(d, x0, y0, z0) {
     const [x, y, z] = deriveShape(d, x0, y0, z0), f = Math.abs(x0) < d.fx;
-    return [deriveX(d, x), (y + deriveCurl(d, x)) * d.s, deriveZ(d, z, f)];
+    let X = deriveX(d, x), Y = (y + deriveCurl(d, x)) * d.s;
+    if (d.bend) [X, Y] = deriveBend(d.bend, X, Y);
+    return [X, Y, deriveZ(d, z, f)];
+  }
+  // A350 wing: flexes upward along the span and the tip curves up into a blended sharklet (derived-model units)
+  function bendAngle(b, X) {
+    const a = Math.abs(X); let ang = 0;
+    if (a > b.root) { const t = (a - b.root) / (b.tip - b.root); ang = Math.atan(2 * b.flex * t / (b.tip - b.root)); }
+    if (a > b.c0) ang += Math.min(a - b.c0, b.tip - b.c0) / ((b.tip - b.c0) / b.ang);
+    return ang;
+  }
+  function deriveBend(b, X, Y) {
+    const a = Math.abs(X), sg = Math.sign(X);
+    if (a <= b.root) return [X, Y];
+    const t = (Math.min(a, b.c0) - b.root) / (b.tip - b.root); let y = Y + b.flex * t * t, x = Math.min(a, b.c0);
+    if (a > b.c0) {
+      const yc = b.flex * Math.pow((b.c0 - b.root) / (b.tip - b.root), 2), Rb = (b.tip - b.c0) / b.ang, sArc = a - b.c0, base = Math.atan(2 * b.flex * (b.c0 - b.root) / Math.pow(b.tip - b.root, 2));
+      const th = sArc / Rb;   // arc continuing the flexed wing's slope
+      x = b.c0 + Rb * (Math.sin(base + th) - Math.sin(base)); y = Y + yc + Rb * (Math.cos(base) - Math.cos(base + th));
+    }
+    return [sg * x, y];
   }
   function deriveX(d, x) { let a = Math.abs(x); if (d.span && a > d.span[0]) a = d.span[0] + (a - d.span[0]) * d.span[1]; return Math.sign(x) * a * d.s; }
   function derivePart(d, pt) {
@@ -1870,6 +1890,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     const fus = (v) => Math.abs(P0[v * 3]) < d.fx;
     // copies of the dark window triangles of each plugged section
     const extra = [];
+    const dropTri = (a, b, c) => d.dropCockpit && !pt.vc && [a, b, c].every((v) => Math.max(...pt.base) < 0.4 && P0[v * 3 + 2] < d.dropCockpit[0] && P0[v * 3 + 1] > d.dropCockpit[1]);
     if (!pt.gear) for (const [z0, add] of d.plugs) {
       const lo = z0 < 0 ? z0 - add : z0, hi = z0 < 0 ? z0 : z0 + add;
       for (let t = 0; t < I0.length; t += 3) {
@@ -1892,6 +1913,10 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       if (back) { const rx = xx, ry = yy - cy * d.s, rl = Math.hypot(rx, ry) || 1; xx += rx / rl * 0.012; yy += ry / rl * 0.012; }   // copies sit a hair above the skin
       P[dst * 3] = xx; P[dst * 3 + 1] = yy; P[dst * 3 + 2] = zz;
       for (let j = 0; j < 3; j++) { N[dst * 3 + j] = N0[v * 3 + j]; if (C) C[dst * 3 + j] = C0[v * 3 + j]; if (VC) VC[dst * 3 + j] = pt.vc[v * 3 + j]; }
+      if (d.bend) {   // turn the normals with the bent wing so the light falls on the sharklet properly
+        const th = bendAngle(d.bend, xx) * Math.sign(xx), nx = N[dst * 3], ny = N[dst * 3 + 1];
+        N[dst * 3] = nx * Math.cos(th) - ny * Math.sin(th); N[dst * 3 + 1] = nx * Math.sin(th) + ny * Math.cos(th);
+      }
     };
     const cyS = PACK_OPTS[d.from].cy;
     for (let v = 0; v < n0; v++) put(v, v, 0, cyS);
@@ -1906,6 +1931,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       }
       if ([0, 1, 2].every((j) => isDark(I0[t + j])) && !pt.vc) I[t + 1] = I[t + 2] = I[t];   // a dark part (window strip) that bridges is dropped
     });
+    if (d.dropCockpit) for (let t = 0; t < I0.length; t += 3) if (dropTri(I0[t], I0[t + 1], I0[t + 2])) I[t + 1] = I[t + 2] = I[t];   // the 767's own cockpit glass goes; the A350 glazing is painted
     const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(P, 3)); g.setAttribute("normal", new THREE.BufferAttribute(N, 3));
     if (C) g.setAttribute("color", new THREE.BufferAttribute(C, 3));
     g.setIndex(new THREE.BufferAttribute(I, 1)); g.computeBoundingSphere();
@@ -1970,6 +1996,7 @@ uniform vec4 uGeo; uniform vec4 uZ; uniform vec4 uLn; uniform vec4 uLn2; uniform
 uniform vec3 uBody; uniform vec3 uBelly; uniform vec3 uTop; uniform vec3 uStr; uniform vec3 uStr2; uniform vec3 uFin1; uniform vec3 uFin2; uniform vec3 uFin3; uniform vec3 uWing; uniform vec3 uNose; uniform vec3 uLead;
 uniform sampler2D uTitle; uniform float uCabin;
 uniform vec4 uFg0; uniform vec4 uFg1; uniform vec4 uEng; uniform vec4 uEz; uniform vec3 uEngC; uniform vec3 uLip; uniform vec4 uMask;
+float gMask = 0.0, gGlass = 0.0;   // set when a pixel lies in the A350 mask: then even the model's own dark glass is repainted
 vec3 liveryAt(vec3 p, out float fus) {
   fus = 0.0;
   float cy = uGeo.x, R = uGeo.y, finY = uGeo.z, finTop = uGeo.w;
@@ -2003,8 +2030,18 @@ vec3 liveryAt(vec3 p, out float fus) {
     if (f > 0.05 && f < 0.97 && v > uLn2.x && v < uLn2.y) c = uStr2;
     if (uFl.y > 0.5 && f < 0.05 - v * 0.03) c = uNose;
     if (uMask.y > uMask.x) {   // A350 "mask": a black band round the cockpit windows that narrows to a point aft
-      float mt = (p.z - uMask.x) / (uMask.y - uMask.x), top = uMask.w - (uMask.w - uMask.z) * 0.45 * mt * mt, bot = uMask.z + (uMask.w - uMask.z) * 0.3 * mt;
-      if (mt > 0.0 && mt < 1.0 && p.y > bot && p.y < top) c = vec3(0.012, 0.013, 0.015);
+      // side view: the front edge follows the windscreen rake, the top runs back level, then top and bottom meet in a point aft
+      float mt = (p.z - uMask.x) / (uMask.y - uMask.x), mv = (p.y - uMask.z) / (uMask.w - uMask.z);
+      float top = 1.0 - 0.55 * smoothstep(0.55, 1.0, mt), bot = 0.38 * smoothstep(0.55, 1.0, mt), frontEdge = 0.3 * mv;
+      if (mt > frontEdge && mt < 1.0 && mv > bot && mv < top) {
+        c = vec3(0.010, 0.011, 0.013); gMask = 1.0;
+        // the glazing inside the mask: windscreen and three side windows, glossy dark grey-blue with thin black frames
+        float gl = 0.0, ww = mt - frontEdge;
+        if (mv > 0.3 && mv < 0.86 && ww > 0.03) {
+          if (ww < 0.3) gl = 1.0; else if (ww > 0.33 && ww < 0.5) gl = 1.0; else if (ww > 0.53 && ww < 0.66 && mv < 0.82 - (ww - 0.53)) gl = 1.0;
+        }
+        if (gl > 0.5) { c = mix(vec3(0.012, 0.016, 0.022), vec3(0.03, 0.038, 0.05), smoothstep(0.3, 0.86, mv)); gGlass = 1.0; }   // glass: a touch bluer, and glossy
+      }
     }
     if (uFg1.w > 0.5) { float va = (p.y - cy) / R, z0 = uFg0.z - (uZ.y - uZ.x) * 0.14; if (va > 0.3 && p.z > z0 + (1.0 - va) * (uZ.y - uZ.x) * 0.12) c = uFin1; }
     if (uFl.x > 0.5 && abs(p.x) > R * 0.4) {
@@ -2024,8 +2061,10 @@ vec3 liveryAt(vec3 p, out float fus) {
     shader.fragmentShader = LIV_FRAG + shader.fragmentShader.replace("#include <color_fragment>", `#include <color_fragment>
   { float fus; vec3 lc = liveryAt(vLp, fus);
     if (uCabin > 0.5 && fus > 0.5) discard;
-    float pnt = smoothstep(0.3, 0.42, max(max(vColor.r, vColor.g), vColor.b));
-    diffuseColor.rgb = mix(diffuseColor.rgb, lc, pnt); }`);
+    float pnt = max(smoothstep(0.3, 0.42, max(max(vColor.r, vColor.g), vColor.b)), gMask);
+    diffuseColor.rgb = mix(diffuseColor.rgb, lc, pnt); }`).replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>
+  if (gMask > 0.5) roughnessFactor = gGlass > 0.5 ? 0.12 : 0.85;`).replace("#include <metalnessmap_fragment>", `#include <metalnessmap_fragment>
+  if (gMask > 0.5) metalnessFactor = 0.0;`);
   }
   function liveryMat(pt, o, liv, cabin) {
     const L = liv || {}, white = "#f4f6f8", V3 = (hex) => ({ value: linC(hex) }), fin = L.fin || [white];
