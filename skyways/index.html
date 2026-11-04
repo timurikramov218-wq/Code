@@ -762,22 +762,21 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   // ================= RENDERER =================
   const stage = $("stage"), worldCv = $("world"), hudCv = $("hud"), hud = hudCv.getContext("2d");
   let renderer;
-  // logarithmic depth: no flicker between the runway, its markings and far terrain
-  try { renderer = new THREE.WebGLRenderer({ canvas: worldCv, antialias: true, logarithmicDepthBuffer: true }); }
+  try { renderer = new THREE.WebGLRenderer({ canvas: worldCv, antialias: true, powerPreference: "high-performance" }); }
   catch { $("briefTip").textContent = "This device can't run 3D graphics (WebGL is off)."; return; }
   // graphics quality: render resolution, how far detailed terrain and forests reach, cloud count, real-time shadow of your aircraft
   const QUALITY = {
-    low: { label: "Low", pr: 0.75, hi: 5500, vis: 10000, trees: 3500, clouds: 0.5, shadows: false },
+    low: { label: "Low", pr: 1, hi: 5500, vis: 10000, trees: 3500, clouds: 0.5, shadows: false },
     medium: { label: "Medium", pr: 1.5, hi: 9500, vis: 15000, trees: 7500, clouds: 1, shadows: false },
     high: { label: "High", pr: 2, hi: 12500, vis: 16000, trees: 10000, clouds: 1, shadows: true },
   };
   let qualName = load("sw-quality"); if (!QUALITY[qualName]) qualName = "medium";
+  if (load("sw-quality-auto") === "1") { qualName = "medium"; save("sw-quality-auto", "0"); }   // an automatic step-down only lasts for that session
   let QS = QUALITY[qualName];
   const pixelRatioFor = (q) => q.pr < 1 ? Math.min(window.devicePixelRatio || 1, 1) * q.pr : Math.min(window.devicePixelRatio || 1, q.pr);
   renderer.setPixelRatio(pixelRatioFor(QS));
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputEncoding = THREE.sRGBEncoding;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;   // filmic contrast instead of flat, toy-like colour
   const scene = new THREE.Scene();
   const HORIZON = new THREE.Color(0xd3e6f3);
   scene.fog = new THREE.Fog(HORIZON, 3000, 14000);
@@ -813,9 +812,9 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
 
   // terrain: streamed tiles. Every 4 km tile has a cheap low-detail mesh; detailed meshes (with forests) are built near the camera.
   const TC = {
-    deep: new THREE.Color(0x1f4c5c), shallow: new THREE.Color(0x86b0a0), sand: new THREE.Color(0xcfc297), grass: new THREE.Color(0x5b7a3c),
-    grass2: new THREE.Color(0x768c4a), forest: new THREE.Color(0x2b4726), field: new THREE.Color(0x9c9558), high: new THREE.Color(0x6f7550),
-    rock: new THREE.Color(0x77716a), rock2: new THREE.Color(0x908a80), snow: new THREE.Color(0xf3f6f9), mowed: new THREE.Color(0x67874a),
+    deep: new THREE.Color(0x1f4c5c), shallow: new THREE.Color(0x8bbaa5), sand: new THREE.Color(0xd8cb9b), grass: new THREE.Color(0x648a42),
+    grass2: new THREE.Color(0x7f9a52), forest: new THREE.Color(0x2d522a), field: new THREE.Color(0xa29d59), high: new THREE.Color(0x767e53),
+    rock: new THREE.Color(0x7c766c), rock2: new THREE.Color(0x958e84), snow: new THREE.Color(0xf3f6f9), mowed: new THREE.Color(0x6f9750),
   };
   const _c2 = new THREE.Color();
   function terrainColor(x, z, y, ny, c) {
@@ -866,12 +865,42 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     mat.onBeforeCompile = detailCompile;
     return mat;
   }
+  // city facades: windows, mullions, glass reflection and lit offices at night, all from world position
+  const CITY_NIGHT = { value: new THREE.Vector2(0, 0.84) };   // x: night 0..1, y: share of dark windows
+  function facadeCompile(sh) {
+    Object.assign(sh.uniforms, this.userData.fac);
+    sh.vertexShader = "varying vec3 vWp; varying vec3 vWn;\n" + sh.vertexShader.replace("#include <project_vertex>", `#include <project_vertex>
+  #ifdef USE_INSTANCING
+    vWp = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz; vWn = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * objectNormal);
+  #else
+    vWp = (modelMatrix * vec4(transformed, 1.0)).xyz; vWn = normalize(mat3(modelMatrix) * objectNormal);
+  #endif`);
+    sh.fragmentShader = "uniform vec4 uMod; uniform vec3 uFrame; uniform vec2 uNight; varying vec3 vWp; varying vec3 vWn; float gLit = 0.0, gGl = 0.0;\n" + sh.fragmentShader
+      .replace("#include <color_fragment>", `#include <color_fragment>
+  { vec3 n = normalize(vWn); float roof = step(0.6, abs(n.y));
+    float uu = (abs(n.x) > abs(n.z) ? vWp.z : vWp.x) / uMod.x, vv = vWp.y / uMod.y;
+    if (abs(n.x) < 0.98 && abs(n.z) < 0.98) uu = atan(n.z, n.x) * 9.0;                  // round towers: windows around the drum
+    vec2 cell = fract(vec2(uu, vv)), id = floor(vec2(uu, vv));
+    float fw = max(fwidth(uu), fwidth(vv)), sharp = clamp(1.6 - fw * 2.5, 0.0, 1.0);
+    float frame = (cell.x < uMod.z || cell.y < uMod.w) ? 1.0 : 0.0, rnd = fract(sin(dot(id, vec2(12.9898, 78.233))) * 43758.5453);
+    vec3 glass = diffuseColor.rgb * (0.7 + 0.4 * rnd * sharp);
+    vec3 avg = mix(glass, uFrame, (uMod.z + uMod.w) * 0.9);
+    vec3 fac = mix(avg, mix(glass, uFrame, frame), sharp);
+    diffuseColor.rgb = mix(fac, vec3(0.3, 0.31, 0.32), roof);
+    gGl = (1.0 - roof) * (1.0 - frame * sharp);
+    float office = fract(sin(dot(vec2(floor(id.x / 5.0), id.y), vec2(39.3, 11.7))) * 24634.6);   // offices lit in groups of windows on a floor
+    gLit = gGl * step(uNight.y, office) * step(0.25, rnd) * uNight.x * (0.55 + 0.45 * rnd); }`)
+      .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
+  { vec3 vd = normalize(vViewPosition), nn = normalize(vNormal); float fr = pow(1.0 - abs(dot(nn, vd)), 3.0);
+    totalEmissiveRadiance += vec3(0.55, 0.68, 0.82) * fr * 0.45 * gGl * (1.0 - uNight.x) + vec3(1.0, 0.86, 0.62) * gLit * 0.6 + diffuseColor.rgb * 0.06 * uNight.x; }`);
+  }
   function detailCompile(sh) {
     Object.assign(sh.uniforms, this.userData.det);
     sh.vertexShader = "varying vec3 vWp;\n" + sh.vertexShader.replace("#include <project_vertex>", "#include <project_vertex>\n  vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;");
     sh.fragmentShader = "uniform sampler2D uDetail; uniform vec4 uDk; uniform float uTint; varying vec3 vWp;\n" + sh.fragmentShader.replace("#include <color_fragment>", `#include <color_fragment>
   { vec2 w = vWp.xz; float a = texture2D(uDetail, w * uDk.y).r, b = texture2D(uDetail, w * uDk.z).g, c = texture2D(uDetail, w * uDk.w).b;
-    float det = (a - 0.5) * 0.55 + (b - 0.5) * 0.75 + (c - 0.5) * 0.9;
+    float dist = length(vWp - cameraPosition), nearF = 1.0 - smoothstep(60.0 / uDk.y * 0.12, 60.0 / uDk.y * 0.5, dist), midF = 1.0 - smoothstep(30.0 / uDk.z * 0.5, 30.0 / uDk.z * 2.0, dist);
+    float det = (a - 0.5) * 0.55 * nearF + (b - 0.5) * 0.75 * midF + (c - 0.5) * 0.6;   // fine layers fade out with distance, so no shimmer or rings
     diffuseColor.rgb *= max(0.0, 1.0 + det * uDk.x);
     float g = diffuseColor.g - max(diffuseColor.r, diffuseColor.b);        // only green ground gets the dry/lush tint
     if (uTint > 0.0 && g > 0.0) diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.25, 1.06, 0.72), smoothstep(0.45, 0.85, c) * uTint * clamp(g * 12.0, 0.0, 1.0));
@@ -887,16 +916,16 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
         float hsh = fract(sin(dot(id, vec2(12.9898, 78.233))) * 43758.5453), hsh2 = fract(hsh * 7.31 + 0.17);
         vec3 crop = hsh < 0.25 ? vec3(0.42, 0.37, 0.15) : hsh < 0.45 ? vec3(0.2, 0.13, 0.07) : hsh < 0.7 ? vec3(0.16, 0.26, 0.07) : hsh < 0.85 ? vec3(0.3, 0.32, 0.12) : vec3(0.11, 0.2, 0.06);
         crop *= 0.85 + 0.3 * hsh2;
-        float rowsA = 0.92 + 0.08 * sin((hsh2 > 0.5 ? rw.x : rw.y) * 1.05);
+        float rowsA = 1.0;
         float edge = min(min(fr.x, 1.0 - fr.x) * cellSz.x, min(fr.y, 1.0 - fr.y) * cellSz.y);
-        vec3 fc = crop * rowsA * (0.85 + 0.3 * a);
+        vec3 fc = crop * rowsA * (0.9 + 0.2 * b);
         fc = mix(vec3(0.05, 0.1, 0.03), fc, smoothstep(2.0, 6.0, edge));                 // hedgerows between fields
         diffuseColor.rgb = mix(diffuseColor.rgb, fc, fm * 0.85);
       }
     }
   }`);
   }
-  const terrainMat = addDetail(new THREE.MeshLambertMaterial({ vertexColors: true }), 0.6, 7, 53, 410, 0.55);
+  const terrainMat = addDetail(new THREE.MeshLambertMaterial({ vertexColors: true }), 0.45, 7, 53, 410, 0.3);
   terrainMat.extensions = { derivatives: true };   // dFdx/dFdy find flat ground for the fields (WebGL 1 needs the extension)
   function terrainGeo(x0, z0, size, seg, skirt) {
     const N = seg + 1, st = size / seg, W2 = N + 2, H = new Float32Array(W2 * W2);
@@ -1090,20 +1119,57 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       m.compose(p.set(x, y + h, z), q, s.set(w * 1.05, 3 + hash(i, 5) * 2, d * 1.05)); roof.setMatrixAt(i, m); roof.setColorAt(i, roofs[Math.floor(hash(i, 4) * roofs.length)]);
     });
     scene.add(body, roof);
-    // city towers with lit window texture
-    const c = document.createElement("canvas"); c.width = 64; c.height = 128; const g = c.getContext("2d");
-    g.fillStyle = "#6d7884"; g.fillRect(0, 0, 64, 128);
-    for (let y = 4; y < 128; y += 8) for (let x = 3; x < 64; x += 8) { g.fillStyle = hash(x, y) > 0.3 ? "#2a3f55" : "#9fb6c9"; g.fillRect(x, y, 5, 5); }
-    const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
-    const tg = new THREE.BoxGeometry(1, 1, 1); tg.translate(0, 0.5, 0);
-    towersMat = new THREE.MeshLambertMaterial({ map: tex, emissiveMap: tex, emissive: 0x000000 });
-    const towersM = new THREE.InstancedMesh(tg, towersMat, towerSpots.length);
-    const tint = [0xffffff, 0xe9e3d6, 0xd5e0ea, 0xc8ccd2].map((x) => new THREE.Color(x));
+    // ---------- city skyline ----------
+    // Facades are drawn by the shader in world space (window grid, mullions, glass reflection, lit offices at night), so
+    // one instanced mesh per building shape gives crisp detail at any size without textures or heavy models.
+    const facadeMat = (mod, frame, shiny) => {
+      const mt = new THREE.MeshPhongMaterial({ color: 0xffffff, shininess: shiny, specular: 0x777777 });
+      mt.extensions = { derivatives: true };
+      mt.userData.fac = { uMod: { value: new THREE.Vector4(...mod) }, uFrame: { value: new THREE.Color(frame).convertSRGBToLinear() }, uNight: CITY_NIGHT };
+      mt.onBeforeCompile = facadeCompile; return mt;
+    };
+    const glassM = facadeMat([3.0, 3.8, 0.06, 0.1], 0x8d949b, 90), officeM = facadeMat([2.6, 3.6, 0.32, 0.42], 0xd8d2c6, 20), darkGlassM = facadeMat([1.6, 3.8, 0.04, 0.08], 0x2c3036, 110);
+    const metalM = new THREE.MeshLambertMaterial({ color: 0x9da4ab }), roofBoxM = new THREE.MeshLambertMaterial({ color: 0x5d6166 }), redLightM = new THREE.MeshBasicMaterial({ color: 0xff2a1f });
+    const boxG = new THREE.BoxGeometry(1, 1, 1); boxG.translate(0, 0.5, 0);
+    const cylG = new THREE.CylinderGeometry(0.5, 0.5, 1, 28); cylG.translate(0, 0.5, 0);
+    const octG = new THREE.CylinderGeometry(0.5, 0.5, 1, 8); octG.translate(0, 0.5, 0);
+    const spireG = new THREE.CylinderGeometry(0.06, 0.5, 1, 6); spireG.translate(0, 0.5, 0);
+    const lists = { glass: [], office: [], dark: [], cyl: [], oct: [], roof: [], spire: [], light: [] };
+    const glassTints = [0x6d8fae, 0x5d7f8f, 0x8aa3b5, 0x4f6f86, 0x7b8f96, 0x9aa9b0].map((c) => new THREE.Color(c).convertSRGBToLinear());
+    const officeTints = [0x5b6e80, 0x6a7784, 0x48606f].map((c) => new THREE.Color(c).convertSRGBToLinear());
+    const add = (list, x, y, z, w, h, d, col) => list.push([x, y, z, w, h, d, col]);
+    const big = towerSpots.length ? towerSpots.reduce((m2, t) => (t[2] > m2[2] ? t : m2), towerSpots[0]) : null;
     towerSpots.forEach(([x, z, k], i) => {
-      const w = 18 + hash(x, 9) * 22, h = 20 + Math.pow(hash(z, 8), 1.5) * 130 * (0.4 + k);
-      m.compose(p.set(x, heightAt(x, z) - 1, z), q.identity(), s.set(w, h, w * (0.7 + hash(i, 1) * 0.6))); towersM.setMatrixAt(i, m); towersM.setColorAt(i, tint[i % tint.length]);
+      const r1 = hash(x, 9), r2 = hash(z, 8), r3 = hash(i, 5), gy = heightAt(x, z) - 1;
+      if (r3 < 0.35 && k < 0.5) return;                                    // gaps: plazas and low blocks between the towers
+      const w = 20 + r1 * 20, d = w * (0.75 + hash(i, 1) * 0.5), h = 35 + Math.pow(r2, 1.4) * 190 * (0.3 + k);
+      const tint = glassTints[i % glassTints.length], type = hash(i, 13);
+      if (h < 70) { add(lists.office, x, gy, z, w, h, d, officeTints[i % officeTints.length]); add(lists.roof, x + w * 0.15, gy + h, z, w * 0.3, 2.5, d * 0.25); return; }
+      if (type < 0.22) {                                                     // round glass tower
+        add(lists.cyl, x, gy, z, w, h, w, tint); add(lists.cyl, x, gy + h, z, w * 0.7, 6, w * 0.7, tint);
+      } else if (type < 0.5) {                                               // setback tower: three tiers
+        const h1 = h * 0.55, h2 = h * 0.3, h3 = h * 0.15;
+        add(lists.glass, x, gy, z, w, h1, d, tint); add(lists.glass, x, gy + h1, z, w * 0.78, h2, d * 0.78, tint); add(lists.dark, x, gy + h1 + h2, z, w * 0.55, h3, d * 0.55, tint);
+      } else if (type < 0.7) {                                               // office slab on a podium
+        add(lists.office, x, gy, z, w * 1.5, 12, d * 1.5, officeTints[i % officeTints.length]); add(lists.glass, x, gy + 12, z, w, h - 12, d * 0.7, tint);
+      } else add(lists.glass, x, gy, z, w, h, d, tint);                       // plain curtain-wall tower
+      const top = type < 0.22 ? gy + h + 6 : gy + h;
+      add(lists.roof, x - w * 0.15, top, z, w * 0.35, 3, d * 0.3); add(lists.roof, x + w * 0.2, top, z + d * 0.15, w * 0.2, 2, d * 0.2);
+      if (h > 140) { add(lists.spire, x, top, z, 1.6, 18 + r1 * 20, 1.6); add(lists.light, x, top + 18 + r1 * 20, z, 1.2, 1.2, 1.2); }
     });
-    scene.add(towersM);
+    if (big) {                                                               // the city's landmark: an octagonal supertall with a spire
+      const [x, z] = big, gy = heightAt(x, z) - 1, tint = new THREE.Color(0x7d9bb4).convertSRGBToLinear();
+      let y = gy, w = 46; for (const hh of [120, 90, 70, 50]) { add(lists.oct, x, y, z, w, hh, w, tint); y += hh; w *= 0.8; }
+      add(lists.spire, x, y, z, 4, 80, 4); add(lists.light, x, y + 80, z, 2, 2, 2);
+    }
+    const build = (list, geo, mat) => {
+      if (!list.length) return null;
+      const im = new THREE.InstancedMesh(geo, mat, list.length), mm = new THREE.Matrix4(), pp = new THREE.Vector3(), ss = new THREE.Vector3(), qq = new THREE.Quaternion();
+      list.forEach(([x, y, z, w, h, d, col], i) => { mm.compose(pp.set(x, y, z), qq, ss.set(w, h, d)); im.setMatrixAt(i, mm); if (col) im.setColorAt(i, col); });
+      scene.add(im); return im;
+    };
+    build(lists.glass, boxG, glassM); build(lists.office, boxG, officeM); build(lists.dark, boxG, darkGlassM); build(lists.cyl, cylG, glassM); build(lists.oct, octG, darkGlassM);
+    build(lists.roof, boxG, roofBoxM); build(lists.spire, spireG, metalM); build(lists.light, boxG, redLightM);
   })();
 
   // clouds: soft billboard puffs in a single instanced mesh that turns to face the camera
@@ -2426,7 +2492,8 @@ vec3 liveryAt(vec3 p, out float fus) {
   const beacons = [];
   const lam = (c, o = {}) => new THREE.MeshLambertMaterial(Object.assign({ color: c }, o));
   const MAT = {
-    asphalt: addDetail(lam(0x474b52), 0.35, 1.3, 9, 70), taxi: addDetail(lam(0x51555c), 0.35, 1.3, 9, 70), apron: addDetail(lam(0x9fa2a4), 0.22, 1.1, 7, 60), shoulder: addDetail(lam(0x6e7266), 0.4, 2, 12, 80), lot: addDetail(lam(0x3c3f44), 0.3, 1.3, 9, 70),
+    asphalt: addDetail(lam(0x474b52, { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), 0.35, 1.3, 9, 70), taxi: addDetail(lam(0x51555c, { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -3 }), 0.35, 1.3, 9, 70),
+    apron: addDetail(lam(0x9fa2a4, { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }), 0.22, 1.1, 7, 60), shoulder: addDetail(lam(0x6e7266, { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }), 0.4, 2, 12, 80), lot: addDetail(lam(0x3c3f44, { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }), 0.3, 1.3, 9, 70),
     yellow: new THREE.MeshBasicMaterial({ color: 0xf2c230 }), white: new THREE.MeshBasicMaterial({ color: 0xf3f3ef }),
     glass: std(0x2a5d8a, { roughness: 0.12, metalness: 0.7 }), wall: lam(0xe9e6df), wall2: lam(0xd4d7da), roof: lam(0x6f7780),
     red: lam(0xb7372c), tank: lam(0xf0f0ec), hangar: lam(0x9aa6b2), door: lam(0x5a636d),
@@ -2531,7 +2598,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     for (const r of a.rwys) {
       const num = String(a.num).padStart(2, "0") + r.sfx, recip = String(a.recip).padStart(2, "0") + swapLR(r.sfx);
       flat(grp, r.w + 14, r.len + 120, MAT.shoulder, r.off, 0.03, 0).userData.keep = true;
-      flat(grp, r.w, r.len, addDetail(new THREE.MeshLambertMaterial({ map: runwayTexture(r, num, recip) }), 0.3, 1.2, 8, 60), r.off, 0.07, 0).userData.keep = true;
+      flat(grp, r.w, r.len, addDetail(new THREE.MeshLambertMaterial({ map: runwayTexture(r, num, recip), polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -6 }), 0.3, 1.2, 8, 60), r.off, 0.07, 0).userData.keep = true;
       for (let z = -r.len / 2; z <= r.len / 2; z += 60) for (const sx of [-1, 1]) edgeL.push([r.off + sx * (r.w / 2 + 1.5), 0.3, z]);
       for (let i = 0; i < 12; i++) { const x = r.off - r.w / 2 + (i + 0.5) * r.w / 12; thrG.push([x, 0.3, r.len / 2 + 2]); thrR.push([x, 0.3, -r.len / 2 - 2]); thrG.push([x, 0.3, -r.len / 2 - 4]); thrR.push([x, 0.3, r.len / 2 + 4]); }
       // approach lights at both ends
@@ -2907,8 +2974,8 @@ vec3 liveryAt(vec3 p, out float fus) {
   sndBtn.addEventListener("click", () => { soundOn = !soundOn; sndBtn.setAttribute("aria-pressed", String(soundOn)); if (soundOn) initAudio(); if (ac && ac.state === "suspended") ac.resume(); });
   // graphics quality and FPS counter (saved)
   const qualBtn = $("qualBtn"), fpsBtn = $("fpsBtn"), fpsOut = $("fpsOut"), vibBtn = $("vibBtn");
-  function applyQuality(name, announce) {
-    qualName = QUALITY[name] ? name : "medium"; QS = QUALITY[qualName]; save("sw-quality", qualName);
+  function applyQuality(name, announce, keep = true) {
+    qualName = QUALITY[name] ? name : "medium"; QS = QUALITY[qualName]; if (keep) save("sw-quality", qualName);
     $("qualVal").textContent = QS.label;
     renderer.setPixelRatio(pixelRatioFor(QS)); resize();
     if (renderer.shadowMap.enabled !== QS.shadows) {
@@ -2937,7 +3004,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     autoQ.fps.length = 0;
     const lower = qualName === "high" ? "medium" : "low", L = QUALITY[lower].label;
     if (qualManual) { if (!autoQ.told[qualName]) { autoQ.told[qualName] = true; flash(`Low frame rate (${Math.max(1, Math.round(avg))} FPS). Graphics: ${L} in the ⋯ menu would run smoother`, 4.5); } return; }
-    applyQuality(lower, false); save("sw-quality-auto", "1"); autoQ.hold = now + 8000;
+    applyQuality(lower, false, false); autoQ.hold = now + 8000;
     flash(`Low frame rate (${Math.max(1, Math.round(avg))} FPS): graphics lowered to ${L}. Change it in the ⋯ menu`, 4);
   }
   let fpsOn = load("sw-fps") === "1";
@@ -3644,7 +3711,7 @@ vec3 liveryAt(vec3 p, out float fus) {
         }
         q.fillStyle = "#e8eef5"; q.font = "9px sans-serif"; q.fillText(`${Math.round(Math.max(0, S.pos.y) * M2FT)} ft  ${Math.round(S.gs * MS2KT)} kt`, 4, 77); t.needsUpdate = true;
       }
-      const nr = inCab || inDeck ? 0.05 : 0.4; if (camera.near !== nr) { camera.near = nr; camera.updateProjectionMatrix(); }
+      const nr = inCab || inDeck ? 0.1 : 0.4; if (camera.near !== nr) { camera.near = nr; camera.updateProjectionMatrix(); }
     }
     if (S.mode === "brief" || S.mode === "over") {
       const a = now / 8000, d = spec.cam[0] * 1.3;
@@ -4304,8 +4371,8 @@ vec3 liveryAt(vec3 p, out float fus) {
     rain.l.visible = wet;
     clouds.setWeather(weather, night, dusk);
     waterMat.color.set(night ? 0x0b2233 : wet || fog ? 0x2b5470 : 0x1d6c9c);
-    if (towersMat) { towersMat.emissive.set(night ? 0xffe2a8 : 0x000000); towersMat.emissiveIntensity = night ? 0.6 : 0; }
-    renderer.toneMappingExposure = night ? 1.0 : 0.92;
+    CITY_NIGHT.value.x = night ? 1 : dusk ? 0.35 : 0;
+    renderer.toneMappingExposure = 1;
   }
 
   // ================= AUTOPILOT =================
