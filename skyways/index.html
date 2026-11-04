@@ -2407,6 +2407,59 @@ vec3 liveryAt(vec3 p, out float fus) {
   }
   const lightG = new THREE.BoxGeometry(0.6, 0.6, 0.6);
 
+  // ---------- airport building textures (drawn once) ----------
+  const APT = (function () {
+    const tx = (W, H, draw) => { const t = canvasTex(W, H, draw).t; t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; };
+    const corr = tx(128, 64, (g, W, H) => { for (let x = 0; x < W; x += 8) { const gr = g.createLinearGradient(x, 0, x + 8, 0); gr.addColorStop(0, "#8e979f"); gr.addColorStop(0.5, "#c3cad0"); gr.addColorStop(1, "#7f878f"); g.fillStyle = gr; g.fillRect(x, 0, 8, H); } g.fillStyle = "rgba(0,0,0,0.08)"; for (let i = 0; i < 60; i++) g.fillRect(hash(i, 3) * W, hash(4, i) * H, 1, 6); });
+    const roofT = tx(128, 64, (g, W, H) => { for (let x = 0; x < W; x += 6) { g.fillStyle = (x / 6) % 2 ? "#6b737b" : "#7d858d"; g.fillRect(x, 0, 6, H); } });
+    const facade = tx(256, 128, (g, W, H) => {
+      const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, "#5f86a6"); gr.addColorStop(0.6, "#2b4a66"); gr.addColorStop(1, "#1c3247"); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      g.fillStyle = "rgba(255,255,255,0.16)"; g.beginPath(); g.moveTo(40, 0); g.lineTo(120, 0); g.lineTo(60, H); g.lineTo(-20, H); g.fill();
+      g.fillStyle = "#c9cfd4"; for (let x = 0; x <= W; x += 32) g.fillRect(x - 2, 0, 4, H); for (let y = 0; y <= H; y += 42) g.fillRect(0, y - 2, W, 4);
+    });
+    const office = tx(128, 64, (g, W, H) => { g.fillStyle = "#d9d6cf"; g.fillRect(0, 0, W, H); for (let y = 10; y < H; y += 28) for (let x = 6; x < W; x += 20) { g.fillStyle = "#34506b"; g.fillRect(x, y, 14, 12); } });
+    const inside = tx(64, 64, (g, W, H) => { g.fillStyle = "#5a6068"; g.fillRect(0, 0, W, H); g.fillStyle = "#6d747c"; for (let x = 0; x < W; x += 8) g.fillRect(x, 0, 3, H); });
+    const m = (map, o = {}) => new THREE.MeshLambertMaterial(Object.assign({ map, side: THREE.DoubleSide }, o));
+    return {
+      corr: m(corr), roof: m(roofT), facade: new THREE.MeshPhongMaterial({ map: facade, shininess: 90, specular: 0x8899aa }), office: m(office), inside: m(inside, { color: 0xcfd3d8 }),
+      lightStrip: new THREE.MeshBasicMaterial({ color: 0xfff6dc }), floodHead: new THREE.MeshBasicMaterial({ color: 0xfff2c8 }), pole: new THREE.MeshLambertMaterial({ color: 0x9aa0a6 }),
+      tug: new THREE.MeshLambertMaterial({ color: 0xe8b524 }), cart: new THREE.MeshLambertMaterial({ color: 0x8c949c }), fuel: new THREE.MeshLambertMaterial({ color: 0xf4f4f0 }), dark: new THREE.MeshLambertMaterial({ color: 0x2a2d31 }),
+    };
+  })();
+  // box whose texture tiles every `tile` metres on all faces
+  function boxT(grp, w, h, d, mat, x, y, z, tile = 4) {
+    const g = new THREE.BoxGeometry(w, h, d), uv = g.attributes.uv, sz = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
+    for (let f = 0; f < 6; f++) for (let k = 0; k < 4; k++) { const i = f * 4 + k; uv.setXY(i, uv.getX(i) * sz[f][0] / tile, uv.getY(i) * sz[f][1] / tile); }
+    const b = new THREE.Mesh(g, mat); b.position.set(x, y + h / 2, z); grp.add(b); return b;
+  }
+  // a maintenance hangar: ribbed metal walls and roof, doors slid open, a lit interior; the door faces −x (the apron)
+  function buildHangar(grp, hx, hz, hD, hW, hH, label, open = 0.62) {
+    const t = 0.6, doorH = hH * 0.82, openW = hW * open;
+    boxT(grp, t, hH, hW, APT.corr, hx + hD / 2, 0, hz, 6);                                        // back wall
+    for (const sz of [-1, 1]) boxT(grp, hD, hH, t, APT.corr, hx, 0, hz + sz * hW / 2, 6);         // side walls
+    boxT(grp, t, hH - doorH, hW, APT.corr, hx - hD / 2, doorH, hz, 6);                            // header over the doors
+    const panW = (hW - openW) / 2 / 2;                                                            // two door leaves stacked at each side
+    for (const sz of [-1, 1]) for (let k = 0; k < 2; k++) boxT(grp, 0.5, doorH, panW + 0.3, APT.corr, hx - hD / 2 - 0.6 - k * 0.7, 0, hz + sz * (hW / 2 - panW / 2 - k * panW * 0.15), 4);
+    const arch = new THREE.Mesh(new THREE.CylinderGeometry(hW / 2, hW / 2, hD + 1, 24, 1, true, 0, Math.PI), APT.roof);
+    arch.geometry.rotateZ(Math.PI / 2); arch.scale.set(1, 0.22, 1); arch.position.set(hx, hH, hz); grp.add(arch);
+    { const uv = arch.geometry.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * hW / 3, uv.getY(i) * hD / 12); }
+    for (const ex of [-1, 1]) {   // gable ends of the arched roof
+      const cap = new THREE.Mesh(new THREE.CircleGeometry(hW / 2, 24, 0, Math.PI), APT.corr);
+      cap.rotation.y = -Math.PI / 2; cap.scale.set(1, 0.22, 1); cap.position.set(hx + ex * (hD / 2 + 0.3), hH, hz); grp.add(cap);
+    }
+    // interior: lining, floor, rows of ceiling lights
+    boxT(grp, 0.2, hH * 0.98, hW - 1.4, APT.inside, hx + hD / 2 - 0.7, 0, hz, 4);
+    flat(grp, hD - 1, hW - 1.4, MAT.apron, hx, 0.06, hz);
+    for (let k = -2; k <= 2; k++) { const l = new THREE.Mesh(new THREE.BoxGeometry(hD * 0.8, 0.25, 0.8), APT.lightStrip); l.position.set(hx, hH * 0.93, hz + k * hW / 6); grp.add(l); }
+    // sign over the doors
+    const sg = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(hW * 0.6, 60), (hH - doorH) * 0.6), new THREE.MeshBasicMaterial({ map: textTex(label, "#1b2c40", "#ffffff", 512, 64) }));
+    sg.rotation.y = -Math.PI / 2; sg.position.set(hx - hD / 2 - 0.4, doorH + (hH - doorH) / 2, hz); grp.add(sg);
+    // office annex with windows on one side, apron markings in front
+    boxT(grp, hD * 0.55, Math.min(10, hH * 0.5), 10, APT.office, hx + hD * 0.1, 0, hz + hW / 2 + 5.3, 5);
+    flat(grp, 0.4, hW * 0.8, MAT.yellow, hx - hD / 2 - 12, 0.09, hz);
+    flat(grp, 26, 0.4, MAT.yellow, hx - hD / 2 - 13, 0.09, hz);
+    return { doorX: hx - hD / 2, w: openW, h: doorH };
+  }
   function buildAirport(a) {
     const grp = new THREE.Group(); grp.position.set(a.x, a.elev, a.z); grp.rotation.y = -a.hdg * Math.PI / 180; scene.add(grp);
     const lg = (lx, lz) => { const [wx, wz] = toWorld(a, -lz, lx); return Math.max(0, heightAt(wx, wz)) - a.elev; };   // over the sea the approach lights stand on piers at the waterline
@@ -2468,7 +2521,8 @@ vec3 liveryAt(vec3 p, out float fus) {
     // terminal
     const tH = intl ? 20 : a.kind === "regional" ? 12 : 7, tCx = a.termX0 + a.termD / 2;
     box(grp, a.termD, tH, a.apL * 0.86, MAT.wall, tCx, 0, 0);
-    const glassBand = new THREE.Mesh(new THREE.BoxGeometry(0.8, tH * 0.55, a.apL * 0.84), MAT.glass); glassBand.position.set(a.termX0 - 0.3, tH * 0.55, 0); grp.add(glassBand);
+    boxT(grp, 0.8, tH * 0.8, a.apL * 0.84, APT.facade, a.termX0 - 0.3, tH * 0.12, 0, tH * 0.8);            // curtain-wall glass facade on the airside
+    boxT(grp, 4, 0.6, a.apL * 0.86, MAT.roof, a.termX0 - 2, tH - 0.6, 0);                                  // roof overhang
     box(grp, a.termD + 6, 1.4, a.apL * 0.86 + 6, MAT.roof, tCx, tH, 0);
     if (intl) for (let k = -2; k <= 2; k++) box(grp, 16, 6, 16, MAT.wall2, tCx + 8, tH + 1.4, k * a.apL * 0.17);
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(a.apL * 0.5, 120), intl ? 12 : 8), new THREE.MeshBasicMaterial({ map: textTex(a.name.toUpperCase(), "#14385e", "#ffffff") }));
@@ -2490,6 +2544,11 @@ vec3 liveryAt(vec3 p, out float fus) {
         const bl = 14, bx = a.termX0 - bl / 2 - 0.5;
         const br = new THREE.Mesh(new THREE.BoxGeometry(bl, 3.2, 3.2), MAT.wall2); br.position.set(bx, 5.2, st.z - 4.2); grp.add(br);
         const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 3.6, 6), MAT.door); leg.position.set(a.termX0 - bl + 2, 1.8, st.z - 4.2); grp.add(leg);
+        const rot = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.6, 4, 12), MAT.wall2); rot.position.set(a.termX0 - 1.5, 5.2, st.z - 4.2); grp.add(rot);
+        const cabB = new THREE.Mesh(new THREE.BoxGeometry(3, 3.4, 3.8), MAT.door); cabB.position.set(bx - bl / 2 - 1, 5.2, st.z - 4.2); grp.add(cabB);
+        for (const wx of [-1, 1]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.4, 10), APT.dark); w.rotation.x = Math.PI / 2; w.position.set(a.termX0 - bl + 2, 0.45, st.z - 4.2 + wx * 0.8); grp.add(w); }
+        const gn = new THREE.Mesh(new THREE.PlaneGeometry(4, 2.4), new THREE.MeshBasicMaterial({ map: textTex(String(stands.indexOf(st) + 1), "#f2c230", "#111", 128, 80) }));
+        gn.rotation.y = -Math.PI / 2; gn.position.set(a.termX0 - 0.9, tH - 2.2, st.z); grp.add(gn);
       }
     }
     // control tower
@@ -2503,14 +2562,22 @@ vec3 liveryAt(vec3 p, out float fus) {
     const bwh = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 1.6), M.white); bwh.position.z = -0.7; bc.add(bwh); grp.add(bc); beacons.push(bc);
     // fire station, hangars, cargo, fuel farm
     box(grp, 26, 9, 34, MAT.red, a.tx + 45, 0, twZ - 30);
-    const hz0 = a.apL / 2 + 70, hN = intl ? 3 : ga ? 2 : 2, hW = intl ? 80 : ga ? 26 : 50, hD = intl ? 70 : ga ? 22 : 40, hH = intl ? 24 : ga ? 9 : 16;
-    for (let k = 0; k < hN; k++) {
-      const hz = hz0 + k * (hW + 20) + hW / 2, hx = a.apX0 + hD / 2 + 30;
-      box(grp, hD, hH, hW, MAT.hangar, hx, 0, hz);
-      const arch = new THREE.Mesh(new THREE.CylinderGeometry(hW / 2, hW / 2, hD, 20, 1, false, 0, Math.PI), MAT.roof);
-      arch.geometry.rotateZ(Math.PI / 2); arch.scale.set(1, 0.25, 1); arch.position.set(hx, hH, hz); grp.add(arch);
-      const door = new THREE.Mesh(new THREE.PlaneGeometry(hW * 0.86, hH * 0.85), MAT.door); door.rotation.y = -Math.PI / 2; door.position.set(hx - hD / 2 - 0.2, hH * 0.43, hz); grp.add(door);
-      flat(grp, 40, hW, MAT.apron, hx - hD / 2 - 20, 0.04, hz);
+    const hz0 = a.apL / 2 + 70, hW = intl ? 80 : ga ? 26 : 52, hD = intl ? 70 : ga ? 22 : 46, hH = intl ? 24 : ga ? 9 : 17;
+    const hN = intl ? 4 : ga ? 4 : 3, hSpan = intl ? 80 * 3 + 95 + 80 : hN * (hW + 20);
+    const names = intl ? ["SKYWAYS TECHNIK", "HANGAR 2", "WIDEBODY MRO", "HANGAR 4"] : ga ? ["AERO CLUB", "FLIGHT SCHOOL", "HANGAR 3", "HANGAR 4"] : ["LINE MAINTENANCE", "HANGAR 2", "HANGAR 3"];
+    const hNum = intl ? 4 : ga ? 4 : 3, hWk = (k) => (intl && k === 2 ? 95 : hW), hDk = (k) => (intl && k === 2 ? 80 : hD), hHk = (k) => (intl && k === 2 ? 30 : hH);
+    let hzCur = hz0;
+    for (let k = 0; k < hNum; k++) {
+      const w = hWk(k), dd = hDk(k), hh = hHk(k), hz = hzCur + w / 2, hx = a.apX0 + dd / 2 + 30; hzCur += w + 20;
+      buildHangar(grp, hx, hz, dd, w, hh, names[k]);
+      flat(grp, 44, w + 10, MAT.apron, hx - dd / 2 - 22, 0.04, hz);
+      // an aircraft in for maintenance, nose in
+      const kinds = Object.keys(PLANES).filter((kk) => PLANES[kk].packed && DIMS[kk][0] < w - 8 && DIMS[kk][1] < dd + 25 && (kk === "b737" || kk === "mh" || kk === "a321" || kk === "b767" || kk === "a350"));
+      if (!ga && kinds.length && (k === 0 || (intl && k === 2))) {
+        const kk = k === 2 ? kinds.filter((q) => DIMS[q][0] > 40)[0] || kinds[0] : kinds[Math.floor(hash(a.x, k) * kinds.length)], sp = PLANES[kk];
+        const mdl = sp.build(livOf(kk, randomLiv(kk))); mdl.rotation.y = -Math.PI / 2; mdl.position.set(hx - dd / 2 + DIMS[kk][1] * 0.42, sp.gearH + 0.05, hz);
+        mdl.userData.strobes.forEach((st) => (st.visible = false)); grp.add(mdl);
+      }
     }
     if (intl) {
       const cz = twZ - 170; box(grp, 60, 16, 130, MAT.wall2, a.apX0 + 80, 0, cz); flat(grp, 70, 140, MAT.apron, a.apX0 + 25, 0.04, cz);
@@ -2518,7 +2585,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     }
     for (let k = 0; k < (intl ? 4 : 2); k++) {
       const t = new THREE.Mesh(new THREE.CylinderGeometry(intl ? 11 : 6, intl ? 11 : 6, intl ? 13 : 8, 20), MAT.tank);
-      t.position.set(a.roadX - 30 - (k % 2) * 28, (intl ? 13 : 8) / 2, hz0 + hN * (hW + 20) + 40 + Math.floor(k / 2) * 28); grp.add(t);
+      t.position.set(a.roadX - 30 - (k % 2) * 28, (intl ? 13 : 8) / 2, hz0 + hSpan + 40 + Math.floor(k / 2) * 28); grp.add(t);
     }
     // car park with cars, landside road kerb
     flat(grp, a.lotX1 - a.lotX0, a.apL * 0.7, MAT.lot, (a.lotX0 + a.lotX1) / 2, 0.04, 0);
@@ -2526,6 +2593,34 @@ vec3 liveryAt(vec3 p, out float fus) {
     const cars = []; for (let x = a.lotX0 + 6; x < a.lotX1 - 4; x += 12) for (let zz = -a.apL * 0.33; zz < a.apL * 0.33; zz += 3.2) if (hash(x, zz) < 0.7) cars.push([x, 0.75, zz]);
     const carM = new THREE.InstancedMesh(new THREE.BoxGeometry(4.4, 1.5, 1.9), new THREE.MeshLambertMaterial(), cars.length), m4 = new THREE.Matrix4();
     cars.forEach(([x, y, zz], i) => { m4.makeTranslation(x, y, zz); carM.setMatrixAt(i, m4); carM.setColorAt(i, carCols[Math.floor(hash(i, x) * carCols.length)]); }); grp.add(carM);
+    // ground service vehicles round the parked aircraft: tug at the nose, baggage carts and a belt loader, a fuel truck at the wing
+    { const veh = { tug: [], cart: [], fuel: [], belt: [] };
+      for (const st of stands) { if (!PLANES[st.kind].big) continue;
+        const nx = a.termX0 - 9, x = (f) => nx - st.len * f;
+        veh.tug.push([nx - 4, st.z + 2]); veh.belt.push([x(0.72), st.z - 4.5]);
+        for (let c = 0; c < 3; c++) veh.cart.push([x(0.72) - 6 - c * 3.4, st.z - 7]);
+        if (hash(st.z, a.x) > 0.4) veh.fuel.push([x(0.45), st.z + 9]);
+      }
+      const put = (list, geo, mat, h) => { if (!list.length) return; const im = new THREE.InstancedMesh(geo, mat, list.length), m4b = new THREE.Matrix4(); list.forEach(([vx, vz], i) => { m4b.makeTranslation(vx, h, vz); im.setMatrixAt(i, m4b); }); grp.add(im); };
+      put(veh.tug, new THREE.BoxGeometry(4.2, 1.5, 2.3), APT.tug, 0.75);
+      put(veh.cart, new THREE.BoxGeometry(2.8, 1.4, 1.6), APT.cart, 0.9);
+      put(veh.fuel, new THREE.BoxGeometry(9, 2.8, 2.5), APT.fuel, 1.4);
+      { const bg = new THREE.BoxGeometry(8, 0.5, 1.2); bg.rotateZ(0.28); put(veh.belt, bg, APT.tug, 1.8); }
+    }
+    // apron floodlight masts
+    for (let fz = -a.apL / 2 + 30; fz <= a.apL / 2 - 30; fz += intl ? 110 : 140) {
+      const fx = a.apX0 - 12, ph = intl ? 28 : 20;
+      const pl = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.5, ph, 6), APT.pole); pl.position.set(fx, ph / 2, fz); grp.add(pl);
+      const hd = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.4, 4), APT.floodHead); hd.position.set(fx + 0.4, ph, fz); grp.add(hd);
+    }
+    // surveillance radar next to the tower, turning
+    if (!ga) {
+      const rx = twX + 40, rzz = twZ - 10;
+      const tw = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 2, 14, 8), APT.pole); tw.position.set(rx, 7, rzz); grp.add(tw);
+      const rad = new THREE.Group(); rad.position.set(rx, 15, rzz);
+      const dish = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.4, 9), new THREE.MeshLambertMaterial({ color: 0xe9ecef })); dish.rotation.z = 0.25; rad.add(dish);
+      grp.add(rad); beacons.push(rad);
+    }
     // windsock
     const wsx = r0.off - r0.w / 2 - 40, wsz = r0.len / 2 - 350;
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 8, 6), lam(0xdddddd)); pole.position.set(wsx, 4, wsz); grp.add(pole);
