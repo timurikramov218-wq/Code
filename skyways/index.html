@@ -408,7 +408,7 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
   <header class="masthead">
     <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="currentColor"/></svg></span>
       <h1>Skyways <span>Flight Sim</span></h1></div>
-    <p class="tagline">4 aircraft · 17 airports · 10 missions · replays · 32 km world · day, sunset and night</p>
+    <p class="tagline">8 aircraft · 17 airports · 10 missions · replays · 32 km world · day, sunset and night</p>
   </header>
 
   <div class="stage" id="stage">
@@ -608,7 +608,9 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
       <ul class="airports">
         <li><code>A320</code><span><a href="https://sketchfab.com/3d-models/1400-boeing-737-airplane-for-free-f39ca33a81f14613a3d562d6b74c466a" target="_blank" rel="noopener">1/400 Boeing 737 Airplane For Free</a> by businessyuen</span><span>CC BY 4.0</span></li>
         <li><code>B767</code><span><a href="https://sketchfab.com/3d-models/boeing-767-200er-41d1b62ed48c4212bf3ef7cd1fca3995" target="_blank" rel="noopener">Boeing 767-200ER</a> by beanz_ncheese</span><span>CC BY 4.0</span></li>
-        <li><code>B777</code><span>Built for this game from the Boeing 767-200ER model above (scaled up, longer fuselage, six-wheel bogies)</span><span>CC BY 4.0</span></li>
+        <li><code>B777 · 77W · B763</code><span>Built for this game from the Boeing 767-200ER model above (scaled, lengthened fuselage sections, six-wheel bogies)</span><span>CC BY 4.0</span></li>
+        <li><code>A321</code><span>Built from the A320 model above with lengthened fuselage sections</span><span>CC BY 4.0</span></li>
+        <li><code>B739</code><span>Built from the 737 model above with lengthened fuselage sections</span><span>CC BY 4.0</span></li>
         <li><code>737</code><span><a href="https://sketchfab.com/3d-models/medium-haul-plane-low-poly-226d0f39a9154db9922fcbdd56efe0f5" target="_blank" rel="noopener">Medium haul plane (low poly)</a> by reeledzin</span><span>CC BY 4.0</span></li>
       </ul>
     </section>
@@ -634,7 +636,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   // ================= WORLD DATA =================
   const AIRPORTS = [
     { code: "HBP", name: "Harbor Point Intl", x: -200, z: -1250, hdg: 20, elev: 12, kind: "intl",
-      rwys: [{ off: 0, len: 2400, w: 50, sfx: "R" }, { off: -380, len: 2000, w: 45, sfx: "L" }], stands: ["b737", "mh", "b777", "b737", "mh", "b767", "b737", "b777", "b767", "b737"] },
+      rwys: [{ off: 0, len: 2400, w: 50, sfx: "R" }, { off: -380, len: 2000, w: 45, sfx: "L" }], stands: ["a321", "mh", "b777", "b737", "b739", "b763", "b737", "b77w", "b767", "a321"] },
     { code: "SPT", name: "Southport", x: 3100, z: 1300, hdg: 120, elev: 20, kind: "intl",
       rwys: [{ off: 0, len: 1900, w: 45, sfx: "" }], stands: ["mh", "b767", "b737", "mh", "b767"] },
     { code: "WFD", name: "Westfield Regional", x: -2900, z: 2350, hdg: 160, elev: 148, kind: "regional",
@@ -644,7 +646,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     { code: "CRK", name: "Coral Key", x: -2300, z: -3050, hdg: 300, elev: 6, kind: "ga",
       rwys: [{ off: 0, len: 1250, w: 35, sfx: "" }], stands: ["mh", "b767"] },
     { code: "EGT", name: "Eastgate Intl", x: 6500, z: -6750, hdg: 140, elev: 88, kind: "intl",
-      rwys: [{ off: 0, len: 2600, w: 50, sfx: "" }], stands: ["b777", "b737", "mh", "b767", "b737", "mh", "b777"] },
+      rwys: [{ off: 0, len: 2600, w: 50, sfx: "" }], stands: ["b77w", "a321", "mh", "b763", "b737", "b739", "b777"] },
     { code: "SNV", name: "Sunvale Intl", x: 2000, z: 10750, hdg: 90, elev: 126, kind: "intl",
       rwys: [{ off: 0, len: 2400, w: 50, sfx: "" }], stands: ["b737", "mh", "b777", "b737", "mh"] },
     { code: "HMR", name: "Highmoor", x: 12500, z: 2500, hdg: 30, elev: 185, kind: "regional",
@@ -674,7 +676,7 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       rwys: [{ off: 0, len: 1300, w: 35, sfx: "" }], stands: ["b737", "mh"] },
   ];
   const WORLD = 16000;
-  const DIMS = { b777: [60.9, 63.7], trainer: [11, 8.3], aero: [8, 6.6], islander: [35.8, 39.5], breeze: [27.1, 27.2], swift: [15.5, 17.7], atlas: [42.4, 45.1], arrow: [9.1, 14.4], regio: [28.7, 36.2], skyliner: [60.1, 62.8], jumbo: [64.4, 70.7], commuter: [17.7, 17.6], b772: [64.8, 73.9], b737: [35.8, 39.7], mh: [37.8, 35.5], b767: [47.6, 48.5] };
+  const DIMS = { b77w: [64.8, 73.6], b763: [47.6, 55.2], a321: [35.8, 46.5], b739: [37.8, 43.0], b777: [60.9, 63.7], trainer: [11, 8.3], aero: [8, 6.6], islander: [35.8, 39.5], breeze: [27.1, 27.2], swift: [15.5, 17.7], atlas: [42.4, 45.1], arrow: [9.1, 14.4], regio: [28.7, 36.2], skyliner: [60.1, 62.8], jumbo: [64.4, 70.7], commuter: [17.7, 17.6], b772: [64.8, 73.9], b737: [35.8, 39.7], mh: [37.8, 35.5], b767: [47.6, 48.5] };
   const swapLR = (s) => (s === "L" ? "R" : s === "R" ? "L" : "");
   for (const a of AIRPORTS) {
     const t = a.hdg * Math.PI / 180; a.s = Math.sin(t); a.c = Math.cos(t);
@@ -1573,20 +1575,20 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   // Lines are in fuselage radii, measured from the window line (+ up): belly / top / stripe (rises with the belly line) / stripe2 (straight).
   // fin: up to three colours top→bottom; finMode 0 solid, 1 bands, 2 sloped bands. title: name on the forward fuselage.
   const AIRLINE = {
-    dal: { name: "Delta", belly: "#14284b", bellyY: -0.4, rise: 0.25, fin: ["#d01c35", "#b0172f", "#7d1530"], finMode: 2, title: ["DELTA", "#14284b", "900", "sans"] },
-    ual: { name: "United", belly: "#0033a0", bellyY: -0.28, rise: 0.3, stripe: ["#8a9bb0", -0.34, -0.28], fin: ["#0b2d6e"], title: ["UNITED", "#0b2d6e", "800", "sans", 0.18] },
-    aal: { name: "American", body: "#c3c9cf", wing: "#b4bac0", fin: ["#0a3a79", "#ffffff", "#c30019"], finMode: 2, title: ["American", "#36495a", "700", "sans"] },
-    uae: { name: "Emirates", fin: ["#00843d", "#ffffff", "#111111"], finMode: 1, title: ["Emirates", "#b5985a", "700", "serif"] },
-    qtr: { name: "Qatar Airways", fin: ["#5c0632"], stripe2: ["#5c0632", -0.28, -0.2], title: ["QATAR AIRWAYS", "#5c0632", "700", "sans", 0.1] },
-    dlh: { name: "Lufthansa", fin: ["#05164d"], title: ["Lufthansa", "#05164d", "700", "serif"] },
-    baw: { name: "British Airways", belly: "#13306b", bellyY: -0.45, rise: 0.2, stripe: ["#c8102e", -0.52, -0.45], fin: ["#13306b", "#ffffff", "#c8102e"], finMode: 2, title: ["BRITISH AIRWAYS", "#13306b", "600", "sans", 0.06] },
-    klm: { name: "KLM", top: "#00a1de", topY: -0.1, stripe2: ["#003082", -0.18, -0.09], fin: ["#00a1de"], title: ["KLM", "#ffffff", "900", "sans", 0.15] },
-    ryr: { name: "Ryanair", belly: "#073590", bellyY: -0.33, rise: 0.3, stripe: ["#f1c933", -0.4, -0.33], fin: ["#073590"], title: ["RYANAIR", "#073590", "900", "sans"] },
-    ezy: { name: "easyJet", fin: ["#ff6600"], nose: "#ff6600", title: ["easyJet", "#ff6600", "900", "sans"] },
-    thy: { name: "Turkish Airlines", fin: ["#c8102e"], stripe2: ["#c8102e", -0.27, -0.19], title: ["TURKISH AIRLINES", "#c8102e", "700", "sans", 0.05] },
-    afl: { name: "Aeroflot", body: "#eef1f4", stripe2: ["#0b4ea2", -0.29, -0.16], fin: ["#ffffff", "#0039a6", "#d52b1e"], finMode: 2, title: ["AEROFLOT", "#0b4ea2", "800", "sans", 0.12] },
-    s7: { name: "S7 Airlines", body: "#b5d334", wing: "#c9cfd4", fin: ["#8fb31d"], title: ["S7 AIRLINES", "#36520f", "900", "sans", 0.08] },
-    sia: { name: "Singapore Airlines", stripe2: ["#f2a900", -0.3, -0.17], fin: ["#0b2a5b", "#0b2a5b", "#f2a900"], finMode: 1, title: ["SINGAPORE AIRLINES", "#0b2a5b", "600", "serif", 0.04] },
+    dal: { name: "Delta", belly: "#0e1f3f", bellyY: -0.4, rise: 0.25, fin: ["#c8102e", "#7c1630"], finMode: 4, engine: "#0e1f3f", title: ["DELTA", "#0e1f3f", "900", "sans", 0.12] },
+    ual: { name: "United", belly: "#0033a0", bellyY: -0.28, rise: 0.3, stripe: ["#8a9bb0", -0.34, -0.28], fin: ["#0b2d6e"], engine: "#0033a0", title: ["UNITED", "#0b2d6e", "800", "sans", 0.18] },
+    aal: { name: "American", body: "#c6ccd2", wing: "#b8bec4", fin: ["#c30019", "#ffffff", "#0a3a79"], finMode: 2, engine: "#c6ccd2", title: ["American", "#36495a", "700", "sans"] },
+    uae: { name: "Emirates", fin: ["#00843d", "#ffffff", "#111111"], finMode: 3, finLead: "#d71921", title: ["Emirates", "#b5985a", "700", "serif"] },
+    qtr: { name: "Qatar Airways", body: "#eceeef", fin: ["#5c0632"], spine: true, engine: "#d6d9dc", title: ["QATAR AIRWAYS", "#5c0632", "700", "sans", 0.1] },
+    dlh: { name: "Lufthansa", fin: ["#05164d"], engine: "#f4f6f8", title: ["Lufthansa", "#05164d", "700", "serif"] },
+    baw: { name: "British Airways", belly: "#13306b", bellyY: -0.45, rise: 0.2, stripe: ["#c8102e", -0.52, -0.45], fin: ["#c8102e", "#ffffff", "#13306b"], finMode: 2, engine: "#a9b1b9", title: ["BRITISH AIRWAYS", "#13306b", "600", "sans", 0.06] },
+    klm: { name: "KLM", top: "#00a1de", topY: -0.1, stripe2: ["#003082", -0.18, -0.09], fin: ["#00a1de"], engine: "#00a1de", title: ["KLM", "#ffffff", "900", "sans", 0.15] },
+    ryr: { name: "Ryanair", belly: "#073590", bellyY: -0.33, rise: 0.3, stripe: ["#f1c933", -0.4, -0.33], fin: ["#073590"], engine: "#073590", title: ["RYANAIR", "#073590", "900", "sans"] },
+    ezy: { name: "easyJet", fin: ["#ff6600"], nose: "#ff6600", engine: "#ff6600", title: ["easyJet", "#ff6600", "900", "sans"] },
+    thy: { name: "Turkish Airlines", fin: ["#c8102e"], stripe2: ["#c8102e", -0.27, -0.19], engine: "#d9dcdf", title: ["TURKISH AIRLINES", "#c8102e", "700", "sans", 0.05] },
+    afl: { name: "Aeroflot", body: "#eef1f4", stripe2: ["#0b4ea2", -0.29, -0.16], fin: ["#ffffff", "#0039a6", "#d52b1e"], finMode: 1, engine: "#0b4ea2", title: ["AEROFLOT", "#0b4ea2", "800", "sans", 0.12] },
+    s7: { name: "S7 Airlines", body: "#b5d334", wing: "#c9cfd4", fin: ["#8fb31d"], engine: "#8fb31d", title: ["S7 AIRLINES", "#36520f", "900", "sans", 0.08] },
+    sia: { name: "Singapore Airlines", stripe2: ["#f2a900", -0.3, -0.17], fin: ["#0b2a5b"], engine: "#d9dcdf", title: ["SINGAPORE AIRLINES", "#0b2a5b", "600", "serif", 0.04] },
   };
   for (const [id, a] of Object.entries(AIRLINE)) LIV[id] = Object.assign({ id, pack: true }, a);
   for (const [id, a] of Object.entries(AIRLINE)) LIV[id] = Object.assign({ id, pack: true }, a);
@@ -1595,6 +1597,10 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     mh: ["ryr", "ual", "aal", "dal", "klm", "thy", "s7", "afl", "sia"],
     b767: ["dal", "ual", "aal", "baw", "uae", "qtr", "afl", "klm"],
     b777: ["uae", "ual", "aal", "baw", "qtr", "klm", "afl", "sia", "thy", "dal"],
+    b77w: ["uae", "ual", "aal", "baw", "qtr", "klm", "afl", "sia", "thy", "dal"],
+    b763: ["dal", "ual", "aal", "baw", "qtr", "afl", "klm", "thy"],
+    a321: ["dlh", "baw", "ezy", "thy", "afl", "s7", "aal", "dal", "ual", "qtr"],
+    b739: ["ual", "dal", "aal", "klm", "thy", "s7", "afl", "ryr"],
     islander: ["ryanair", "klm", "turkish", "qantas", "lufthansa"],
     regio: ["klmch", "jetblue", "azul"],
     skyliner: ["ba", "qantas", "ana", "turkish", "airnz"],
@@ -1608,6 +1614,10 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
     b737: { name: "Airbus A320", type: "Narrow-body airliner · detailed 3D model", packed: true, build: build737model, thrust: 7.0, vmax: 128, stall: 46, roll: 0.8, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 3.2, retract: true, cam: [64, 13], cock: [1.0, -20.4], wingX: 17.9, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.3, 0.35] },
     b767: { name: "Boeing 767-200ER", type: "Wide-body airliner · 3D model", packed: true, build: build767model, thrust: 6.6, vmax: 140, stall: 50, roll: 0.68, pitch: 0.45, yaw: 0.22, turn: 0.7, gearH: 4.2, retract: true, cam: [90, 18], cock: [1.2, -24.85], wingX: 23.6, brake: 4.2, shadow: 26, big: true, stats: [0.9, 0.25, 0.3] },
     b777: { name: "Boeing 777-200ER", type: "Long-haul wide-body · 3D model", packed: true, build: build777model, thrust: 6.9, vmax: 145, stall: 52, roll: 0.6, pitch: 0.42, yaw: 0.2, turn: 0.65, gearH: 5.3, retract: true, cam: [112, 22], cock: [1.55, -33.2], wingX: 30.2, brake: 4.0, shadow: 33, big: true, stats: [0.95, 0.22, 0.28] },
+    b77w: { name: "Boeing 777-300ER", type: "Long-haul wide-body · stretched 777", packed: true, build: build77Wmodel, thrust: 7.0, vmax: 146, stall: 54, roll: 0.55, pitch: 0.4, yaw: 0.19, turn: 0.62, gearH: 5.3, retract: true, cam: [128, 24], cock: [1.55, -38.2], wingX: 31.9, brake: 3.9, shadow: 37, big: true, stats: [0.97, 0.2, 0.26] },
+    b763: { name: "Boeing 767-300ER", type: "Wide-body airliner · stretched 767", packed: true, build: build763model, thrust: 6.7, vmax: 140, stall: 51, roll: 0.65, pitch: 0.44, yaw: 0.21, turn: 0.68, gearH: 4.2, retract: true, cam: [98, 19], cock: [1.2, -28.2], wingX: 23.6, brake: 4.1, shadow: 28, big: true, stats: [0.92, 0.24, 0.29] },
+    a321: { name: "Airbus A321", type: "Narrow-body airliner · stretched A320", packed: true, build: buildA321model, thrust: 7.1, vmax: 128, stall: 48, roll: 0.75, pitch: 0.48, yaw: 0.24, turn: 0.72, gearH: 3.2, retract: true, cam: [72, 14], cock: [1.0, -23.8], wingX: 17.9, brake: 4.4, shadow: 19, big: true, stats: [0.84, 0.28, 0.33] },
+    b739: { name: "Boeing 737-900ER", type: "Narrow-body airliner · stretched 737", packed: true, build: build739model, thrust: 7.1, vmax: 130, stall: 48, roll: 0.75, pitch: 0.48, yaw: 0.24, turn: 0.72, gearH: 3.0, retract: true, cam: [70, 14], cock: [1.0, -21.8], wingX: 18.9, brake: 4.4, shadow: 19, big: true, stats: [0.84, 0.28, 0.33] },
     mh: { name: "Boeing 737", type: "Narrow-body airliner · low-poly 3D model", packed: true, build: buildMHmodel, thrust: 7.0, vmax: 130, stall: 46, roll: 0.82, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 3.0, retract: true, cam: [60, 13], cock: [1.0, -18.3], wingX: 18.9, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.32, 0.38] },
   };
   for (const k of Object.keys(PLANES)) PLANES[k].kind = k;
@@ -1624,9 +1634,9 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
       sp.gearH *= f; sp.wingX *= f; sp.shadow *= f; sp.cam = sp.cam.map((v) => v * f); sp.cock = sp.cock.map((v) => v * f);
     }
   })();
-  const CAT = { b777: "airliner", b767: "airliner", b737: "airliner", mh: "airliner", trainer: "light", aero: "light", swift: "light", islander: "airliner", breeze: "airliner", regio: "airliner", skyliner: "airliner", jumbo: "airliner", b772: "airliner", commuter: "airliner", atlas: "special", arrow: "special" };
-  const SEATS = { b777: 314, b767: 224, b737: 180, mh: 189, trainer: 4, aero: 2, swift: 9, islander: 189, breeze: 72, regio: 100, skyliner: 296, jumbo: 416, b772: 396, commuter: 19, atlas: 116, arrow: 1 };
-  const CRUISE = { b777: 482, b767: 459, b737: 447, mh: 453, trainer: 124, aero: 210, swift: 465, islander: 453, breeze: 275, regio: 447, skyliner: 488, jumbo: 490, b772: 490, commuter: 280, atlas: 421, arrow: 500 };
+  const CAT = { b77w: "airliner", b763: "airliner", a321: "airliner", b739: "airliner", b777: "airliner", b767: "airliner", b737: "airliner", mh: "airliner", trainer: "light", aero: "light", swift: "light", islander: "airliner", breeze: "airliner", regio: "airliner", skyliner: "airliner", jumbo: "airliner", b772: "airliner", commuter: "airliner", atlas: "special", arrow: "special" };
+  const SEATS = { b77w: 396, b763: 269, a321: 220, b739: 215, b777: 314, b767: 224, b737: 180, mh: 189, trainer: 4, aero: 2, swift: 9, islander: 189, breeze: 72, regio: 100, skyliner: 296, jumbo: 416, b772: 396, commuter: 19, atlas: 116, arrow: 1 };
+  const CRUISE = { b77w: 484, b763: 459, a321: 447, b739: 453, b777: 482, b767: 459, b737: 447, mh: 453, trainer: 124, aero: 210, swift: 465, islander: 453, breeze: 275, regio: 447, skyliner: 488, jumbo: 490, b772: 490, commuter: 280, atlas: 421, arrow: 500 };
   for (const k of Object.keys(PLANES)) { PLANES[k].cat = CAT[k] || "light"; PLANES[k].seats = SEATS[k] || 0; }
 
   // ================= DETAILED 3D MODELS (GLB) =================
@@ -1737,18 +1747,78 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   // Builds a packed model: int16 positions, int8 normals and optional per-vertex colours, decoded once and shared by every copy.
   var PACK_CACHE = {};   // var: realScale and the plane table can build models before this line runs
   // Boeing 777-200ER, built from the 767 airframe: scaled up 1.28x (span 60.9 m) with a 1.6 m fuselage plug ahead of the wing (63.7 m long)
-  var DERIVED = { b777: { from: "b767", s: 1.28, z0: -8.63, plug: 1.6 / 1.28 } };
+  // Aircraft built from the three source models. Plugs lengthen the fuselage at a gap between windows:
+  // [z, add] — z < 0 moves everything ahead of z forward, z > 0 moves everything behind z aft. The windows of the section
+  // next to the plug are copied into the new gap, so the window rows stay continuous (add = whole window pitches).
+  // Plugs touch only the fuselage (|x| < fx); wings and engines keep their shape. span: [x, k] stretches the wings outboard of x.
+  var DERIVED = {
+    b777: { from: "b767", s: 1.28, fx: 3.4, plugs: [[-12.25, 2 * 0.557]] },
+    b77w: { from: "b767", s: 1.28, fx: 3.4, plugs: [[-12.25, 9 * 0.557], [4.85, 7 * 0.557]], span: [3.4, 1.064] },
+    b763: { from: "b767", s: 1, fx: 3.4, plugs: [[-12.25, 6 * 0.557], [4.85, 6 * 0.557]] },
+    a321: { from: "b737", s: 1, fx: 2.7, plugs: [[-9.7, 7 * 0.4855], [1.49, 7 * 0.4855]] },
+    b739: { from: "mh", s: 1, fx: 2.6, plugs: [[-9.67, 6 * 0.58], [1.67, 7 * 0.58]] },
+  };
+  // where a source-model point ends up in a derived model
+  function deriveZ(d, z, fus = true) {
+    let o = z;
+    if (fus) for (const [z0, add] of d.plugs) { if (z0 < 0 && z < z0) o -= add; if (z0 > 0 && z > z0) o += add; }
+    return o * d.s;
+  }
+  function deriveX(d, x) { let a = Math.abs(x); if (d.span && a > d.span[0]) a = d.span[0] + (a - d.span[0]) * d.span[1]; return Math.sign(x) * a * d.s; }
+  function derivePart(d, pt) {
+    const src = pt.g, P0 = src.attributes.position.array, N0 = src.attributes.normal.array, I0 = src.index.array, C0 = src.attributes.color ? src.attributes.color.array : null;
+    const n0 = P0.length / 3, isDark = (v) => { const r = pt.base[0] * (pt.vc ? pt.vc[v * 3] : 1), g = pt.base[1] * (pt.vc ? pt.vc[v * 3 + 1] : 1), b = pt.base[2] * (pt.vc ? pt.vc[v * 3 + 2] : 1); return Math.max(r, g, b) < 0.3; };
+    const fus = (v) => Math.abs(P0[v * 3]) < d.fx;
+    // copies of the dark window triangles of each plugged section
+    const extra = [];
+    if (!pt.gear) for (const [z0, add] of d.plugs) {
+      const lo = z0 < 0 ? z0 - add : z0, hi = z0 < 0 ? z0 : z0 + add;
+      for (let t = 0; t < I0.length; t += 3) {
+        const a = I0[t], b = I0[t + 1], c = I0[t + 2];
+        if (![a, b, c].every((v) => fus(v) && P0[v * 3 + 2] > lo && P0[v * 3 + 2] < hi)) continue;
+        if (!pt.vc && ![a, b, c].every(isDark)) continue;   // painted-on windows (vertex colours): the whole section of skin is copied
+        extra.push([a, b, c, z0 < 0 ? add : -add]);
+      }
+    }
+    // triangles that bridge a plug get stretched: give them their own vertices, painted plain skin instead of window-dark
+    const bridge = [];
+    if (!pt.gear) for (let t = 0; t < I0.length; t += 3) {
+      const tri = [I0[t], I0[t + 1], I0[t + 2]]; if (!tri.every(fus)) continue;
+      if (d.plugs.some(([z0]) => { const zs = tri.map((v) => P0[v * 3 + 2]); return Math.min(...zs) < z0 && Math.max(...zs) > z0; })) bridge.push(t);
+    }
+    const nb = n0 + extra.length * 3;
+    const n = nb + bridge.length * 3, P = new Float32Array(n * 3), N = new Float32Array(n * 3), C = C0 ? new Float32Array(n * 3) : null, VC = pt.vc ? new Float32Array(n * 3) : null;
+    const put = (dst, v, back, cy) => {
+      const x = P0[v * 3], y = P0[v * 3 + 1], z = P0[v * 3 + 2], f = Math.abs(x) < d.fx;
+      let zz = deriveZ(d, z, f) + back * d.s, xx = deriveX(d, x), yy = y * d.s;
+      if (back) { const rx = xx, ry = yy - cy * d.s, rl = Math.hypot(rx, ry) || 1; xx += rx / rl * 0.012; yy += ry / rl * 0.012; }   // copies sit a hair above the skin
+      P[dst * 3] = xx; P[dst * 3 + 1] = yy; P[dst * 3 + 2] = zz;
+      for (let j = 0; j < 3; j++) { N[dst * 3 + j] = N0[v * 3 + j]; if (C) C[dst * 3 + j] = C0[v * 3 + j]; if (VC) VC[dst * 3 + j] = pt.vc[v * 3 + j]; }
+    };
+    const cyS = PACK_OPTS[d.from].cy;
+    for (let v = 0; v < n0; v++) put(v, v, 0, cyS);
+    const I = n > 65535 ? new Uint32Array(I0.length + extra.length * 3) : new Uint16Array(I0.length + extra.length * 3); I.set(I0);
+    extra.forEach(([a, b, c, back], k) => { const v0 = n0 + k * 3; put(v0, a, back, cyS); put(v0 + 1, b, back, cyS); put(v0 + 2, c, back, cyS); I.set([v0, v0 + 1, v0 + 2], I0.length + k * 3); });
+    bridge.forEach((t, k) => {
+      const v0 = nb + k * 3;
+      for (let j = 0; j < 3; j++) {
+        const v = I0[t + j]; put(v0 + j, v, 0, cyS);
+        if (isDark(v)) for (let c = 0; c < 3; c++) { if (VC) VC[(v0 + j) * 3 + c] = 0.92; if (C) C[(v0 + j) * 3 + c] = 0.92; }
+        I[t + j] = v0 + j;
+      }
+      if ([0, 1, 2].every((j) => isDark(I0[t + j])) && !pt.vc) I[t + 1] = I[t + 2] = I[t];   // a dark part (window strip) that bridges is dropped
+    });
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(P, 3)); g.setAttribute("normal", new THREE.BufferAttribute(N, 3));
+    if (C) g.setAttribute("color", new THREE.BufferAttribute(C, 3));
+    g.setIndex(new THREE.BufferAttribute(I, 1)); g.computeBoundingSphere();
+    return Object.assign({}, pt, { g, vc: VC });
+  }
   function decodePack(key) {
     if (PACK_CACHE[key]) return PACK_CACHE[key];
     if (DERIVED[key]) {
       const d = DERIVED[key], src = decodePack(d.from);
-      const parts = src.parts.map((pt) => {
-        const g = pt.g.clone(), P = g.attributes.position.array.slice();
-        for (let i = 0; i < P.length; i += 3) { if (P[i + 2] < d.z0) P[i + 2] -= d.plug; P[i] *= d.s; P[i + 1] *= d.s; P[i + 2] *= d.s; }
-        g.setAttribute("position", new THREE.BufferAttribute(P, 3)); g.computeBoundingSphere();
-        return Object.assign({}, pt, { g });
-      });
-      return (PACK_CACHE[key] = { tip: src.tip.map((v) => v * d.s), parts });
+      const parts = src.parts.map((pt) => derivePart(d, pt));
+      return (PACK_CACHE[key] = { tip: [deriveX(d, src.tip[0]), src.tip[1] * d.s, src.tip[2] * d.s], parts });
     }
     const D = window.SKY_PACKS[key], raw = atob(D.data), bin = new Uint8Array(raw.length);
     for (let i = 0; i < raw.length; i++) bin[i] = raw.charCodeAt(i);
@@ -1801,15 +1871,25 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
 uniform vec4 uGeo; uniform vec4 uZ; uniform vec4 uLn; uniform vec4 uLn2; uniform vec4 uTb; uniform vec4 uFl;
 uniform vec3 uBody; uniform vec3 uBelly; uniform vec3 uTop; uniform vec3 uStr; uniform vec3 uStr2; uniform vec3 uFin1; uniform vec3 uFin2; uniform vec3 uFin3; uniform vec3 uWing; uniform vec3 uNose; uniform vec3 uLead;
 uniform sampler2D uTitle; uniform float uCabin;
+uniform vec4 uFg0; uniform vec4 uFg1; uniform vec4 uEng; uniform vec4 uEz; uniform vec3 uEngC; uniform vec3 uLip;
 vec3 liveryAt(vec3 p, out float fus) {
   fus = 0.0;
   float cy = uGeo.x, R = uGeo.y, finY = uGeo.z, finTop = uGeo.w;
-  if (abs(p.x) < 0.9 && p.y > finY && p.z > 0.0) {
-    float t = clamp((finTop - p.y) / (finTop - finY), 0.0, 1.0);
-    if (uFl.w > 1.5) t = clamp(t * 0.8 - (p.z - uZ.y) * 0.045 - 0.05, 0.0, 1.0);
-    if (uFl.z > 0.5 && p.z < uZ.y - (uZ.y - uZ.x) * 0.105 + (finTop - p.y) * 0.9) return uLead;
-    if (uFl.w < 0.5) return uFin1;
-    return t < 0.3333 ? uFin1 : (t < 0.6667 ? uFin2 : uFin3);
+  // fin, in its own chord (uf: leading → trailing edge) and height (vf: root → tip) coordinates
+  { float vf = (p.y - uFg0.x) / (uFg0.y - uFg0.x), vc = clamp(vf, 0.0, 1.0);
+    float le = mix(uFg0.z, uFg1.x, vc), te = mix(uFg0.w, uFg1.y, vc);
+    if (abs(p.x) < uFg1.z && vf > -0.03 && p.z > le - 0.25 && p.z < te + 0.4 && p.z > uFg0.z - 0.6) {
+      float uf = clamp((p.z - le) / max(te - le, 0.3), 0.0, 1.0), m = uFl.w;
+      if (m < 0.5) return uFin1;
+      if (m < 1.5) return vc > 0.6667 ? uFin1 : (vc > 0.3333 ? uFin2 : uFin3);
+      if (m < 2.5) { float t = vc + uf * 0.55; return t > 1.0 ? uFin1 : (t > 0.6 ? uFin2 : uFin3); }
+      if (m < 3.5) { if (uf < 0.26) return uLead; return vc > 0.6667 ? uFin1 : (vc > 0.3333 ? uFin2 : uFin3); }
+      return (uf + (1.0 - vc) * 0.9 > 1.15) ? uFin2 : uFin1;
+    }
+  }
+  // engine nacelles: painted cowling, bare metal intake lip
+  { float dx = abs(p.x) - uEng.x, dy = p.y - uEng.y;
+    if (dx * dx + dy * dy < uEng.z * uEng.z && p.z > uEz.x - 0.3 && p.z < uEz.y + 0.3) return (p.z - uEz.x) / (uEz.y - uEz.x) < 0.07 ? uLip : uEngC;
   }
   if (abs(p.x) < R * 1.12 && p.y > cy - R * 1.15 && p.y < cy + R * 1.2) {
     fus = 1.0;
@@ -1821,6 +1901,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     if (f > 0.05 && v > uLn.z + rise && v < uLn.w + rise) c = uStr;
     if (f > 0.05 && f < 0.97 && v > uLn2.x && v < uLn2.y) c = uStr2;
     if (uFl.y > 0.5 && f < 0.05 - v * 0.03) c = uNose;
+    if (uFg1.w > 0.5) { float va = (p.y - cy) / R, z0 = uFg0.z - (uZ.y - uZ.x) * 0.14; if (va > 0.3 && p.z > z0 + (1.0 - va) * (uZ.y - uZ.x) * 0.12) c = uFin1; }
     if (uFl.x > 0.5 && abs(p.x) > R * 0.4) {
       float tu = (p.z - uTb.x) / (uTb.y - uTb.x); if (p.x > 0.0) tu = 1.0 - tu;
       float tv = (v - uTb.z) / (uTb.w - uTb.z);
@@ -1854,6 +1935,9 @@ vec3 liveryAt(vec3 p, out float fus) {
       uBody: V3(L.body || white), uBelly: V3(L.belly || white), uTop: V3(L.top || white), uStr: V3(L.stripe ? L.stripe[0] : white), uStr2: V3(L.stripe2 ? L.stripe2[0] : white),
       uFin1: V3(fin[0]), uFin2: V3(fin[1] || fin[0]), uFin3: V3(fin[2] || fin[1] || fin[0]), uWing: V3(L.wing || "#d9dde1"), uNose: V3(L.nose || white), uLead: V3(L.finLead || white),
       uTitle: { value: L.title ? titleTex(L) : BLANK_TEX }, uCabin: cabin || { value: 0 },
+      uFg0: { value: new THREE.Vector4(o.fin[0], o.fin[1], o.fin[2], o.fin[3]) }, uFg1: { value: new THREE.Vector4(o.fin[4], o.fin[5], 0.35 * o.R, L.spine ? 1 : 0) },
+      uEng: { value: new THREE.Vector4(o.eng[0], o.eng[1], o.eng[2], 1) }, uEz: { value: new THREE.Vector4(o.eng[3], o.eng[4], 0, 0) },
+      uEngC: V3(L.engine || "#eef0f2"), uLip: V3("#c3c7cc"),
     };
     const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, metalness: Math.min(pt.m, 0.3), roughness: clamp(pt.r, 0.3, 0.55), side: THREE.DoubleSide, envMapIntensity: 0.9 });
     mat.userData.u = u; mat.onBeforeCompile = liveryCompile;
@@ -1949,10 +2033,31 @@ vec3 liveryAt(vec3 p, out float fus) {
     const dummy = () => new THREE.Object3D();
     return finishModel(root, { prop: null, gear: gearG, ail: [dummy(), dummy()], elev: [dummy()], rud: dummy(), strobes: [], fans: [] });
   }
-  function build737model(liv) { return buildPacked("b737", { cy: 1.08, R: 2.16, finTop: 9.2, win: 0.19, zNose: -19.9, zTail: 19.5, tailZ: 19.6, beaconY: 2.2 }, liv); }
-  function build767model(liv) { return buildPacked("b767", { cy: 0.2, R: 2.7, finTop: 11.4, win: 0.21, zNose: -24.3, zTail: 24.3, bodyOnly: true, addGear: true, gearH: 4.2, mainX: 4.65, mainZ: 2.4, noseZ: -18.3, bogie: true, tailZ: 24.0, beaconY: 2.8 }, liv); }
-  function build777model(liv) { return buildPacked("b777", { cy: 0.26, R: 3.46, finTop: 14.6, win: 0.21, zNose: -32.7, zTail: 31.1, bodyOnly: true, addGear: true, gearH: 5.3, wheelR: 0.66, mainX: 5.6, mainZ: 3.3, noseZ: -25.4, bogie: true, six: true, tailZ: 30.7, beaconY: 3.6 }, liv); }
-  function buildMHmodel(liv) { return buildPacked("mh", { cy: 1.1, R: 2.1, finTop: 10.7, win: 0.1, zNose: -17.7, zTail: 16.6, bodyOnly: true, addGear: true, gearH: 3.0, mainX: 2.7, mainZ: 1.6, noseZ: -13.6, tailZ: 17.6, beaconY: 2.0 }, liv); }
+  // measured on the source models: fuselage axis/radius, window line, nose/tail, fin [root y, tip y, root LE, root TE, tip LE, tip TE], engine [x, y, r, z front, z back]
+  var PACK_OPTS = {
+    b737: { cy: 1.08, R: 2.16, win: 0.19, zNose: -19.9, zTail: 19.5, finTop: 9.2, fin: [3.1, 9.2, 12.0, 19.5, 17.57, 19.53], eng: [5.16, -0.9, 1.05, -6.6, -2.9], tailZ: 19.6, beaconY: 2.2 },
+    mh: { cy: 1.1, R: 2.1, win: 0.1, zNose: -17.7, zTail: 16.6, finTop: 10.7, fin: [3.0, 10.7, 10.53, 15.42, 15.42, 16.61], eng: [5.04, -1.23, 1.25, -4.9, -1.6], bodyOnly: true, addGear: true, gearH: 3.0, mainX: 2.7, mainZ: 1.6, noseZ: -13.6, tailZ: 17.6, beaconY: 2.0 },
+    b767: { cy: 0.2, R: 2.7, win: 0.21, zNose: -24.3, zTail: 24.3, finTop: 11.41, fin: [3.43, 11.41, 13.73, 21.3, 21.57, 24.25], eng: [7.97, -2.37, 1.45, -8.8, -4.6], bodyOnly: true, addGear: true, gearH: 4.2, mainX: 4.65, mainZ: 2.4, noseZ: -18.3, bogie: true, tailZ: 24.0, beaconY: 2.8 },
+  };
+  function packOpts(key, extra) {
+    const d = DERIVED[key]; if (!d) return Object.assign({}, PACK_OPTS[key], extra);
+    const b = PACK_OPTS[d.from], s = d.s, zm = (z) => deriveZ(d, z, true);
+    return Object.assign({}, b, {
+      cy: b.cy * s, R: b.R * s, zNose: zm(b.zNose), zTail: zm(b.zTail), finTop: b.finTop * s,
+      fin: [b.fin[0] * s, b.fin[1] * s, zm(b.fin[2]), zm(b.fin[3]), zm(b.fin[4]), zm(b.fin[5])],
+      eng: [deriveX(d, b.eng[0]), b.eng[1] * s, b.eng[2] * s, b.eng[3] * s, b.eng[4] * s],
+      tailZ: zm(b.tailZ), beaconY: b.beaconY * s, gearH: (b.gearH || 0) * s,
+      mainX: b.mainX && deriveX(d, b.mainX), mainZ: b.mainZ && b.mainZ * s, noseZ: b.noseZ !== undefined ? zm(b.noseZ) : undefined,
+    }, extra);
+  }
+  function build737model(liv) { return buildPacked("b737", packOpts("b737"), liv); }
+  function build767model(liv) { return buildPacked("b767", packOpts("b767"), liv); }
+  function buildMHmodel(liv) { return buildPacked("mh", packOpts("mh"), liv); }
+  function build777model(liv) { return buildPacked("b777", packOpts("b777", { gearH: 5.3, wheelR: 0.66, six: true }), liv); }
+  function build77Wmodel(liv) { return buildPacked("b77w", packOpts("b77w", { gearH: 5.3, wheelR: 0.68, six: true }), liv); }
+  function build763model(liv) { return buildPacked("b763", packOpts("b763"), liv); }
+  function buildA321model(liv) { return buildPacked("a321", packOpts("a321"), liv); }
+  function build739model(liv) { return buildPacked("b739", packOpts("b739"), liv); }
   function buildPlane(kind, livId) {
     const sp = PLANES[kind];
     if (sp.glb) return GLB[kind] && GLB[kind].status === "ready" ? GLB[kind].make() : null;
@@ -3440,8 +3545,8 @@ vec3 liveryAt(vec3 p, out float fus) {
   const AI = [], RADIO = [];
   const TAN3 = Math.tan(3 * Math.PI / 180);
   const AI_FLEET = [["mh", "OCEANA 301"], ["b777", "OCEANA 88"], ["b737", "ISLA 214"], ["mh", "ISLANDER 52"], ["b767", "SOUTHWIND 640"], ["b737", "ISLANDER 17"], ["mh", "SKYLARK 42"], ["b777", "FALCON 7"], ["b737", "PACIFICA 12"],
-    ["mh", "EASTGATE 410"], ["b767", "SUNVALE 9"], ["b737", "NORTHCAPE 77"], ["mh", "ISLANDER 63"], ["b777", "OCEANA 515"], ["b737", "SKYLARK 18"], ["mh", "FALCON 22"],
-    ["b767", "BREEZE 301"], ["b737", "REGIO 190"], ["mh", "REGIO 44"], ["b777", "SKYLINER 35"], ["b737", "JUMBO 1"], ["mh", "COMMUTER 9"], ["b767", "BREEZE 88"], ["b737", "SWIFT 6"], ["mh", "ATLAS 4"], ["b777", "ARROW 1"]];
+    ["mh", "EASTGATE 410"], ["b763", "SUNVALE 9"], ["a321", "NORTHCAPE 77"], ["b739", "ISLANDER 63"], ["b777", "OCEANA 515"], ["b737", "SKYLARK 18"], ["mh", "FALCON 22"],
+    ["b767", "BREEZE 301"], ["a321", "REGIO 190"], ["b739", "REGIO 44"], ["b77w", "SKYLINER 35"], ["b737", "JUMBO 1"], ["mh", "COMMUTER 9"], ["b767", "BREEZE 88"], ["b737", "SWIFT 6"], ["mh", "ATLAS 4"], ["b777", "ARROW 1"]];
   const wrapA = (a) => { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; };
   function radio(text, where) { if (S.mode !== "fly" || where.distanceTo(S.pos) > 7000) return; RADIO.push({ text, t: 10 }); if (RADIO.length > 4) RADIO.shift(); }
   const aiPorts = (kind) => AIRPORTS.filter((a) => (PLANES[kind].big ? a.kind !== "ga" : true));
