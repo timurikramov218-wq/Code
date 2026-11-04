@@ -1,0 +1,542 @@
+<title>Маяк в тумане</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prata&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one night-sea canvas filling the screen; brass-plate HUD pinned to the top edge; a keeper's logbook card for start and end screens. Single dark look by design. */
+:root {
+  --ink: #07131b;        /* night sea */
+  --deep: #0d2230;
+  --fog: #9fb3bb;        /* fog and secondary text */
+  --lamp: #ffd27a;       /* the beam, the accent */
+  --brass: #c9a25e;
+  --rust: #e0583c;       /* wrecks and danger */
+  --paper: #efe6d2;      /* logbook text */
+  --font-display: "Prata", "Georgia", "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--ink); color: var(--paper);
+  font-family: var(--font-mono); font-size: 14px; overflow: hidden;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+}
+#stage { position: relative; height: 100%; width: 100%; touch-action: none; }
+canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+
+.hud {
+  position: absolute; top: 0; left: 0; right: 0; display: flex; gap: 10px 18px; flex-wrap: wrap; align-items: center;
+  padding-top: calc(10px + env(safe-area-inset-top, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  pointer-events: none; font-variant-numeric: tabular-nums;
+  background: linear-gradient(var(--ink), transparent); padding-bottom: 18px;
+}
+.stat { display: grid; gap: 1px; }
+.stat b { font-weight: 600; font-size: 17px; color: var(--paper); }
+.stat span { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fog); }
+.hulls { display: flex; gap: 5px; align-items: center; height: 22px; }
+.hull { width: 18px; height: 9px; border-radius: 0 0 9px 9px; background: var(--brass); }
+.hull.lost { background: transparent; border: 1.5px solid var(--rust); opacity: 0.7; }
+.spacer { flex: 1; }
+.btn-icon {
+  pointer-events: auto; font: 600 11px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--fog); background: rgba(159,179,187,0.08); border: 1px solid rgba(159,179,187,0.28);
+  padding: 7px 10px; border-radius: 4px; cursor: pointer;
+}
+.btn-icon:hover { color: var(--paper); border-color: var(--fog); }
+button:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
+
+.toast {
+  position: absolute; left: 50%; top: 30%; transform: translate(-50%, -50%); text-align: center;
+  font-family: var(--font-display); font-size: clamp(22px, 5vw, 34px); color: var(--lamp);
+  text-shadow: 0 0 24px rgba(255,210,122,0.45); pointer-events: none; transition: opacity 0.6s; opacity: 0;
+  width: calc(100% - 32px); text-wrap: balance;
+}
+.toast small { display: block; font: 400 13px var(--font-mono); color: var(--fog); margin-top: 8px; letter-spacing: 0.06em; }
+
+.overlay {
+  position: absolute; inset: 0; display: grid; place-items: center; background: rgba(4,10,15,0.62);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px;
+}
+.log {
+  width: min(460px, 100%); background: #13212a; border: 1px solid rgba(201,162,94,0.45); border-radius: 6px;
+  padding: 26px 24px 22px; display: grid; gap: 14px; box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+  max-height: 100%; overflow-y: auto;
+}
+.log .eyebrow { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--brass); }
+.log h1, .log h2 { font-family: var(--font-display); font-weight: 400; margin: 0; color: var(--paper); text-wrap: balance; line-height: 1.1; }
+.log h1 { font-size: clamp(30px, 8vw, 42px); }
+.log h2 { font-size: 30px; }
+.log p { margin: 0; line-height: 1.55; color: var(--fog); font-size: 13px; }
+.log ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.log li { display: grid; grid-template-columns: 92px 1fr; gap: 10px; font-size: 13px; line-height: 1.45; color: var(--fog); }
+.log li b { color: var(--paper); font-weight: 600; }
+.log .entry { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 13px; font-variant-numeric: tabular-nums; border-top: 1px dashed rgba(159,179,187,0.25); padding-top: 12px; }
+.log .entry span { color: var(--fog); }
+.log .entry b { color: var(--paper); text-align: right; }
+.go {
+  justify-self: start; font: 600 13px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase;
+  color: #1a1206; background: var(--lamp); border: 0; border-radius: 4px; padding: 13px 20px; cursor: pointer;
+  box-shadow: 0 0 30px rgba(255,210,122,0.35);
+}
+.go:hover { filter: brightness(1.06); }
+@media (max-width: 420px) { .log li { grid-template-columns: 1fr; gap: 2px; } .stat b { font-size: 15px; } }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+
+<div id="stage">
+  <canvas id="c" aria-label="Ночное море с маяком. Ведите лучом корабли в гавань."></canvas>
+
+  <div class="hud" aria-live="polite">
+    <div class="stat"><b id="hNight">1</b><span>Ночь</span></div>
+    <div class="stat"><b id="hDock">0 / 6</b><span>В гавани</span></div>
+    <div class="stat"><b id="hScore">0</b><span>Счёт</span></div>
+    <div class="stat"><b id="hMult">×1</b><span>Серия</span></div>
+    <div class="stat"><div class="hulls" id="hHulls"></div><span>Запас прочности</span></div>
+    <div class="spacer"></div>
+    <button class="btn-icon" id="bSound" type="button">Звук: вкл</button>
+    <button class="btn-icon" id="bPause" type="button">Пауза</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="overlay" id="ovStart">
+    <div class="log">
+      <div class="eyebrow">Вахтенный журнал смотрителя</div>
+      <h1>Маяк в тумане</h1>
+      <p>Над бухтой опустился туман. Капитаны не видят скал и идут наугад. Ваш луч — их единственные глаза: кого он освещает, тот видит путь и сам правит к причалу.</p>
+      <ul>
+        <li><b>Луч</b><span>Ведите мышью или пальцем. На клавиатуре — ← и →. Механизм тяжёлый: луч поворачивается не мгновенно.</span></li>
+        <li><b>Корабли</b><span>Освещённый корабль идёт к ближайшему причалу и обходит скалы. В темноте он ещё пару секунд держит курс, потом дрейфует.</span></li>
+        <li><b>Скалы</b><span>Видны только в луче. После крушения тонущий корабль ещё долго их подсвечивает.</span></li>
+        <li><b>Серия</b><span>Каждые три корабля подряд без потерь повышают множитель очков.</span></li>
+      </ul>
+      <div class="entry"><span>Лучший рекорд</span><b id="bestStart">—</b></div>
+      <button class="go" id="bStart" type="button">Зажечь маяк</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="ovEnd" hidden>
+    <div class="log">
+      <div class="eyebrow">Запись в журнале</div>
+      <h2 id="endTitle">Маяк погас</h2>
+      <p id="endText">Три корабля разбились о скалы. Утром бухту закрыли для судоходства.</p>
+      <div class="entry">
+        <span>Ночей отстояли</span><b id="eNights">0</b>
+        <span>Кораблей в гавани</span><b id="eDocked">0</b>
+        <span>Счёт</span><b id="eScore">0</b>
+        <span>Рекорд</span><b id="eBest">0</b>
+      </div>
+      <button class="go" id="bAgain" type="button">Новая ночь</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="ovPause" hidden>
+    <div class="log">
+      <div class="eyebrow">Пауза</div>
+      <h2>Смотритель пьёт чай</h2>
+      <p>Корабли стоят на якоре и ждут вашего луча.</p>
+      <button class="go" id="bResume" type="button">Вернуться к лампе</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const cv = $("c"), ctx = cv.getContext("2d");
+  const fogC = document.createElement("canvas"), fx = fogC.getContext("2d");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const TAU = Math.PI * 2;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; return d; };
+
+  let W = 0, H = 0, DPR = 1;
+  function resize() {
+    const r = $("stage").getBoundingClientRect();
+    W = Math.max(320, r.width); H = Math.max(420, r.height); DPR = Math.min(2, window.devicePixelRatio || 1);
+    for (const c of [cv, fogC]) { c.width = Math.round(W * DPR); c.height = Math.round(H * DPR); }
+    if (G.running) layoutWorld(false);
+  }
+
+  // ---------- storage (may be unavailable) ----------
+  const load = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+  const save = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+
+  // ---------- sound ----------
+  const SND = { ctx: null, on: load("mayak-sound") !== "off", master: null };
+  function audioInit() {
+    if (SND.ctx) return;
+    try {
+      const A = window.AudioContext || window.webkitAudioContext; if (!A) return;
+      SND.ctx = new A(); SND.master = SND.ctx.createGain(); SND.master.gain.value = SND.on ? 0.8 : 0; SND.master.connect(SND.ctx.destination);
+      // surf: looping filtered noise with a slow swell
+      const len = SND.ctx.sampleRate * 3, buf = SND.ctx.createBuffer(1, len, SND.ctx.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      SND.noise = buf;
+      const src = SND.ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+      const lp = SND.ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 380;
+      const g = SND.ctx.createGain(); g.gain.value = 0.05;
+      const lfo = SND.ctx.createOscillator(), lg = SND.ctx.createGain(); lfo.frequency.value = 0.12; lg.gain.value = 0.035; lfo.connect(lg); lg.connect(g.gain);
+      src.connect(lp); lp.connect(g); g.connect(SND.master); src.start(); lfo.start();
+    } catch { SND.ctx = null; }
+  }
+  function horn(pitch = 1) {
+    const a = SND.ctx; if (!a || !SND.on) return; const t = a.currentTime;
+    const o = a.createOscillator(), o2 = a.createOscillator(), f = a.createBiquadFilter(), g = a.createGain();
+    o.type = "sawtooth"; o2.type = "sawtooth"; o.frequency.setValueAtTime(116 * pitch, t); o.frequency.linearRampToValueAtTime(104 * pitch, t + 1.1);
+    o2.frequency.setValueAtTime(174 * pitch, t); o2.frequency.linearRampToValueAtTime(156 * pitch, t + 1.1);
+    f.type = "lowpass"; f.frequency.value = 520; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.16, t + 0.12); g.gain.linearRampToValueAtTime(0.0001, t + 1.2);
+    o.connect(f); o2.connect(f); f.connect(g); g.connect(SND.master); o.start(t); o2.start(t); o.stop(t + 1.25); o2.stop(t + 1.25);
+  }
+  function crash() {
+    const a = SND.ctx; if (!a || !SND.on || !SND.noise) return; const t = a.currentTime;
+    const s = a.createBufferSource(); s.buffer = SND.noise; const f = a.createBiquadFilter(), g = a.createGain();
+    f.type = "lowpass"; f.frequency.setValueAtTime(1800, t); f.frequency.exponentialRampToValueAtTime(90, t + 0.9);
+    g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+    s.connect(f); f.connect(g); g.connect(SND.master); s.start(t); s.stop(t + 1.05);
+    const o = a.createOscillator(), og = a.createGain(); o.type = "triangle"; o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(30, t + 0.6);
+    og.gain.setValueAtTime(0.35, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.7); o.connect(og); og.connect(SND.master); o.start(t); o.stop(t + 0.75);
+  }
+  function bell() {
+    const a = SND.ctx; if (!a || !SND.on) return; const t = a.currentTime;
+    for (const [fr, v] of [[660, 0.12], [990, 0.05], [1320, 0.03]]) {
+      const o = a.createOscillator(), g = a.createGain(); o.frequency.value = fr; g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+      o.connect(g); g.connect(SND.master); o.start(t); o.stop(t + 1.7);
+    }
+  }
+  function setSound(on) { SND.on = on; save("mayak-sound", on ? "on" : "off"); $("bSound").textContent = on ? "Звук: вкл" : "Звук: выкл"; if (SND.master) SND.master.gain.value = on ? 0.8 : 0; }
+
+  // ---------- game state ----------
+  const G = { running: false, paused: false, night: 1, score: 0, dockedNight: 0, dockedTotal: 0, hulls: 3, streak: 0, t: 0,
+    ships: [], rocks: [], parts: [], texts: [], fogs: [], piers: [], spawnT: 0, goal: 6, wind: 0, between: 0, aim: -Math.PI / 2, beam: -Math.PI / 2 };
+  let best = +(load("mayak-best") || 0) || 0;
+
+  const lh = () => ({ x: W / 2, y: H - 58 });
+  const beamRange = () => Math.min(Math.hypot(W, H) * 0.95, 380 + Math.max(0, 7 - G.night) * 40 + Math.min(W, H) * 0.35);
+  const beamHalf = () => clamp(0.24 - G.night * 0.012, 0.15, 0.24);
+  const mult = () => 1 + Math.floor(G.streak / 3);
+
+  function layoutWorld(newRocks) {
+    G.piers = [{ x: W * 0.16, y: H - 40 }, { x: W * 0.84, y: H - 40 }];
+    if (!newRocks) return;
+    G.rocks = [];
+    const n = Math.round(clamp(5 + G.night * 1.6, 5, 17) * clamp(W * H / (900 * 700), 0.55, 1.3));
+    let tries = 0;
+    while (G.rocks.length < n && tries++ < 2000) {
+      const r = rand(13, 26 + G.night), x = rand(30, W - 30), y = rand(110, H - 130);
+      if (G.rocks.some((k) => Math.hypot(k.x - x, k.y - y) < k.r + r + 46)) continue;
+      if (G.piers.some((p) => Math.hypot(p.x - x, p.y - y) < 110)) continue;
+      if (Math.hypot(lh().x - x, lh().y - y) < 120) continue;
+      const pts = []; const k = 7 + (Math.random() * 4 | 0);
+      for (let i = 0; i < k; i++) pts.push(0.72 + Math.random() * 0.36);
+      G.rocks.push({ x, y, r, pts, rot: rand(0, TAU), seen: 0 });
+    }
+  }
+
+  function startGame() {
+    audioInit(); if (SND.ctx && SND.ctx.state === "suspended") SND.ctx.resume();
+    Object.assign(G, { running: true, paused: false, night: 1, score: 0, dockedNight: 0, dockedTotal: 0, hulls: 3, streak: 0, ships: [], parts: [], texts: [], spawnT: 0.6, between: 0 });
+    beginNight();
+    $("ovStart").hidden = true; $("ovEnd").hidden = true; $("ovPause").hidden = true;
+    cv.focus?.();
+  }
+  function beginNight() {
+    G.goal = 4 + G.night * 2; G.dockedNight = 0; G.ships = []; G.spawnT = 1.2;
+    G.wind = (Math.random() < 0.5 ? -1 : 1) * Math.min(14, 3 + G.night * 2);
+    layoutWorld(true);
+    G.fogs = Array.from({ length: 9 }, () => ({ x: rand(0, W), y: rand(0, H), r: rand(120, 260), v: rand(4, 12) }));
+    toast(`Ночь ${G.night}`, `Проведите в гавань ${G.goal} кораблей · ветер ${G.wind > 0 ? "→" : "←"} ${Math.abs(G.wind)} узлов`);
+    hud();
+  }
+
+  function spawnShip() {
+    const gold = G.night >= 2 && Math.random() < 0.12;
+    const x = rand(40, W - 40);
+    const kind = gold ? "gold" : Math.random() < 0.35 ? "barge" : "sloop";
+    const spd = { sloop: 40, barge: 28, gold: 48 }[kind] * (1 + G.night * 0.05);
+    G.ships.push({ x, y: -18, h: Math.PI / 2 + rand(-0.5, 0.5), spd, kind, conf: 0, len: kind === "barge" ? 13 : 10, wob: rand(0, TAU), lit: false, age: 0 });
+  }
+
+  // ---------- input ----------
+  function aimAt(px, py) { const L = lh(); G.aim = clamp(Math.atan2(py - L.y, px - L.x), -Math.PI + 0.08, -0.08); }
+  cv.addEventListener("pointermove", (e) => { const r = cv.getBoundingClientRect(); aimAt(e.clientX - r.left, e.clientY - r.top); });
+  cv.addEventListener("pointerdown", (e) => { const r = cv.getBoundingClientRect(); aimAt(e.clientX - r.left, e.clientY - r.top); try { cv.setPointerCapture(e.pointerId); } catch {} });
+  const keys = new Set();
+  window.addEventListener("keydown", (e) => {
+    if (["ArrowLeft", "ArrowRight", "KeyA", "KeyD"].includes(e.code)) { keys.add(e.code); e.preventDefault(); }
+    if ((e.code === "KeyP" || e.code === "Escape") && G.running) togglePause();
+  });
+  window.addEventListener("keyup", (e) => keys.delete(e.code));
+  window.addEventListener("blur", () => { keys.clear(); if (G.running && !G.paused) togglePause(); });
+  document.addEventListener("visibilitychange", () => { if (document.hidden && G.running && !G.paused) togglePause(); });
+
+  function togglePause() {
+    if (!G.running) return;
+    G.paused = !G.paused; $("ovPause").hidden = !G.paused; $("bPause").textContent = G.paused ? "Дальше" : "Пауза";
+    if (G.paused) $("bResume").focus();
+  }
+
+  // ---------- HUD ----------
+  function hud() {
+    $("hNight").textContent = G.night; $("hDock").textContent = `${G.dockedNight} / ${G.goal}`;
+    $("hScore").textContent = G.score; $("hMult").textContent = `×${mult()}`;
+    const hh = $("hHulls"); hh.replaceChildren();
+    for (let i = 0; i < 3; i++) { const d = document.createElement("i"); d.className = "hull" + (i >= G.hulls ? " lost" : ""); hh.append(d); }
+  }
+  let toastTimer = 0;
+  function toast(t, sub) { const el = $("toast"); el.innerHTML = ""; el.append(t); if (sub) { const s = document.createElement("small"); s.textContent = sub; el.append(s); } el.style.opacity = 1; clearTimeout(toastTimer); toastTimer = setTimeout(() => (el.style.opacity = 0), 2600); }
+  function floatText(x, y, text, color) { G.texts.push({ x, y, text, color, t: 0 }); }
+
+  // ---------- simulation ----------
+  function inBeam(x, y) {
+    const L = lh(), dx = x - L.x, dy = y - L.y, d = Math.hypot(dx, dy);
+    if (d > beamRange()) return false;
+    if (d < 34) return true;
+    return Math.abs(angDiff(Math.atan2(dy, dx), G.beam)) < beamHalf();
+  }
+
+  function step(dt) {
+    G.t += dt;
+    // the lamp turns on a heavy gear: limited rate
+    if (keys.has("ArrowLeft") || keys.has("KeyA")) G.aim = clamp(G.aim - 1.8 * dt, -Math.PI + 0.08, -0.08);
+    if (keys.has("ArrowRight") || keys.has("KeyD")) G.aim = clamp(G.aim + 1.8 * dt, -Math.PI + 0.08, -0.08);
+    const rate = 2.4 * dt; G.beam += clamp(angDiff(G.aim, G.beam), -rate, rate);
+
+    for (const f of G.fogs) { f.x += (G.wind * 0.6 + f.v * 0.3) * dt; if (f.x - f.r > W) f.x = -f.r; if (f.x + f.r < 0) f.x = W + f.r; }
+    for (const k of G.rocks) { if (inBeam(k.x, k.y)) k.seen = 1; else k.seen = Math.max(0, k.seen - dt / 5); }
+
+    if (G.between > 0) { G.between -= dt; if (G.between <= 0) { G.night++; beginNight(); } }
+    else {
+      G.spawnT -= dt;
+      const maxShips = Math.min(2 + G.night, 8);
+      if (G.spawnT <= 0 && G.ships.length < maxShips && G.dockedNight + G.ships.length < G.goal + 2) { spawnShip(); G.spawnT = Math.max(1.6, 5.5 - G.night * 0.45) * rand(0.8, 1.25); }
+    }
+
+    for (let i = G.ships.length - 1; i >= 0; i--) {
+      const s = G.ships[i]; s.age += dt; s.wob += dt * 2;
+      s.lit = inBeam(s.x, s.y);
+      if (s.lit) s.conf = 1; else s.conf = Math.max(0, s.conf - dt / 2.4);
+      let speed;
+      if (s.conf > 0) {
+        // guided: head for the nearest pier, steer around rocks it can see and other ships
+        const p = G.piers.reduce((a, b) => (Math.hypot(a.x - s.x, a.y - s.y) < Math.hypot(b.x - s.x, b.y - s.y) ? a : b));
+        let dx = p.x - s.x, dy = p.y - s.y; const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl;
+        for (const k of G.rocks) {
+          const rx = s.x - k.x, ry = s.y - k.y, d = Math.hypot(rx, ry), m = k.r + 70;
+          if (d < m) {
+            const ahead = (-(rx) * Math.cos(s.h) + -(ry) * Math.sin(s.h)) / (d || 1);
+            const w = (1 - (d - k.r) / 70) * (ahead > -0.3 ? 2.6 : 0.8);
+            dx += (rx / d) * w; dy += (ry / d) * w;
+            // slide sideways around the rock rather than stopping head-on
+            const side = Math.sign(rx * dy - ry * dx) || 1; dx += (-ry / d) * w * 0.9 * side; dy += (rx / d) * w * 0.9 * side;
+          }
+        }
+        for (const o of G.ships) { if (o === s) continue; const rx = s.x - o.x, ry = s.y - o.y, d = Math.hypot(rx, ry); if (d < 34 && d > 0) { dx += rx / d * 0.8; dy += ry / d * 0.8; } }
+        const want = Math.atan2(dy, dx);
+        s.h += clamp(angDiff(want, s.h), -2.4 * dt, 2.4 * dt);
+        speed = s.spd * (0.55 + 0.45 * s.conf);
+      } else {
+        // blind: wander, slow, pushed by the wind
+        s.h += (Math.sin(s.age * 0.9 + s.wob) * 0.5 + rand(-0.6, 0.6)) * dt;
+        speed = s.spd * 0.42;
+        s.x += G.wind * 0.9 * dt;
+      }
+      s.x += Math.cos(s.h) * speed * dt; s.y += Math.sin(s.h) * speed * dt;
+      if (s.y < -10 && s.age > 3) s.h += clamp(angDiff(Math.PI / 2, s.h), -1.5 * dt, 1.5 * dt);
+
+      // docking
+      const dock = G.piers.find((p) => Math.hypot(p.x - s.x, p.y - s.y) < 30);
+      if (dock) {
+        G.streak++; const pts = (s.kind === "gold" ? 3 : 1) * mult(); G.score += pts; G.dockedNight++; G.dockedTotal++;
+        floatText(dock.x, dock.y - 30, s.kind === "gold" ? `+${pts} золото` : `+${pts}`, "#ffd27a");
+        horn(s.kind === "barge" ? 0.85 : 1); burst(dock.x, dock.y - 6, "#ffd27a", 14, 60);
+        G.ships.splice(i, 1); hud();
+        if (G.dockedNight >= G.goal && G.between <= 0) nightDone();
+        continue;
+      }
+      // reefs
+      const hit = G.rocks.find((k) => Math.hypot(k.x - s.x, k.y - s.y) < k.r * 0.95 + s.len * 0.6);
+      if (hit || s.y > H - 34) {
+        wreck(s, hit); G.ships.splice(i, 1); continue;
+      }
+      if (s.x < -40 || s.x > W + 40 || (s.y < -70 && s.age > 4)) {
+        G.ships.splice(i, 1); G.streak = 0; floatText(clamp(s.x, 40, W - 40), clamp(s.y, 90, H), "потерян в тумане", "#9fb3bb"); hud();
+      }
+    }
+
+    for (let i = G.parts.length - 1; i >= 0; i--) { const p = G.parts[i]; p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.96; p.vy *= 0.96; if (p.t > p.life) G.parts.splice(i, 1); }
+    for (let i = G.texts.length - 1; i >= 0; i--) { const t = G.texts[i]; t.t += dt; t.y -= 18 * dt; if (t.t > 1.8) G.texts.splice(i, 1); }
+  }
+
+  function burst(x, y, color, n, sp) { for (let i = 0; i < n; i++) { const a = rand(0, TAU), v = rand(sp * 0.3, sp); G.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, life: rand(0.6, 1.4), color }); } }
+
+  function wreck(s, rock) {
+    G.hulls--; G.streak = 0; crash(); burst(s.x, s.y, "#e0583c", 22, 90); burst(s.x, s.y, "#efe6d2", 10, 40);
+    if (rock) rock.seen = 3.5;   // the burning wreck lights the reef for a while
+    G.wrecks = (G.wrecks || []); G.wrecks.push({ x: s.x, y: s.y, t: 0 });
+    floatText(s.x, s.y - 20, "крушение", "#e0583c"); hud();
+    if (G.hulls <= 0) setTimeout(gameOver, 900);
+  }
+
+  function nightDone() {
+    G.between = 3.2; bell();
+    const bonus = G.hulls * 2 * G.night; G.score += bonus;
+    toast("Рассвет", `Ночь ${G.night} отстояли · бонус за целые корпуса +${bonus}`);
+    for (const s of G.ships) floatText(s.x, s.y - 16, "встал на якорь", "#9fb3bb");
+    G.ships = []; hud();
+  }
+
+  function gameOver() {
+    if (!G.running) return;
+    G.running = false;
+    const record = G.score > best; if (record) { best = G.score; save("mayak-best", String(best)); }
+    $("endTitle").textContent = record ? "Новый рекорд смотрителя" : "Маяк погас";
+    $("endText").textContent = G.night > 1
+      ? `Вы отстояли ${G.night - 1} ${plural(G.night - 1, "ночь", "ночи", "ночей")}, но третий корабль разбился о скалы. Утром бухту закрыли для судоходства.`
+      : "Три корабля разбились о скалы ещё до рассвета. Утром бухту закрыли для судоходства.";
+    $("eNights").textContent = G.night - 1; $("eDocked").textContent = G.dockedTotal; $("eScore").textContent = G.score; $("eBest").textContent = best;
+    $("ovEnd").hidden = false; $("bAgain").focus();
+  }
+  const plural = (n, a, b, c) => { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c; };
+
+  // ---------- drawing ----------
+  function drawSea() {
+    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#0b2a3a"); g.addColorStop(1, "#0f3546");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = "rgba(170,210,220,0.10)"; ctx.lineWidth = 1;
+    const t = reduced ? 0 : G.t;
+    for (let y = 40; y < H - 40; y += 26) {
+      ctx.beginPath();
+      for (let x = 0; x <= W; x += 18) { const yy = y + Math.sin(x * 0.03 + t * 0.9 + y) * 3; x ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy); }
+      ctx.stroke();
+    }
+  }
+  function rockPath(k) {
+    ctx.beginPath();
+    k.pts.forEach((m, i) => { const a = k.rot + (i / k.pts.length) * TAU, r = k.r * m; const x = k.x + Math.cos(a) * r, y = k.y + Math.sin(a) * r; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.closePath();
+  }
+  function drawRocks(alphaFn) {
+    for (const k of G.rocks) {
+      const a = alphaFn(k); if (a <= 0) continue;
+      ctx.globalAlpha = a;
+      ctx.fillStyle = "rgba(220,240,240,0.18)"; ctx.beginPath(); ctx.arc(k.x, k.y, k.r * 1.25, 0, TAU); ctx.fill();   // surf ring
+      rockPath(k); ctx.fillStyle = "#2a2f33"; ctx.fill(); ctx.strokeStyle = "#5c6468"; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  }
+  function drawShip(s) {
+    ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.h);
+    const L = s.len, hullC = s.kind === "gold" ? "#d9a441" : s.kind === "barge" ? "#6b4a35" : "#8a5a3c";
+    ctx.fillStyle = "rgba(220,240,240,0.25)"; ctx.beginPath(); ctx.moveTo(-L * 1.6, -L * 0.5); ctx.lineTo(-L * 0.6, 0); ctx.lineTo(-L * 1.6, L * 0.5); ctx.fill(); // wake
+    ctx.fillStyle = hullC; ctx.beginPath(); ctx.moveTo(L, 0); ctx.quadraticCurveTo(L * 0.2, -L * 0.55, -L * 0.8, -L * 0.42); ctx.lineTo(-L * 0.8, L * 0.42); ctx.quadraticCurveTo(L * 0.2, L * 0.55, L, 0); ctx.fill();
+    if (s.kind !== "barge") { ctx.fillStyle = "#e9e1cc"; ctx.beginPath(); ctx.moveTo(L * 0.25, 0); ctx.lineTo(-L * 0.55, -L * 0.9); ctx.lineTo(-L * 0.55, 0); ctx.fill(); }
+    else { ctx.fillStyle = "#3d2b20"; ctx.fillRect(-L * 0.5, -L * 0.25, L * 0.8, L * 0.5); }
+    ctx.restore();
+  }
+  function drawCoast() {
+    const L = lh();
+    ctx.fillStyle = "#0a1014";
+    ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, H - 30);
+    for (let x = 0; x <= W; x += 24) { const cape = Math.max(0, 1 - Math.abs(x - L.x) / 90) * 34; ctx.lineTo(x, H - 30 - cape - Math.sin(x * 0.07) * 4); }
+    ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+    // piers
+    for (const p of G.piers) {
+      ctx.fillStyle = "#3b2c20"; ctx.fillRect(p.x - 5, p.y - 22, 10, 40);
+      ctx.fillStyle = "#c9a25e"; ctx.beginPath(); ctx.arc(p.x, p.y - 26, 3.2, 0, TAU); ctx.fill();
+      ctx.strokeStyle = "rgba(255,210,122,0.35)"; ctx.setLineDash([4, 5]); ctx.beginPath(); ctx.arc(p.x, p.y, 30, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke(); ctx.setLineDash([]);
+    }
+    // the tower
+    ctx.fillStyle = "#d8d0bd"; ctx.beginPath(); ctx.moveTo(L.x - 11, L.y + 30); ctx.lineTo(L.x - 7, L.y - 4); ctx.lineTo(L.x + 7, L.y - 4); ctx.lineTo(L.x + 11, L.y + 30); ctx.fill();
+    ctx.fillStyle = "#b5402c"; for (const y of [L.y + 4, L.y + 18]) ctx.fillRect(L.x - 10, y, 20, 5);
+    ctx.fillStyle = "#1c252b"; ctx.fillRect(L.x - 9, L.y - 8, 18, 5);
+    const g = ctx.createRadialGradient(L.x, L.y - 12, 0, L.x, L.y - 12, 26); g.addColorStop(0, "rgba(255,230,160,1)"); g.addColorStop(1, "rgba(255,210,122,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(L.x, L.y - 12, 26, 0, TAU); ctx.fill();
+  }
+  function beamPath(c, r, half) {
+    const L = lh(); c.beginPath(); c.moveTo(L.x, L.y - 12); c.arc(L.x, L.y - 12, r, G.beam - half, G.beam + half); c.closePath();
+  }
+
+  function render() {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    drawSea();
+    drawRocks(() => 1);
+    for (const w of (G.wrecks || [])) { ctx.fillStyle = "rgba(60,30,20,0.8)"; ctx.fillRect(w.x - 6, w.y - 2, 12, 4); }
+    for (const s of G.ships) drawShip(s);
+
+    // fog layer with holes for the beam, the lamp and ship lanterns
+    fx.setTransform(DPR, 0, 0, DPR, 0, 0); fx.globalCompositeOperation = "source-over"; fx.clearRect(0, 0, W, H);
+    fx.fillStyle = "rgba(5,12,18,0.975)"; fx.fillRect(0, 0, W, H);
+    for (const f of G.fogs) { const g = fx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r); g.addColorStop(0, "rgba(120,145,155,0.10)"); g.addColorStop(1, "rgba(120,145,155,0)"); fx.fillStyle = g; fx.beginPath(); fx.arc(f.x, f.y, f.r, 0, TAU); fx.fill(); }
+    fx.globalCompositeOperation = "destination-out";
+    const L = lh(), R = beamRange(), half = beamHalf();
+    if (G.running || !$("ovEnd").hidden) {
+      const g = fx.createRadialGradient(L.x, L.y - 12, 10, L.x, L.y - 12, R); g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(0.7, "rgba(0,0,0,0.9)"); g.addColorStop(1, "rgba(0,0,0,0)");
+      fx.fillStyle = g; beamPath(fx, R, half); fx.fill();
+      fx.fillStyle = "rgba(0,0,0,0.35)"; beamPath(fx, R * 0.9, half * 1.5); fx.fill();
+    }
+    const halo = (x, y, r, a) => { const g = fx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(0,0,0,${a})`); g.addColorStop(1, "rgba(0,0,0,0)"); fx.fillStyle = g; fx.beginPath(); fx.arc(x, y, r, 0, TAU); fx.fill(); };
+    halo(L.x, L.y - 10, 90, 0.85);
+    for (const s of G.ships) halo(s.x, s.y, 22, 0.55);
+    for (const p of G.piers) halo(p.x, p.y - 20, 46, 0.6);
+    for (const k of G.rocks) if (k.seen > 1) halo(k.x, k.y, k.r * 2.4, 0.8);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(fogC, 0, 0); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    // remembered reefs show through the fog as faint outlines
+    for (const k of G.rocks) { if (k.seen <= 0) continue; ctx.globalAlpha = Math.min(0.55, k.seen * 0.55); rockPath(k); ctx.strokeStyle = "#e0583c"; ctx.lineWidth = 1.2; ctx.setLineDash([3, 4]); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; }
+
+    // beam glow
+    if (G.running || !$("ovEnd").hidden) {
+      ctx.globalCompositeOperation = "lighter";
+      const g = ctx.createRadialGradient(L.x, L.y - 12, 6, L.x, L.y - 12, R); g.addColorStop(0, "rgba(255,214,130,0.42)"); g.addColorStop(1, "rgba(255,214,130,0)");
+      ctx.fillStyle = g; beamPath(ctx, R, half); ctx.fill();
+      ctx.globalCompositeOperation = "source-over";
+    }
+    drawCoast();
+
+    // ship lanterns: always visible so the keeper can find them; brighter when guided
+    for (const s of G.ships) {
+      const a = 0.45 + 0.55 * s.conf, blink = s.conf === 0 ? (Math.sin(G.t * 5 + s.wob) > 0 ? 1 : 0.5) : 1;
+      ctx.fillStyle = s.kind === "gold" ? `rgba(255,200,80,${a * blink})` : `rgba(255,236,190,${a * blink})`;
+      ctx.beginPath(); ctx.arc(s.x, s.y, 2.6, 0, TAU); ctx.fill();
+      if (s.conf > 0) { ctx.strokeStyle = `rgba(255,210,122,${0.5 * s.conf})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(s.x, s.y, 9 + Math.sin(G.t * 6) * 1.5, -Math.PI / 2, -Math.PI / 2 + TAU * s.conf); ctx.stroke(); }
+    }
+    for (const p of G.parts) { ctx.globalAlpha = 1 - p.t / p.life; ctx.fillStyle = p.color; ctx.fillRect(p.x - 1.5, p.y - 1.5, 3, 3); }
+    ctx.globalAlpha = 1;
+    ctx.font = `600 13px ${getComputedStyle(document.documentElement).getPropertyValue("--font-mono")}`; ctx.textAlign = "center";
+    for (const t of G.texts) { ctx.globalAlpha = 1 - t.t / 1.8; ctx.fillStyle = t.color; ctx.fillText(t.text, t.x, t.y); }
+    ctx.globalAlpha = 1;
+  }
+
+  // ---------- loop ----------
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (G.running && !G.paused) step(dt);
+    else if (!G.running) { G.t += dt; G.beam = -Math.PI / 2 + Math.sin(G.t * 0.4) * 1.1; for (const f of G.fogs) { f.x += f.v * dt; if (f.x - f.r > W) f.x = -f.r; } }
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- wiring ----------
+  $("bStart").addEventListener("click", startGame);
+  $("bAgain").addEventListener("click", () => { G.wrecks = []; startGame(); });
+  $("bResume").addEventListener("click", togglePause);
+  $("bPause").addEventListener("click", togglePause);
+  $("bSound").addEventListener("click", () => { audioInit(); setSound(!SND.on); });
+  window.addEventListener("resize", resize);
+  setSound(SND.on);
+  $("bestStart").textContent = best ? `${best} очков` : "пока нет";
+  resize(); G.night = 1; layoutWorld(true); G.fogs = Array.from({ length: 9 }, () => ({ x: rand(0, W), y: rand(0, H), r: rand(120, 260), v: rand(4, 12) }));
+  // attract mode: a few ships drifting under the title
+  for (let i = 0; i < 3; i++) G.ships.push({ x: rand(60, W - 60), y: rand(120, H - 200), h: rand(0, TAU), spd: 0, kind: i ? "sloop" : "barge", conf: 0, len: 11, wob: rand(0, TAU), lit: false, age: 0 });
+  hud();
+  requestAnimationFrame(frame);
+})();
+</script>
