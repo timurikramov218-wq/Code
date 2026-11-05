@@ -3671,8 +3671,8 @@ vec3 liveryAt(vec3 p, out float fus) {
       // (which kill lift) make the brakes bite, and braking at high speed with full lift is weak, as on a real airliner
       const wheelLoad = clamp(1 - q * Aw * clOf(S.groundPitch || 0) * ge / G, 0.08, 1);
       if (S.autobrake && (S.throttle > 0.3 || S.gs < 12)) S.autobrake = false;
-      const brakeDecel = brake ? spec.brake * wheelLoad : S.autobrake ? Math.min(2.6, spec.brake * wheelLoad) : 0;
-      S.gs -= (brakeDecel + 0.2 * wheelLoad + (S.throttle < 0.02 ? 0.15 : 0) + S.spoiler * 0.6) * dt;
+      const brakeDecel = brake ? spec.brake * 0.72 * wheelLoad : S.autobrake ? Math.min(2.4, spec.brake * 0.72 * wheelLoad) : 0;   // max braking ≈ 0.33 g
+      S.gs -= (brakeDecel + 0.2 * wheelLoad + (S.throttle < 0.02 ? 0.1 : 0) + S.spoiler * 0.35) * dt;
       if (S.park) S.gs = Math.max(0, S.gs - 12 * dt);
       S.gs = Math.max(0, S.gs);
       // nosewheel steering: tight at taxi speed, only small corrections at takeoff speed (rudder pedals, not the tiller)
