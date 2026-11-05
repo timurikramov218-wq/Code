@@ -1831,13 +1831,13 @@ b767: {"c":[0.0,3.9792,0.0],"e":[23.5523,7.4299,24.2524],"tip":[23.55,1.249,7.42
   const randomLiv = (kind) => { const l = LIVERIES[kind]; return l && Math.random() < 0.85 ? l[Math.floor(Math.random() * l.length)] : "house"; };
   let chosenLiv = {}; try { chosenLiv = JSON.parse(load("sw-liv") || "{}") || {}; } catch { chosenLiv = {}; }
   const PLANES = {
-    b737: { name: "Airbus A320", type: "Narrow-body airliner · detailed 3D model", packed: true, build: build737model, thrust: 7.0, vmax: 128, stall: 46, roll: 0.8, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 3.2, retract: true, cam: [64, 13], cock: [1.0, -17.4], wingX: 17.9, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.3, 0.35] },
-    b77w: { name: "Boeing 777-300ER", type: "Long-haul wide-body · twin GE90", packed: true, build: build77Wmodel, thrust: 7.0, vmax: 146, stall: 54, roll: 0.55, pitch: 0.4, yaw: 0.19, turn: 0.62, gearH: 5.3, retract: true, cam: [128, 24], cock: [2.6, -31.6], wingX: 32.4, brake: 3.9, shadow: 37, big: true, stats: [0.97, 0.2, 0.26] },
-    b744: { name: "Boeing 747-400", type: "Jumbo jet · upper deck · four engines", packed: true, build: build744model, thrust: 6.6, vmax: 148, stall: 55, roll: 0.5, pitch: 0.38, yaw: 0.18, turn: 0.6, gearH: 5.2, retract: true, cam: [132, 27], cock: [3.5, -28.4], wingX: 31.2, brake: 3.8, shadow: 38, big: true, stats: [0.96, 0.18, 0.24] },
-    b747: { name: "Boeing 747-400F", type: "Jumbo freighter · four engines", packed: true, freighter: true, cargo: 113, build: build747model, thrust: 6.6, vmax: 148, stall: 55, roll: 0.5, pitch: 0.38, yaw: 0.18, turn: 0.6, gearH: 5.2, retract: true, cam: [132, 27], cock: [3.5, -28.4], wingX: 31.2, brake: 3.8, shadow: 38, big: true, stats: [0.96, 0.18, 0.24] },
-    b763: { name: "Boeing 767-300ER", type: "Wide-body airliner · stretched 767", packed: true, build: build763model, thrust: 6.7, vmax: 140, stall: 51, roll: 0.65, pitch: 0.44, yaw: 0.21, turn: 0.68, gearH: 4.2, retract: true, cam: [98, 19], cock: [1.2, -24.3], wingX: 23.6, brake: 4.1, shadow: 28, big: true, stats: [0.92, 0.24, 0.29] },
-    a321: { name: "Airbus A321", type: "Narrow-body airliner · stretched A320", packed: true, build: buildA321model, thrust: 7.1, vmax: 128, stall: 48, roll: 0.75, pitch: 0.48, yaw: 0.24, turn: 0.72, gearH: 3.2, retract: true, cam: [72, 14], cock: [1.0, -20.8], wingX: 17.9, brake: 4.4, shadow: 19, big: true, stats: [0.84, 0.28, 0.33] },
-    mh: { name: "Boeing 737", type: "Narrow-body airliner · low-poly 3D model", packed: true, build: buildMHmodel, thrust: 7.0, vmax: 130, stall: 46, roll: 0.82, pitch: 0.5, yaw: 0.25, turn: 0.75, gearH: 3.0, retract: true, cam: [60, 13], cock: [1.0, -15.6], wingX: 18.9, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.32, 0.38] },
+    b737: { name: "Airbus A320", type: "Narrow-body airliner · detailed 3D model", packed: true, build: build737model, thrust: 3.1, vmax: 128, stall: 56, roll: 0.42, pitch: 0.32, yaw: 0.18, turn: 0.75, gearH: 3.2, retract: true, cam: [64, 13], cock: [1.0, -17.4], wingX: 17.9, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.3, 0.35] },
+    b77w: { name: "Boeing 777-300ER", type: "Long-haul wide-body · twin GE90", packed: true, build: build77Wmodel, thrust: 2.8, vmax: 146, stall: 62, roll: 0.32, pitch: 0.26, yaw: 0.15, turn: 0.62, gearH: 5.3, retract: true, cam: [128, 24], cock: [2.6, -31.6], wingX: 32.4, brake: 3.9, shadow: 37, big: true, stats: [0.97, 0.2, 0.26] },
+    b744: { name: "Boeing 747-400", type: "Jumbo jet · upper deck · four engines", packed: true, build: build744model, thrust: 2.7, vmax: 148, stall: 64, roll: 0.3, pitch: 0.25, yaw: 0.14, turn: 0.6, gearH: 5.2, retract: true, cam: [132, 27], cock: [3.5, -28.4], wingX: 31.2, brake: 3.8, shadow: 38, big: true, stats: [0.96, 0.18, 0.24] },
+    b747: { name: "Boeing 747-400F", type: "Jumbo freighter · four engines", packed: true, freighter: true, cargo: 113, build: build747model, thrust: 2.7, vmax: 148, stall: 64, roll: 0.3, pitch: 0.25, yaw: 0.14, turn: 0.6, gearH: 5.2, retract: true, cam: [132, 27], cock: [3.5, -28.4], wingX: 31.2, brake: 3.8, shadow: 38, big: true, stats: [0.96, 0.18, 0.24] },
+    b763: { name: "Boeing 767-300ER", type: "Wide-body airliner · stretched 767", packed: true, build: build763model, thrust: 3.0, vmax: 140, stall: 58, roll: 0.36, pitch: 0.28, yaw: 0.16, turn: 0.68, gearH: 4.2, retract: true, cam: [98, 19], cock: [1.2, -24.3], wingX: 23.6, brake: 4.1, shadow: 28, big: true, stats: [0.92, 0.24, 0.29] },
+    a321: { name: "Airbus A321", type: "Narrow-body airliner · stretched A320", packed: true, build: buildA321model, thrust: 2.9, vmax: 128, stall: 58, roll: 0.4, pitch: 0.3, yaw: 0.17, turn: 0.72, gearH: 3.2, retract: true, cam: [72, 14], cock: [1.0, -20.8], wingX: 17.9, brake: 4.4, shadow: 19, big: true, stats: [0.84, 0.28, 0.33] },
+    mh: { name: "Boeing 737", type: "Narrow-body airliner · low-poly 3D model", packed: true, build: buildMHmodel, thrust: 3.2, vmax: 130, stall: 55, roll: 0.44, pitch: 0.33, yaw: 0.18, turn: 0.75, gearH: 3.0, retract: true, cam: [60, 13], cock: [1.0, -15.6], wingX: 18.9, brake: 4.5, shadow: 18, big: true, stats: [0.8, 0.32, 0.38] },
   };
   for (const k of Object.keys(PLANES)) PLANES[k].kind = k;
   (function realScale() {
@@ -2943,7 +2943,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     const [x, z] = toWorld(at, along, 0);
     S.pos.set(x, at.elev + 0.05 + spec.gearH, z);
     S.q.setFromAxisAngle(AY, -at.hdg * Math.PI / 180); S.vel.set(0, 0, 0);
-    Object.assign(S, { speed: 0, sink: 0, throttle: 0, grounded: true, crashed: false, flaps: 1, gearDown: true, gearPos: 1, flapPos: 1, flightT: 0, vs: 0, touchFpm: null, landedAt: null, autobrake: false, calls: {}, callUntil: 0, boomT: 0, started: false, gate: null, push: null, taxiOut: false, groundPitch: 0, alpha: 0, load: 1, gust: 0, gs: 0, ias: 0, n1: 0, trimAlpha: 0.09, spoiler: 0, autoSpoiler: false, reverse: false, trim: 0, park: false, alerts: {}, msgQ: [], gammaPrev: undefined, gammaRate: 0, engOut: false, lights: typeof ENV !== "undefined" && ENV.time !== "day" });
+    Object.assign(S, { speed: 0, sink: 0, throttle: 0, grounded: true, crashed: false, flaps: 1, gearDown: true, gearPos: 1, flapPos: 1, flightT: 0, vs: 0, wr: 0, wp: 0, wy: 0, pc: 0, touchFpm: null, landedAt: null, autobrake: false, calls: {}, callUntil: 0, boomT: 0, started: false, gate: null, push: null, taxiOut: false, groundPitch: 0, alpha: 0, load: 1, gust: 0, gs: 0, ias: 0, n1: 0, trimAlpha: 0.09, spoiler: 0, autoSpoiler: false, reverse: false, trim: 0, park: false, alerts: {}, msgQ: [], gammaPrev: undefined, gammaRate: 0, engOut: false, lights: typeof ENV !== "undefined" && ENV.time !== "day" });
     if (typeof syncTouchKeys === "function") syncTouchKeys();
     if (typeof AP !== "undefined") { AP.on = false; AP.athr = false; AP.app = false; AP.lat = "HDG"; AP.flare = false; apSync(); pushBtn.hidden = true; }
     boom.visible = false; model.visible = true; flyby.set = false;
@@ -3634,7 +3634,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     const CL0 = 0.15 + 0.3 * S.flapPos - 0.25 * S.spoiler, CLMAX = 1.45 + 0.55 * S.flapPos - 0.4 * S.spoiler;
     const aCrit = (CLMAX - CL0) / CLA;
     const clOf = (al) => al < aCrit ? Math.max(-0.9, CL0 + CLA * al) : Math.max(CLMAX * 0.5, CLMAX - (al - aCrit) * 4);
-    const dragMult = 1 + 0.7 * S.flapPos + (spec.retract ? 0.35 * S.gearPos : 0.15) + 1.3 * S.spoiler;
+    let dragMult = 1 + 0.7 * S.flapPos + (spec.retract ? 0.35 * S.gearPos : 0.15) + 1.3 * S.spoiler;
     const stallV = spec.stall * Math.sqrt(1.45 / Math.max(0.4, CLMAX));
     S.alphaCrit = aCrit; S.stallV = stallV;
     const rho = RHO0 * Math.exp(-Math.max(0, S.pos.y) / 8500), sigma = rho / RHO0;   // thinner air higher up
@@ -3648,11 +3648,15 @@ vec3 liveryAt(vec3 p, out float fus) {
       tone(700, 700, 0.25, "square", 0.06); tone(700, 700, 0.25, "square", 0.06, 0.35); tone(700, 700, 0.25, "square", 0.06, 0.7); buzz([200, 80, 200, 80, 200]);
       RADIO.push({ text: `${S.mission.to} Tower: copy the engine failure. Runway ${(AP_BY[S.mission.to] || S.from).label} is yours, cleared to land.`, t: 10 });
     }
-    const thrustAcc = (S.reverse ? -0.5 : 1) * S.n1 * thrMax * Math.pow(sigma, 0.7) * (S.engOut ? 0.5 : 1);
+    // Mach number: jet thrust falls off as speed rises, and drag climbs steeply past ~0.8 (the airliners' practical limit)
+    const mach = Math.hypot(S.vel.x, S.vel.y, S.vel.z) / (340 - 0.0039 * clamp(S.pos.y, 0, 11000)); S.mach = mach;
+    const thrustAcc = (S.reverse ? -0.5 : 1) * S.n1 * thrMax * Math.pow(sigma, 0.7) * (1 - 0.3 * Math.min(mach, 0.9)) * (S.engOut ? 0.5 : 1);
+    const machDrag = mach > 0.78 ? 1 + 30 * (mach - 0.78) * (mach - 0.78) : 1;
     // wind with gusts (stronger in cloud and rain)
     const gustAmp = ENV.weather === "rain" ? 1 : ENV.weather === "cloudy" ? 0.45 : 0.12;
     // gusts follow smooth noise (a few slow waves), not a new random number every frame, so the aircraft sways instead of shaking
     { const t = S.flightT; S.gustV.lerp(V.tmp.set(wave(t, 3) * 4.5 * gustAmp, wave(t, 4) * 2.5 * gustAmp * (agl > 8 ? 1 : 0.1), wave(t, 5) * 4.5 * gustAmp), Math.min(1, dt * 2)); }
+    dragMult *= machDrag;
     const wind = V.wind.copy(S.wind).add(S.gustV);
     if (agl < 30) wind.multiplyScalar(0.6 + 0.4 * Math.max(0, agl) / 30);   // wind is lighter near the ground
 
@@ -3663,17 +3667,23 @@ vec3 liveryAt(vec3 p, out float fus) {
       S.speed = Math.max(0, S.gs + headwind);
       const q = 0.5 * rho * S.speed * S.speed;
       S.gs += (thrustAcc - q * Aw * CD0 * dragMult) * dt;
-      // autobrake after a landing: medium deceleration until taxi speed, cancelled by thrust or the brake key
+      // weight on the wheels: what the wings don't carry. Brakes and rolling friction work through it, so the spoilers
+      // (which kill lift) make the brakes bite, and braking at high speed with full lift is weak, as on a real airliner
+      const wheelLoad = clamp(1 - q * Aw * clOf(S.groundPitch || 0) * ge / G, 0.08, 1);
       if (S.autobrake && (S.throttle > 0.3 || S.gs < 12)) S.autobrake = false;
-      S.gs -= ((brake ? spec.brake : S.autobrake ? 2.6 : 0.25) + (S.throttle < 0.02 ? 0.25 : 0) + S.spoiler * 1.3) * dt;
+      const brakeDecel = brake ? spec.brake * wheelLoad : S.autobrake ? Math.min(2.6, spec.brake * wheelLoad) : 0;
+      S.gs -= (brakeDecel + 0.2 * wheelLoad + (S.throttle < 0.02 ? 0.15 : 0) + S.spoiler * 0.6) * dt;
       if (S.park) S.gs = Math.max(0, S.gs - 12 * dt);
       S.gs = Math.max(0, S.gs);
-      let steer = (S.inputs.yaw + S.inputs.roll * 0.5) * clamp(S.gs / 6, 0, 1) * (spec.big ? 0.25 : 0.6);
+      // nosewheel steering: tight at taxi speed, only small corrections at takeoff speed (rudder pedals, not the tiller)
+      let steer = (S.inputs.yaw + S.inputs.roll * 0.5) * clamp(S.gs / 6, 0, 1) * (spec.big ? 0.25 : 0.6) * Math.min(1, 12 / Math.max(S.gs, 1));
       steer -= cross * 0.004 * clamp(S.speed / 25, 0, 1);   // weathervane: the tail fin pushes the nose into a crosswind
       const heading = Math.atan2(-fwd.x, -fwd.z) - steer * dt;
       const canRotate = S.speed > stallV * 0.75;
       const gpTarget = canRotate && S.inputs.pitch > 0.1 ? 0.2 * S.inputs.pitch : 0;
-      S.groundPitch = clamp(lerp(S.groundPitch || 0, gpTarget, Math.min(1, dt * (canRotate ? spec.pitch * 1.5 : 3))), 0, 0.2);
+      // rotation about 3°/s (heavies a little slower); after touchdown the nose comes down at a similar rate, not slapped down
+      const gp0 = S.groundPitch || 0, upRate = spec.big ? 0.05 + 0.02 * (1 - spec.stall / 70) : 0.1, downRate = S.gs > 15 ? 0.055 : 0.3;
+      S.groundPitch = clamp(gp0 + clamp(gpTarget - gp0, -downRate * dt, upRate * dt), 0, 0.2);
       if (spec.big && S.groundPitch > 0.17 && S.msgT <= 0) flash("TAIL STRIKE RISK: ease off the pull", 1.2);
       S.q.setFromEuler(new THREE.Euler(S.groundPitch, heading, 0, "YXZ"));
       fwd.set(0, 0, -1).applyQuaternion(S.q);
@@ -3718,7 +3728,9 @@ vec3 liveryAt(vec3 p, out float fus) {
         aTrim = clamp((need / Math.max(1, q * Aw * ge) - CL0) / CLA, -0.12, aCrit * 0.84);
       }
       const kA = 2.6 * Math.min(qr, 1.5) + 0.4;
-      let pitchRate = S.inputs.pitch * spec.pitch * auth - kA * (alpha - aTrim);
+      const spanI = (DIMS[spec.kind] || [12])[0];
+      S.pc = lerp(S.pc || 0, S.inputs.pitch * spec.pitch * auth, 1 - Math.exp(-dt / (0.2 + spanI / 200)));   // pilot's pitch command builds up with the aircraft's inertia
+      let pitchRate = S.pc - kA * (alpha - aTrim);
       if (alpha > aCrit) pitchRate -= 0.8 * Math.min(1, (alpha - aCrit) / 0.08);   // stall: the nose drops
       let yawRate = -S.inputs.yaw * spec.yaw * auth - (2.2 * Math.min(qr, 1.5) + 0.3) * beta;
       let rollRate = -S.inputs.roll * spec.roll * auth;
@@ -3732,9 +3744,17 @@ vec3 liveryAt(vec3 p, out float fus) {
       if (alpha > aCrit && Math.abs(S.inputs.roll) < 0.05) rollRate += Math.sin(S.flightT * 1.7) * 0.25 * (alpha - aCrit) * 10;  // wing drop in a deep stall
       const turb = ENV.weather === "rain" ? 1 : ENV.weather === "cloudy" ? 0.4 : 0;
       if (turb) { rollRate += wave(S.flightT * 1.6, 1) * 0.09 * turb; pitchRate += wave(S.flightT * 1.6, 2) * 0.03 * turb; }
-      S.q.multiply(tmpQ.setFromAxisAngle(AX, pitchRate * dt));
-      S.q.multiply(tmpQ.setFromAxisAngle(AZ, rollRate * dt));
-      S.q.multiply(tmpQ.setFromAxisAngle(AY, yawRate * dt));
+      if (!realistic && !AP.on) {   // bank protection (assisted): back to 33° when the stick is let go, never past 67°
+        const ab = Math.abs(bankNow), sb = Math.sign(bankNow);
+        if (ab > 0.58 && Math.abs(S.inputs.roll) < 0.05) rollRate += sb * (ab - 0.58) * 1.2;
+        if (ab > 1.17 && Math.sign(S.inputs.roll) === sb) rollRate += sb * spec.roll * auth * Math.abs(S.inputs.roll);
+      }
+      // inertia: an airliner takes a moment to start and stop rolling or pitching, more so the bigger it is
+      const span2 = (DIMS[spec.kind] || [12])[0], tauR = 0.3 + span2 / 110, tauP = 0.22 + span2 / 220, tauY = 0.45 + span2 / 120;
+      S.wr = lerp(S.wr || 0, rollRate, 1 - Math.exp(-dt / tauR)); S.wp = pitchRate; S.wy = lerp(S.wy || 0, yawRate, 1 - Math.exp(-dt / tauY));
+      S.q.multiply(tmpQ.setFromAxisAngle(AX, S.wp * dt));
+      S.q.multiply(tmpQ.setFromAxisAngle(AZ, S.wr * dt));
+      S.q.multiply(tmpQ.setFromAxisAngle(AY, S.wy * dt));
       S.q.normalize();
       fwd.set(0, 0, -1).applyQuaternion(S.q); up.set(0, 1, 0).applyQuaternion(S.q); right.set(1, 0, 0).applyQuaternion(S.q);
       const cl = clOf(alpha), lift = q * Aw * cl * ge, drag = q * Aw * (CD0 * dragMult + (cl * cl * 0.045) / ge);
