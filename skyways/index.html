@@ -355,6 +355,13 @@ kbd { font: 400 11px var(--font-mono); color: var(--fg); background: rgba(255,25
 .log { box-sizing: border-box; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(720px, calc(100% - 24px)); max-height: calc(100% - 96px); overflow: auto; display: grid; gap: 10px; background: #17171a; border: 1px solid var(--hair-2); border-radius: 18px; padding: 18px 20px; color: var(--fg); box-shadow: 0 40px 80px rgba(0,0,0,0.6); z-index: 7; }
 .log h3 { margin: 0; font: 400 22px var(--font-display); }
 /* career */
+.net-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; } .net-row label { display: grid; gap: 4px; font: 400 11px var(--font-body); color: var(--fg-3); flex: 1 1 130px; }
+.net-row input { font: 400 15px var(--font-body); padding: 9px 12px; border-radius: 10px; border: 1px solid var(--hair); background: #101013; color: var(--fg); min-width: 0; text-transform: none; }
+#netRoom { text-transform: uppercase; }
+.net-list { display: grid; gap: 4px; } .net-list div { display: flex; justify-content: space-between; gap: 10px; padding: 7px 10px; border-radius: 8px; background: var(--g1); font: 400 13px var(--font-body); color: var(--fg-2); } .net-list span { font: 400 11px var(--font-mono); color: var(--fg-3); }
+.net-say { display: flex; flex-wrap: wrap; gap: 6px; }
+.net-acc { flex: 1 1 240px; display: grid; gap: 3px; } .net-acc b { font: 600 14px var(--font-body); } .net-acc span { font: 400 12px var(--font-body); color: var(--fg-3); }
+#netPanel { z-index: 13; }
 /* career page */
 .cpage { position: absolute; inset: 0; z-index: 12; background: radial-gradient(120% 90% at 20% 0%, #1d1c20 0%, #0d0d10 70%); overflow: auto; color: var(--fg); }
 .cp-in { box-sizing: border-box; width: min(980px, 100%); margin: 0 auto; padding: calc(22px + env(safe-area-inset-top, 0px)) 20px 40px; display: grid; gap: 14px; }
@@ -674,6 +681,7 @@ body.fs-on .stage { position: fixed; inset: 0; z-index: 50; width: 100vw; height
           <hr>
           <button class="chip" id="showBtn" type="button">360° hangar</button>
           <button class="chip" id="carBtn" type="button">Career</button>
+          <button class="chip" id="netBtn" type="button">Online · multiplayer<span class="val" id="netVal"></span></button>
           <button class="chip" id="logBtn" type="button">Flight log</button>
           <button class="chip" id="fsBtn" type="button">Full screen</button>
         </div>
@@ -775,6 +783,16 @@ body.fs-on .stage { position: fixed; inset: 0; z-index: 50; width: 100vw; height
       </div>
     </div>
     <div class="jobbar" id="jobBar" hidden aria-live="off"></div>
+    <div class="log net" id="netPanel" hidden role="dialog" aria-labelledby="netTitle">
+      <div class="log-head"><h3 id="netTitle">Online</h3><div class="log-acts"><button class="chip" id="netClose" type="button">Close</button></div></div>
+      <p class="cp-note" id="netStatus">Fly with other players in the same world. Everyone in the same room sees each other.</p>
+      <div class="net-row"><label>Your name<input id="netName" maxlength="16" autocomplete="off" spellcheck="false"></label><label>Room<input id="netRoom" maxlength="12" autocomplete="off" spellcheck="false" value="WORLD"></label><button class="btn" id="netJoin" type="button">Join</button></div>
+      <p class="cp-note">Room WORLD is open to everyone. For a private flight, make up a room code and tell it to your friends.</p>
+      <div id="netList" class="net-list"></div>
+      <div class="net-say" id="netSay" hidden></div>
+      <hr>
+      <div class="net-row"><div class="net-acc"><b id="netAcc">Not signed in</b><span id="netAccSub">Your progress is saved in this browser. Sign in to keep it in the cloud and open it on any device.</span></div><button class="btn alt" id="netSign" type="button">Sign in with Google</button></div>
+    </div>
     <div class="log" id="logPanel" hidden role="dialog" aria-labelledby="logTitle">
       <div class="log-head"><h3 id="logTitle">Flight log</h3><div class="log-acts"><button class="chip" id="logClear" type="button">Clear</button><button class="chip" id="logClose" type="button">Close</button></div></div>
       <div id="logBody"></div>
@@ -883,6 +901,7 @@ body.fs-on .stage { position: fixed; inset: 0; z-index: 50; width: 100vw; height
           <button class="btn" id="wStart" type="button">Start</button>
           <button class="btn alt" id="wMissions" type="button">Missions</button>
           <button class="btn alt" id="wCareer" type="button">Career</button>
+          <button class="btn alt" id="wOnline" type="button">Online</button>
         </div>
         <button class="car-chip" id="wCarChip" type="button"></button>
       </div>
@@ -6052,6 +6071,14 @@ vec3 liveryAt(vec3 p, out float fus) {
       hud.font = `${Math.round(fs * 0.7)}px ${MONO}`; hud.textAlign = "left"; hud.textBaseline = "middle";
       hud.fillText(`${PLANES[ai.kind].name}`, sx + 12, sy - 7); hud.fillText(`${ai.air || "Skyways"} · ${(d / 1000).toFixed(1)} km ${dy >= 0 ? "+" : ""}${dy}`, sx + 12, sy + 8);
     }
+    for (const o of NET.list) {   // other players: a green marker with the name
+      if (!o.model) continue; const d = o.model.position.distanceTo(S.pos); if (d > 20000) continue;
+      proj.copy(o.model.position).project(camera); if (proj.z > 1 || Math.abs(proj.x) > 0.95 || Math.abs(proj.y) > 0.95) continue;
+      const sx = (proj.x + 1) / 2 * w, sy = (1 - proj.y) / 2 * h; if (sy > h - dashH) continue;
+      hud.strokeStyle = hud.fillStyle = "#7fe39a"; hud.lineWidth = 1.5; hud.beginPath(); hud.arc(sx, sy, 8, 0, Math.PI * 2); hud.stroke();
+      hud.font = `${Math.round(fs * 0.75)}px ${MONO}`; hud.textAlign = "left"; hud.textBaseline = "middle";
+      hud.fillText(o.n, sx + 12, sy - 7); hud.fillText(`${PLANES[o.k].name} · ${(d / 1000).toFixed(1)} km`, sx + 12, sy + 8);
+    }
     if (threat && blink) { hud.font = `bold ${Math.round(fs * 1.25)}px ${MONO}`; hud.textAlign = "center"; warnTxt(`TRAFFIC · ${threat.cs}`, HC.warn, warnLow ? cy + 135 * sc : warnY + fs * 1.8); }
     if (RADIO.length) {
       const coarse = coarseMQ.matches, lh = Math.round(fs * 1.25), phoneR = phoneMQ.matches;
@@ -7543,6 +7570,7 @@ vec3 liveryAt(vec3 p, out float fus) {
     // traffic more than 8.5 km away is a dot under a pixel: don't draw the whole aircraft model (it comes back as it nears)
     for (const ai of AI) { const far = ai.pos.distanceToSquared(camera.position) > 8500 * 8500;
       if (far && ai.model.visible) { ai.model.visible = false; ai.farHide = true; } else if (!far && ai.farHide) { ai.model.visible = true; ai.farHide = false; } }
+    NET.tick(dt, now);
     if (S.mode !== "paused") updateCars(dt);
     RADIO.forEach((r) => (r.t -= dt)); while (RADIO.length && RADIO[0].t <= 0) RADIO.shift();
     beacons.forEach((b) => (b.rotation.y += dt * 3));
@@ -7561,6 +7589,127 @@ vec3 liveryAt(vec3 p, out float fus) {
     if (fpsOn) { fpsMeter.n++; if (now - fpsMeter.t0 >= 500) { fpsOut.textContent = `${Math.round(fpsMeter.n * 1000 / (now - fpsMeter.t0))} FPS`; fpsMeter.n = 0; fpsMeter.t0 = now; } }
     requestAnimationFrame(frame);
   }
+  // ================= ONLINE: multiplayer rooms and a cloud save (Firebase) =================
+  // The Firebase scripts load only when Online is opened. A room is a list of players, each writing their own position five
+  // times a second; everyone else draws them, smoothed, with their aircraft and livery. Signing in with Google keeps the
+  // saved progress in the cloud. Names and messages are only ever drawn as text.
+  const FB_CFG = { apiKey: "AIzaSyBu-Dzr9wF6jrl0y5eUE5Okp70bLhUFUD8", authDomain: "skyways-61c6f.firebaseapp.com", databaseURL: "https://skyways-61c6f-default-rtdb.europe-west1.firebasedatabase.app", projectId: "skyways-61c6f", appId: "1:810722050231:web:384ad733578c1eb7370d32" };
+  const NET = { list: [], by: new Map(), room: null, ref: null, uid: null, user: null, ready: null, sendT: 0, joinedAt: 0, cloudT: 0,
+    tick(dt, now) {
+      if (!this.room) return;
+      if (now - this.sendT > 200 && this.me && model && (S.mode === "fly" || S.mode === "paused")) {
+        this.sendT = now; const r = (v) => Math.round(v * 100) / 100, q = S.q;
+        this.me.set({ n: this.name, k: spec.kind, l: chosenLiv[spec.kind] || "house", p: [r(S.pos.x), r(S.pos.y), r(S.pos.z)], q: [+q.x.toFixed(4), +q.y.toFixed(4), +q.z.toFixed(4), +q.w.toFixed(4)],
+          v: S.grounded ? [0, 0, 0] : [r(S.vel.x), r(S.vel.y), r(S.vel.z)], g: S.gearPos > 0.5 ? 1 : 0, t: Date.now() }).catch(() => {});
+      }
+      const tnow = performance.now();
+      for (const o of this.list) {
+        if (tnow - o.at > 15000) { this.drop(o.id); continue; }
+        if (!o.model) { const m = buildPlane(o.k, o.l); if (!m) continue; o.model = m; scene.add(m); m.position.copy(o.p); m.quaternion.copy(o.q); (m.userData.strobes || []).forEach((x) => (x.visible = false)); if (m.userData.glow) m.userData.glow.visible = false; }
+        const age = Math.min(1, (tnow - o.at) / 1000); V.t1 = V.t1 || new THREE.Vector3(); V.t1.copy(o.p).addScaledVector(o.v, age);
+        o.model.position.lerp(V.t1, 1 - Math.exp(-dt * 8)); o.model.quaternion.slerp(o.q, 1 - Math.exp(-dt * 6));
+        const g = o.model.userData.gear; if (g) g.visible = !!o.g;
+        o.model.visible = o.model.position.distanceToSquared(camera.position) < 12000 * 12000;
+      }
+    },
+    drop(id) { const o = this.by.get(id); if (!o) return; if (o.model) scene.remove(o.model); this.by.delete(id); this.list = this.list.filter((q) => q !== o); netRender(); },
+    take(id, d) {
+      if (id === this.uid || !d || !Array.isArray(d.p) || !Array.isArray(d.q)) return;
+      const num = (a, n) => a.length === n && a.every((x) => typeof x === "number" && isFinite(x)); if (!num(d.p, 3) || !num(d.q, 4)) return;
+      const k = PLANES[d.k] ? d.k : "b737", l = (LIVERIES[k] || []).includes(d.l) ? d.l : "house", n = String(d.n || "Pilot").replace(/[^\p{L}\p{N} ._-]/gu, "").slice(0, 16) || "Pilot";
+      let o = this.by.get(id); const fresh = !o;
+      if (o && (o.k !== k || o.l !== l)) { if (o.model) scene.remove(o.model); o.model = null; }
+      if (!o) { o = { id, p: new THREE.Vector3(), q: new THREE.Quaternion(), v: new THREE.Vector3(), model: null }; this.by.set(id, o); this.list.push(o); }
+      o.k = k; o.l = l; o.n = n; o.g = d.g; o.p.fromArray(d.p); o.q.fromArray(d.q).normalize(); o.v.fromArray(num(d.v || [], 3) ? d.v : [0, 0, 0]); o.at = performance.now();
+      if (fresh) { netRender(); if (Date.now() - this.joinedAt > 3000) flash(`${n} joined`, 2); }
+    },
+  };
+  const netPanel = $("netPanel"), netSt = (t) => { $("netStatus").textContent = t; };
+  function netLoad() {
+    if (NET.ready) return NET.ready;
+    const one = (u) => new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = u; sc.onload = res; sc.onerror = () => rej(new Error("load")); document.head.append(sc); });
+    const B = "https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-";
+    NET.ready = one(B + "app-compat.js").then(() => one(B + "auth-compat.js")).then(() => one(B + "database-compat.js")).then(() => {
+      firebase.initializeApp(FB_CFG);
+      firebase.auth().onAuthStateChanged((u) => { NET.user = u; NET.uid = u ? u.uid : null; netAccount(); if (u && !u.isAnonymous) cloudSync(); });
+    });
+    NET.ready.catch(() => { NET.ready = null; });
+    return NET.ready;
+  }
+  const netAuth = () => (NET.user ? Promise.resolve(NET.user) : firebase.auth().signInAnonymously().then((c) => c.user));
+  function netJoin() {
+    const room = ($("netRoom").value || "WORLD").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12) || "WORLD"; $("netRoom").value = room;
+    NET.name = ($("netName").value || "").replace(/[^\p{L}\p{N} ._-]/gu, "").trim().slice(0, 16) || `Pilot ${Math.floor(100 + Math.random() * 900)}`; $("netName").value = NET.name; save("sw-netname", NET.name);
+    netSt("Connecting…"); $("netJoin").disabled = true;
+    netLoad().then(netAuth).then((u) => {
+      NET.uid = u.uid; netLeave(true);
+      const db = firebase.database(), base = db.ref(`rooms/${room}`); NET.ref = base; NET.room = room; NET.joinedAt = Date.now();
+      NET.me = base.child(`players/${u.uid}`); NET.me.onDisconnect().remove();
+      const P = base.child("players");
+      P.on("child_added", (sn) => NET.take(sn.key, sn.val()), (e) => { netSt("The server refused the connection: check the database rules."); });
+      P.on("child_changed", (sn) => NET.take(sn.key, sn.val()));
+      P.on("child_removed", (sn) => { const o = NET.by.get(sn.key); if (o) flash(`${o.n} left`, 2); NET.drop(sn.key); });
+      base.child("chat").limitToLast(1).on("child_added", (sn) => { const m = sn.val(); if (!m || typeof m.m !== "string" || (m.t || 0) < NET.joinedAt || m.u === NET.uid) return;
+        RADIO.push({ text: `${String(m.n || "Pilot").slice(0, 16)}: ${m.m.slice(0, 80)}`, t: 8 }); if (S.mode !== "fly") flash(`${String(m.n || "Pilot").slice(0, 16)}: ${m.m.slice(0, 80)}`, 3); });
+      save("sw-netroom", room); netRender();
+    }).catch((e) => { netSt(e && /admin-restricted|operation-not-allowed/.test(e.code || "") ? "Online isn't switched on yet: anonymous sign-in is disabled in the game's Firebase project." : "Couldn't connect. Online play needs the internet and works on the game's website."); }).then(() => { $("netJoin").disabled = false; });
+  }
+  function netLeave(quiet) {
+    if (NET.ref) { NET.ref.child("players").off(); NET.ref.child("chat").off(); if (NET.me) { NET.me.onDisconnect().cancel(); NET.me.remove().catch(() => {}); } }
+    for (const o of NET.list.slice()) NET.drop(o.id);
+    NET.ref = null; NET.room = null; NET.me = null; if (!quiet) { save("sw-netroom", ""); netRender(); }
+  }
+  function netSayMsg(m) { if (!NET.ref) return; NET.ref.child("chat").push({ u: NET.uid, n: NET.name, m, t: Date.now() }).catch(() => {}); flash(`You: ${m}`, 1.6); }
+  function netRender() {
+    const on = !!NET.room; $("netJoin").textContent = on ? "Leave" : "Join"; $("netVal").textContent = on ? `${NET.room} · ${NET.list.length + 1}` : "";
+    netSt(on ? `In room ${NET.room}: ${NET.list.length + 1} player${NET.list.length ? "s" : ""} online. Other pilots show as green circles with their names.` : "Fly with other players in the same world. Everyone in the same room sees each other.");
+    const L = $("netList"); L.replaceChildren();
+    if (on) { const me = document.createElement("div"); me.textContent = `${NET.name} (you)`; L.append(me);
+      for (const o of NET.list) { const d = document.createElement("div"), sp = document.createElement("span"); d.textContent = o.n; sp.textContent = `${PLANES[o.k].name} · ${(o.p.distanceTo(S.pos) / 1000).toFixed(1)} km`; d.append(sp); L.append(d); } }
+    const say = $("netSay"); say.hidden = !on;
+    if (on && !say.children.length) for (const m of ["Hello!", "Taking off", "Coming in to land", "Follow me", "Where are you?", "Nice landing!", "Thanks, bye!"]) { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = m; b.addEventListener("click", () => netSayMsg(m)); say.append(b); }
+  }
+  // ---- the account: Google sign-in keeps every saved setting, the career and the bests in the cloud ----
+  const localKeys = () => { const o = {}; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^sw-/.test(k) && k !== "sw-cloud-t") o[k] = localStorage.getItem(k); } } catch {} return o; };
+  function netAccount() {
+    const u = NET.user, g = u && !u.isAnonymous;
+    $("netAcc").textContent = g ? `Signed in: ${u.displayName || u.email || "Google account"}` : "Not signed in";
+    $("netAccSub").textContent = g ? "Your progress is saved to the cloud automatically and opens on any device you sign in on." : "Your progress is saved in this browser. Sign in to keep it in the cloud and open it on any device.";
+    $("netSign").textContent = g ? "Sign out" : "Sign in with Google";
+  }
+  function cloudPush() {
+    const u = NET.user; if (!u || u.isAnonymous) return; const data = JSON.stringify(localKeys()); if (data === NET.lastPush || data.length > 900000) return;
+    const t = Date.now(); firebase.database().ref(`saves/${u.uid}`).set({ t, data }).then(() => { NET.lastPush = data; save("sw-cloud-t", String(t)); }).catch(() => {});
+  }
+  function cloudSync() {
+    const u = NET.user; if (!u || u.isAnonymous) return;
+    firebase.database().ref(`saves/${u.uid}`).once("value").then((sn) => {
+      const c = sn.val(), mine = +(load("sw-cloud-t") || 0);
+      if (c && typeof c.data === "string" && c.t > mine) {
+        let d = null; try { d = JSON.parse(c.data); } catch {}
+        if (d && JSON.stringify(localKeys()) !== c.data && confirm("Your account has saved progress in the cloud. Load it on this device? (Cancel keeps this device's progress and saves it to the cloud instead.)")) {
+          try { for (const k of Object.keys(localKeys())) localStorage.removeItem(k); } catch {}
+          for (const [k, v] of Object.entries(d)) if (/^sw-/.test(k) && typeof v === "string") save(k, v);
+          save("sw-cloud-t", String(c.t)); location.reload(); return;
+        }
+      }
+      cloudPush();
+    }).catch(() => {});
+    if (!NET.cloudI) NET.cloudI = setInterval(cloudPush, 45000);
+  }
+  $("netSign").addEventListener("click", () => {
+    netLoad().then(() => {
+      const a = firebase.auth(); if (NET.user && !NET.user.isAnonymous) { if (NET.room) netLeave(); return a.signOut(); }
+      return a.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    }).catch((e) => { netSt(e && e.code === "auth/popup-blocked" ? "The browser blocked the sign-in window: allow pop-ups for this site and try again." : "Sign-in didn't complete. It works on the game's website."); });
+  });
+  function openNet() { $("moreMenu").hidden = true; if (S.mode === "fly") pause(); $("netName").value = load("sw-netname") || ""; netRender(); netAccount(); netPanel.hidden = false; }
+  $("netBtn").addEventListener("click", openNet); $("wOnline").addEventListener("click", openNet);
+  $("netClose").addEventListener("click", () => { netPanel.hidden = true; });
+  $("netJoin").addEventListener("click", () => { if (NET.room) netLeave(); else netJoin(); });
+  setInterval(() => { if (!netPanel.hidden && NET.room) netRender(); }, 2000);
+  window.addEventListener("pagehide", () => { if (NET.me) NET.me.remove(); });
+  if (load("sw-cloud-t")) setTimeout(() => netLoad().catch(() => {}), 4000);   // signed in before: reconnect the cloud save quietly
   // ---------- step by step: welcome screen → hangar (aircraft and livery) → route and conditions → take off ----------
   const welcome = $("welcome"), FLOW = { on: false };
   const ROUTE_TIP = "Pick the airports, the time of day and the weather, then take off. The runway, ILS and taxiways are set up for you.";
