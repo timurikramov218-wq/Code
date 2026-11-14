@@ -495,15 +495,19 @@ function surfaceAt(car) {
   if ((side > 0 ? GRAV_R[k] : GRAV_L[k]) && ad > HW + 1.6) return "gravel";
   return "grass";
 }
-const GRIP = { road: 1, kerb: 0.9, grass: 0.5, gravel: 0.42 }, ROLL = { road: 0.15, kerb: 0.4, grass: 2.2, gravel: 6.5 };
-function stepPlayer(car, dt, inp) {
-  const assist = SET.assist === "on", v = car.v;
+const GRIP = { road: 1, kerb: 0.9, grass: 0.5, gravel: 0.42 }, ROLL = { road: 0.15, kerb: 0.4, grass: 1.4, gravel: 3.2 };
+const steerMax = (v) => lerp(0.3, 0.042, clamp(v / 70, 0, 1));   // less lock the faster you go
+function stepPlayer(car, dt, inp) { stepCar(car, dt, inp, SET.assist === "on"); }
+function stepCar(car, dt, inp, assist) {
+  const v = car.v;
   // braking help: lifts and brakes for you when you arrive far too fast at a corner
   let thr = inp.thr, brk = inp.brk;
   if (assist) { const want = vAt(car.s + Math.max(20, v * 0.9)) * 1.03; if (v > want + 2) { thr = Math.min(thr, 0.15); brk = Math.max(brk, clamp((v - want) / 12, 0.35, 1)); } }
   car.thr = lerp(car.thr, thr, Math.min(1, dt * 10)); car.brk = lerp(car.brk, brk, Math.min(1, dt * 14));
-  const sMax = lerp(0.36, 0.07, clamp(v / 85, 0, 1));
-  car.steer = lerp(car.steer, inp.steer, Math.min(1, dt * (inp.steer === 0 ? 7 : 4.5)));
+  const sMax = steerMax(v);
+  // keys and buttons are all-or-nothing: the wheel winds on gently (and comes back a little quicker)
+  const rate = car.isPlayer ? (Math.abs(inp.steer) < Math.abs(car.steer) || inp.steer * car.steer < 0 ? 4.2 : 2.2) : 6;
+  car.steer += clamp(inp.steer - car.steer, -rate * dt, rate * dt);
   const surf = surfaceAt(car), mu = PH.mu * GRIP[surf], down = PH.g + DFc * v * v, gripA = mu * down;
   // longitudinal
   const drs = car.drsOpen;
@@ -511,7 +515,7 @@ function stepPlayer(car, dt, inp) {
   // lateral: the nose turns at the rate the front wheels ask for (a little more than grip allows when you overdo it);
   // the direction of travel follows only as fast as the tyres' grip lets it: the difference is the slide
   const delta = car.steer * sMax, wantYaw = v * Math.tan(delta) / PH.L, latLeft = gripA * Math.sqrt(Math.max(0.08, 1 - (ax / (gripA * 1.05)) ** 2));
-  const limit = v > 2 ? latLeft / v : 9, yawRate = clamp(wantYaw, -limit * 1.18, limit * 1.18);
+  const limit = v > 2 ? latLeft / v : 9, yawRate = clamp(wantYaw, -limit * 1.06, limit * 1.06);
   car.yawRate = lerp(car.yawRate, yawRate, Math.min(1, dt * 9));
   car.yaw -= car.yawRate * dt;   // a right turn (positive steer) turns clockwise seen from above
   let slip = wrapA(car.yaw - car.psi);
@@ -524,48 +528,50 @@ function stepPlayer(car, dt, inp) {
   car.x += -Math.sin(car.psi) * car.v * dt; car.z += -Math.cos(car.psi) * car.v * dt;
 }
 function stepAI(car, dt, lead) {
-  // the AI drives its racing line (with a lane offset for overtaking) at the speed it can carry, scaled by its skill
-  let want = vAt(car.s + 10) * car.skill;
-  if (phase !== "race") want = 0;
-  // traffic: slow behind a slower car unless it can go round it
-  const ahead = lead; if (ahead) { const gap = ahead.prog - car.prog; if (gap < 14 && gap > 0) { if (Math.abs(ahead.lane - car.lane) < 2.4) { car.laneT = car.lane > 0 ? -3.2 : 3.2; want = Math.min(want, ahead.v + (gap - 9) * 0.6); } } }
+  // the AI drives the same car as you, with the same physics: it steers for a point on its line ahead and works the pedals
+  // to the speed it can carry there (scaled by its skill); behind a slower car it moves over to pass
+  if (phase !== "race" && phase !== "cooldown") { stepCar(car, dt, { steer: 0, thr: 0, brk: 1 }, false); return; }
+  let want = vAt(car.s + Math.max(15, car.v * 0.6)) * car.skill;
+  const ahead = lead; if (ahead) { const gap = ahead.prog - car.prog; if (gap < 16 && gap > 0) { if (Math.abs(ahead.lane - car.lane) < 2.6) { car.laneT = car.lane > 0.5 ? -3.2 : 3.2; if (gap < 10) want = Math.min(want, ahead.v + (gap - 7) * 0.5); } } }
   car.lane = lerp(car.lane, car.laneT, Math.min(1, dt * 0.8)); if (Math.random() < dt * 0.15) car.laneT *= 0.5;
-  if (car.v < want) { car.v = Math.min(want, car.v + Math.max(0.5, accelAt(car.v, car.drsOpen)) * dt); car.thr = 1; car.brk = 0; }
-  else { car.v = Math.max(want, car.v - brakeAt(car.v) * 0.95 * dt); car.thr = 0; car.brk = car.v > want + 0.5 ? 1 : 0; }
-  // position: along the track by the distance driven, across by the line + lane
-  car.s += car.v * dt; car.prog += car.v * dt;
-  const off = clamp(lineAt(car.s) * 0.85 + car.lane, -HW + 1.2, HW - 1.2), p = pointAt(car.s, off, V1), pf = pointAt(car.s + 6, clamp(lineAt(car.s + 6) * 0.85 + car.lane, -HW + 1.2, HW - 1.2), V2);
-  car.x = p.x; car.z = p.z; const yaw = Math.atan2(-(pf.x - p.x), -(pf.z - p.z)); car.yawRate = (wrapA(car.yaw - yaw)) / Math.max(dt, 1e-3); car.yaw = yaw;
-  car.steer = clamp(-car.yawRate * 0.3, -1, 1);
+  const look = 8 + car.v * 0.45, tgt = pointAt(car.s + look, clamp(lineAt(car.s + look) * 0.85 + car.lane, -HW + 1.3, HW - 1.3), V1);
+  const dx = tgt.x - car.x, dz = tgt.z - car.z, fx = -Math.sin(car.yaw), fz = -Math.cos(car.yaw), ang = Math.atan2(dx * -fz + dz * fx, dx * fx + dz * fz);
+  const steer = clamp(ang * 1.2 / Math.max(0.05, steerMax(car.v)), -1, 1);
+  stepCar(car, dt, { steer, thr: clamp((want - car.v) * 0.6, 0, 1), brk: clamp((car.v - want - 0.5) * 0.35, 0, 1) }, false);
 }
 const V1 = new THREE.Vector3(), V2 = new THREE.Vector3();
 const wrapA = (a) => { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; };
 function gearOf(car) { const kmh = car.v * 3.6, tops = [85, 128, 165, 200, 236, 270, 305, 345]; let g = 1; while (g < 8 && kmh > tops[g - 1] * 0.97) g++; const lo = g > 1 ? tops[g - 2] * 0.8 : 0, hi = tops[g - 1]; car.gear = car.v < 0.5 && car.thr < 0.1 ? 0 : g; car.rpm = clamp(4200 + (kmh - lo) / (hi - lo) * 8300, 4000, 12500); }
 function collide(dt) {
-  // walls (you): stop at the barrier, lose speed
-  const c = player;
-  if (c && phase !== "menu") { const wl = c.d >= 0 ? RUN_R[c.idx] - 1.2 : -(RUN_L[c.idx] - 1.2);
-    if (Math.abs(c.d) > Math.abs(wl)) { const r = R[c.idx], push = c.d - wl; c.x -= r.x * push; c.z -= r.z * push; const hit = c.v; c.v *= 0.55; const t = T[c.idx], want = Math.atan2(-t.x, -t.z); c.yaw = want + wrapA(c.yaw - want) * 0.4; c.psi = c.yaw; if (hit > 12) { shake = Math.min(1, hit / 40); thud(hit); } } }
-  // cars: push apart (the AI are on rails, so you take the push), share some speed
+  for (const c of CARS) {   // barriers: stop at the wall, lose speed, get turned back along the track
+    const wl = c.d >= 0 ? RUN_R[c.idx] - 1.2 : -(RUN_L[c.idx] - 1.2);
+    if (Math.abs(c.d) > Math.abs(wl)) { const r = R[c.idx], push = c.d - wl; c.x -= r.x * push; c.z -= r.z * push; c.d = wl; const hit = c.v; c.v *= 0.55;
+      const t = T[c.idx], want = Math.atan2(-t.x, -t.z); c.yaw = want + wrapA(c.yaw - want) * 0.4; c.psi = c.yaw;
+      if (c.isPlayer && hit > 12) { shake = Math.min(1, hit / 40); thud(hit); } }
+  }
+  // car against car: both are pushed apart; a hit from behind passes speed forward, a side hit nudges both
   for (let a = 0; a < CARS.length; a++) for (let b = a + 1; b < CARS.length; b++) {
     const A = CARS[a], B = CARS[b], dx = B.x - A.x, dz = B.z - A.z; if (Math.abs(dx) > 6 || Math.abs(dz) > 6) continue;
-    // cars are long: compare in the frame of A's heading
-    const f = [-Math.sin(A.yaw), -Math.cos(A.yaw)], lx = dx * -f[1] + dz * f[0], lz = dx * f[0] + dz * f[1];
-    if (Math.abs(lx) < 1.9 && Math.abs(lz) < 5.2) {
-      const P = A.isPlayer ? A : B.isPlayer ? B : null;
-      if (P) { const O = P === A ? B : A, sgn = P === A ? -1 : 1; const ox = Math.abs(lx) / 1.9, oz = Math.abs(lz) / 5.2;
-        if (oz > ox) { const push = (5.2 - Math.abs(lz)) * Math.sign(lz) * sgn; P.x += f[0] * push * 0.6; P.z += f[1] * push * 0.6; if ((lz > 0) === (P === A)) P.v = Math.min(P.v, O.v * 0.97); else O.v = Math.min(O.v, P.v); }
-        else { const push = (1.9 - Math.abs(lx)) * Math.sign(lx) * sgn; P.x += -f[1] * push; P.z += f[0] * push; }
-        if (Math.abs(P.v - O.v) > 4) { shake = 0.4; thud(Math.abs(P.v - O.v) * 2); } }
-      else { const back = lz > 0 ? A : B; back.v = Math.min(back.v, (back === A ? B : A).v * 0.98); }
+    const f = [-Math.sin(A.yaw), -Math.cos(A.yaw)], rt = [-f[1], f[0]], lx = dx * rt[0] + dz * rt[1], lz = dx * f[0] + dz * f[1];
+    const HWc = 1.95, HLc = 5.3; if (Math.abs(lx) >= HWc || Math.abs(lz) >= HLc) continue;
+    const penX = HWc - Math.abs(lx), penZ = HLc - Math.abs(lz), rel = Math.abs(A.v - B.v);
+    if (penZ / HLc < penX / HWc) {   // nose to tail
+      const sg = Math.sign(lz) || 1, front = sg > 0 ? B : A, rear = front === A ? B : A, k = penZ / 2 * sg;
+      A.x -= f[0] * k; A.z -= f[1] * k; B.x += f[0] * k; B.z += f[1] * k;
+      if (rear.v > front.v) { const dv = rear.v - front.v; front.v += dv * 0.45; rear.v -= dv * 0.65; }
+    } else {   // side by side
+      const sg = Math.sign(lx) || 1, k = penX / 2 * sg;
+      A.x -= rt[0] * k; A.z -= rt[1] * k; B.x += rt[0] * k; B.z += rt[1] * k;
+      A.yaw += 0.02 * sg; B.yaw -= 0.02 * sg; A.v *= 0.995; B.v *= 0.995;
     }
+    if ((A.isPlayer || B.isPlayer) && rel > 4) { shake = Math.max(shake, Math.min(0.6, rel / 30)); thud(rel * 2); }
   }
 }
 
 // ================= TIMING =================
 function timing(car, dt) {
   const q = locate(car.x, car.z, car.idx); car.idx = q.i; car.d = q.d;
-  if (car.isPlayer) { const ds = wrapS(q.s - car.s); car.s = (q.s + TL) % TL; car.prog += ds; }
+  { const ds = wrapS(q.s - car.s); car.s = (q.s + TL) % TL; car.prog += ds; }
   const lapNow = Math.floor(car.prog / TL);
   if (lapNow > car.lap) {   // crossed the line
     car.lap = lapNow;
