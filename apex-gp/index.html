@@ -330,9 +330,9 @@ const lineMesh = (() => {
 const S0 = 0;   // the line at the start of the samples
 { const chk = canvasTex(128, 32, (g, w, h) => { for (let x = 0; x < 16; x++) for (let y = 0; y < 4; y++) { g.fillStyle = (x + y) % 2 ? "#111" : "#fff"; g.fillRect(x * 8, y * 8, 8, 8); } });
   const pg = new THREE.PlaneGeometry(W, 1.6); pg.rotateX(-Math.PI / 2); const m = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({ map: chk })); m.rotation.y = Math.atan2(T[0].x, T[0].z); m.position.set(PTS[0].x, 0.06, PTS[0].z); scene.add(m); }
-const gridSlot = (n) => ({ s: -14 - n * 8, off: n % 2 ? -3 : 3 });
+const gridSlot = (n) => ({ s: -12 - n * 8, off: n % 2 ? -3.9 : 3.9 });   // two columns, each car 8 m behind the one beside-ahead (16 m between rows)
 { const v = new THREE.Vector3(); for (let n = 0; n < 20; n++) { const g = gridSlot(n); pointAt(g.s + 2.5, g.off, v);
-  const pg = new THREE.PlaneGeometry(4.2, 0.3); pg.rotateX(-Math.PI / 2); const m = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({ color: 0xffffff })); const i = Math.floor(((g.s + TL) % TL) / DS); m.rotation.y = Math.atan2(T[i].x, T[i].z); m.position.set(v.x, 0.055, v.z); scene.add(m); } }
+  const pg = new THREE.PlaneGeometry(3.4, 0.3); pg.rotateX(-Math.PI / 2); const m = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({ color: 0xffffff })); const i = Math.floor(((g.s + TL) % TL) / DS); m.rotation.y = Math.atan2(T[i].x, T[i].z); m.position.set(v.x, 0.055, v.z); scene.add(m); } }
 // ground
 { const grassTex = canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#4f8a3a"; g.fillRect(0, 0, w, h); for (let i = 0; i < 4000; i++) { g.fillStyle = Math.random() < 0.5 ? "rgba(70,130,50,0.5)" : "rgba(95,150,60,0.4)"; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
     for (let y = 0; y < h; y += 32) { g.fillStyle = "rgba(255,255,255,0.035)"; g.fillRect(0, y, w, 16); } }, true);
@@ -452,7 +452,7 @@ function setupRace() {
     const others = entries.filter((e) => !e[2]).sort(() => Math.random() - 0.5), me = entries.find((e) => e[2]);
     const slot = SET.grid === "pole" ? 0 : SET.grid === "back" ? 19 : 9 + (Math.random() * 3 | 0);
     const order = others.slice(); order.splice(slot, 0, me);
-    order.forEach(([ti, d, isP], n) => { const sk = isP ? 1 : skill * (0.965 + Math.random() * 0.045) * (1 - n * 0.0012); const c = newCar(ti, d, isP, sk); if (isP) player = c; const g = gridSlot(n); place(c, g.s, g.off); c.lane = g.off; });
+    order.forEach(([ti, d, isP], n) => { const sk = isP ? 1 : skill * (0.965 + Math.random() * 0.045) * (1 - n * 0.0012); const c = newCar(ti, d, isP, sk); if (isP) player = c; const g = gridSlot(n); place(c, g.s, g.off); c.lane = c.laneT = c.gridSide = g.off; });
   }
   for (const c of CARS) { c.lap = -1; c.prog = c.s; c.lapStart = 0; c.v = 0; c.gear = 1; c.cp.clear(); c.lastCp = -1; c.psi = c.yaw; }
   phase = "lights"; lights = { t: 0, n: 0, out: 2.6 + Math.random() * 1.2 }; drawLights();
@@ -533,8 +533,11 @@ function stepAI(car, dt, lead) {
   if (phase !== "race" && phase !== "cooldown") { stepCar(car, dt, { steer: 0, thr: 0, brk: 1 }, false); return; }
   let want = vAt(car.s + Math.max(15, car.v * 0.6)) * car.skill;
   const ahead = lead; if (ahead) { const gap = ahead.prog - car.prog; if (gap < 16 && gap > 0) { if (Math.abs(ahead.lane - car.lane) < 2.6) { car.laneT = car.lane > 0.5 ? -3.2 : 3.2; if (gap < 10) want = Math.min(want, ahead.v + (gap - 7) * 0.5); } } }
-  car.lane = lerp(car.lane, car.laneT, Math.min(1, dt * 0.8)); if (Math.random() < dt * 0.15) car.laneT *= 0.5;
-  const look = 8 + car.v * 0.45, tgt = pointAt(car.s + look, clamp(lineAt(car.s + look) * 0.85 + car.lane, -HW + 1.3, HW - 1.3), V1);
+  // off the start they keep to their own side of the grid down to the first corner, then settle onto the racing line
+  const launch = car.gridSide !== undefined && car.lap < 1 && car.prog < 900, lw = launch ? clamp((car.prog - 500) / 400, 0, 1) * 0.85 : 0.85;
+  if (launch && car.prog < 500 && Math.abs(car.laneT) < 3) car.laneT = car.gridSide;
+  car.lane = lerp(car.lane, car.laneT, Math.min(1, dt * 0.8)); if (!launch && Math.random() < dt * 0.15) car.laneT *= 0.5;
+  const look = 8 + car.v * 0.45, tgt = pointAt(car.s + look, clamp(lineAt(car.s + look) * lw + car.lane, -HW + 1.3, HW - 1.3), V1);
   const dx = tgt.x - car.x, dz = tgt.z - car.z, fx = -Math.sin(car.yaw), fz = -Math.cos(car.yaw), ang = Math.atan2(dx * -fz + dz * fx, dx * fx + dz * fz);
   const steer = clamp(ang * 1.2 / Math.max(0.05, steerMax(car.v)), -1, 1);
   stepCar(car, dt, { steer, thr: clamp((want - car.v) * 0.6, 0, 1), brk: clamp((car.v - want - 0.5) * 0.35, 0, 1) }, false);
