@@ -365,16 +365,70 @@ const nearTrack = (x, z) => { const q = locate(x, z, -1); return Math.abs(q.d) <
   trunks.forEach(([x, z, s], i) => { m4.compose(ps.set(x, 1.5 * s, z), q, sc.set(s, s, s)); it.setMatrixAt(i, m4); m4.compose(ps.set(x, (3 + 3.5) * s, z), q, sc.set(s, s, s)); ic.setMatrixAt(i, m4); });
   scene.add(it, ic);
   const hillMat = lam(0x6f8f6a); for (let k = 0; k < 18; k++) { const a = k / 18 * Math.PI * 2, r = 2800 + Math.random() * 400, h = 180 + Math.random() * 260; const m = new THREE.Mesh(new THREE.ConeGeometry(500 + Math.random() * 300, h, 7), hillMat); m.position.set(150 + Math.cos(a) * r, h / 2 - 10, -450 + Math.sin(a) * r); scene.add(m); } }
-{ // grandstands with a crowd along the main straight (left side), pit building and pit wall on the right
-  const crowd = canvasTex(256, 64, (g, w, h) => { g.fillStyle = "#30343c"; g.fillRect(0, 0, w, h); const cs = ["#e10600", "#ffd200", "#00a7c7", "#ffffff", "#ff7a00", "#1747c9", "#19a84a", "#e5438f"]; for (let i = 0; i < 1400; i++) { g.fillStyle = cs[i % cs.length]; g.fillRect(Math.random() * w, Math.random() * h, 2, 3); } }, true);
+{ // grandstands along the main straight (left) and the pit building with its pit lane (right)
+  const mergeG = (list) => THREE.BufferGeometryUtils.mergeBufferGeometries(list.map((g) => (g.index ? g.toNonIndexed() : g)));
+  const bx = (w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y, z); return g; };
+  // the crowd: one row of spectators drawn crisply (64 px per metre), four different stretches so the rows don't repeat
+  const crowdTex = canvasTex(2048, 128, (g, w, h) => {
+    const shirts = ["#d4161c", "#1c3fae", "#ffffff", "#ffc23a", "#00a7c7", "#ff7a00", "#19a84a", "#e5438f", "#2b3442", "#f2f2f2", "#7b2cd1", "#c8202a", "#9fd3ff", "#ffe08a"];
+    const skins = ["#f1c7a5", "#e2b18c", "#c98e66", "#a8714c", "#7a4d32"];
+    g.fillStyle = "#3a4458"; g.fillRect(0, 0, w, h);
+    for (let x = 0; x < w; x += 512) { g.fillStyle = (x / 512) % 2 ? "#a3242b" : "#24459e"; g.fillRect(x, 34, 512, h - 34); }   // seat blocks, blue and red
+    for (let pass = 0; pass < 2; pass++) for (let x = pass * 13; x < w; x += 26) {   // two staggered lines of people: shoulder to shoulder
+      if (Math.random() < 0.06) continue;
+      const cx = x + 13 + (Math.random() - 0.5) * 5, sh = shirts[Math.random() * shirts.length | 0], top = (pass ? 30 : 40) + Math.random() * 8;
+      g.fillStyle = sh; g.beginPath(); g.moveTo(cx - 13, 128); g.lineTo(cx - 13, top + 20); g.quadraticCurveTo(cx, top + 10, cx + 13, top + 20); g.lineTo(cx + 13, 128); g.fill();
+      g.fillStyle = "rgba(0,0,0,0.18)"; g.fillRect(cx - 13, top + 50, 26, 3);   // a shadow line across the shirt
+      if (Math.random() < 0.14) { g.strokeStyle = sh; g.lineWidth = 6; g.lineCap = "round"; g.beginPath(); g.moveTo(cx + 9, top + 24); g.lineTo(cx + 15, top - 14); g.stroke();
+        if (Math.random() < 0.5) { g.fillStyle = Math.random() < 0.5 ? "#00a7c7" : "#d4161c"; g.fillRect(cx + 14, top - 30, 24, 15); g.fillStyle = "#fff"; g.fillRect(cx + 14, top - 24, 24, 3); } }
+      g.fillStyle = skins[Math.random() * skins.length | 0]; g.beginPath(); g.arc(cx, top + 4, 10, 0, Math.PI * 2); g.fill();
+      const hat = Math.random(); g.fillStyle = hat < 0.5 ? (Math.random() < 0.5 ? "#2a1d14" : "#14110f") : shirts[Math.random() * shirts.length | 0];
+      if (hat < 0.5) { g.beginPath(); g.arc(cx, top + 1, 10.5, Math.PI, 0); g.fill(); } else if (hat < 0.8) { g.fillRect(cx - 11, top - 7, 22, 7); g.fillRect(cx - 2, top - 2, 15, 3); }
+    }
+  }, true);
+  crowdTex.anisotropy = 8;
+  const concrete = new THREE.MeshStandardMaterial({ color: 0xc9ccd1, roughness: 0.9 }), dark = new THREE.MeshStandardMaterial({ color: 0x2c313b, roughness: 0.8 });
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0xf1f2f4, roughness: 0.45, metalness: 0.15, emissive: 0x6a6e75 }), steelM = new THREE.MeshStandardMaterial({ color: 0x8e97a3, roughness: 0.5, metalness: 0.4 });
+  const crowdMat = new THREE.MeshBasicMaterial({ map: crowdTex, color: 0xe6e6e6 });   // spectators lit by the open side of the stand, never in black shadow
+  function grandstand(L) {
+    const rows = 14, rd = 0.85, rr = 0.52, y0 = 1.5, g = new THREE.Group(), steps = [], crowd = [];
+    steps.push(bx(0.4, y0 + 0.5, L, 0.2, (y0 + 0.5) / 2, 0));   // a low front wall
+    for (let r = 0; r < rows; r++) { const x = 0.4 + r * rd, y = y0 + r * rr; steps.push(bx(rd, 0.22, L, x + rd / 2, y, 0), bx(0.12, rr, L, x + rd, y + rr / 2, 0));
+      const pg = new THREE.PlaneGeometry(L, 1.05); pg.rotateY(-Math.PI / 2); pg.translate(x + 0.32, y + 0.55, 0);
+      const uv = pg.attributes.uv, o = Math.random(); for (let k = 0; k < uv.count; k++) uv.setX(k, uv.getX(k) * L / 32 + o); crowd.push(pg); }
+    const top = y0 + rows * rr, back = 0.4 + rows * rd;
+    steps.push(bx(0.5, top + 3.2, L, back + 0.25, (top + 3.2) / 2, 0));   // back wall
+    for (const sz of [-1, 1]) steps.push(bx(back + 0.5, top + 1.2, 0.5, (back + 0.5) / 2, (top + 1.2) / 2, sz * (L / 2 + 0.25)));   // end walls
+    g.add(new THREE.Mesh(mergeG(steps), concrete), new THREE.Mesh(mergeG(crowd), crowdMat));
+    // the roof: a thin cantilever from columns at the back, tilted up towards the track
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(back + 5, 0.35, L + 4), roofMat); roof.position.set(back / 2 - 1.2, top + 6.4, 0); roof.rotation.z = -0.07; roof.castShadow = true; g.add(roof);
+    const edge = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.1, L + 4), dark); edge.position.set(-3.3, top + 6.15, 0); g.add(edge);
+    const cols = []; for (let z = -L / 2 + 4; z <= L / 2 - 4; z += 12) cols.push(bx(0.5, top + 6.4, 0.5, back + 0.8, (top + 6.4) / 2, z), bx(back * 0.9, 0.3, 0.3, back * 0.55, top + 6.9, z));
+    g.add(new THREE.Mesh(mergeG(cols), steelM));
+    return g;
+  }
   const v = new THREE.Vector3();
-  for (const s of [-300, -180, -60, 60, 180, 320, 460]) { pointAt(s, -(RUN_L[0] + 10), v); const i = Math.floor(((s + TL) % TL) / DS), ang = Math.atan2(T[i].x, T[i].z);
-    const g = new THREE.Group(); g.position.copy(v); g.rotation.y = ang;
-    const tiers = new THREE.Mesh(new THREE.BoxGeometry(18, 9, 100), [lam(0x8b9097), new THREE.MeshLambertMaterial({ map: crowd }), lam(0x9aa0a6), lam(0x5d6168), lam(0x8b9097), lam(0x8b9097)]); tiers.position.set(9, 4.5, 0); g.add(tiers);
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(22, 0.6, 104), lam(0xeeeeee)); roof.position.set(9, 13, 0); g.add(roof); scene.add(g); }
-  for (const s of [-260, -60, 140, 340]) { pointAt(s, RUN_R[0] + 14, v); const i = Math.floor(((s + TL) % TL) / DS), ang = Math.atan2(T[i].x, T[i].z);
-    const pit = canvasTex(512, 64, (g, w, h) => { g.fillStyle = "#e9ebee"; g.fillRect(0, 0, w, h); g.fillStyle = "#1d2836"; g.fillRect(0, 6, w, 18); for (let k = 0; k < 10; k++) { g.fillStyle = TEAMS[k].c1; g.fillRect(k * w / 10 + 4, 30, w / 10 - 8, 30); g.fillStyle = "rgba(0,0,0,0.35)"; g.fillRect(k * w / 10 + 10, 36, w / 10 - 20, 24); } });
-    const b = new THREE.Mesh(new THREE.BoxGeometry(22, 8, 190), [lam(0xe9ebee), new THREE.MeshLambertMaterial({ map: pit }), lam(0x2a2d33), lam(0xcccccc), lam(0xe9ebee), lam(0xe9ebee)]); b.position.set(v.x, 4, v.z); b.rotation.y = ang; scene.add(b); }
+  for (const s0 of [150, 275, 400, 525, 650, 775]) { const i = Math.round(s0 / DS) % N; pointAt(s0, -(RUN_L[i] + 5), v);
+    const g = grandstand(118); g.position.copy(v); g.rotation.y = Math.atan2(T[i].x, T[i].z); scene.add(g); }
+  // pit building: garages in team colours below, a glass hospitality floor above; pit lane between it and the barrier
+  { const s0 = 470, i = Math.round(s0 / DS) % N, L = 600, depth = 22, H = 12, base = RUN_R[i] + 15; pointAt(s0, base, v);
+    const g = new THREE.Group(); g.position.copy(v); g.rotation.y = Math.atan2(T[i].x, T[i].z) + Math.PI;   // local +x points away from the track on this side
+    { const bld = new THREE.Mesh(new THREE.BoxGeometry(depth, H, L), new THREE.MeshStandardMaterial({ color: 0xe6e8eb, roughness: 0.6 })); bld.position.set(depth / 2, H / 2, 0); g.add(bld); }
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(L, 4.2), new THREE.MeshStandardMaterial({ color: 0x1d3150, roughness: 0.12, metalness: 0.7 })); glass.rotation.y = -Math.PI / 2; glass.position.set(-0.05, 8.4, 0); g.add(glass);
+    const mull = []; for (let z = -L / 2; z <= L / 2; z += 3) mull.push(bx(0.2, 4.2, 0.12, -0.12, 8.4, z)); mull.push(bx(0.3, 0.3, L, -0.15, 6.2, 0), bx(0.3, 0.3, L, -0.15, 10.6, 0)); g.add(new THREE.Mesh(mergeG(mull), steelM));
+    const lip = new THREE.Mesh(new THREE.BoxGeometry(4, 0.4, L + 2), roofMat); lip.position.set(-1.6, H + 0.1, 0); g.add(lip);
+    // twenty garages, two per team, each with the team colour, its name and the car number
+    const gw = L / 20; let n = 0;
+    for (const t of TEAMS) for (const d of t.drivers) {
+      const tex = canvasTex(512, 256, (c, w, h) => { c.fillStyle = "#1b1f27"; c.fillRect(0, 0, w, h); c.fillStyle = t.c1; c.fillRect(0, 0, w, 54); c.fillStyle = t.c2; c.fillRect(0, 54, w, 6);
+        c.fillStyle = "#fff"; c.font = "30px Michroma, sans-serif"; c.textBaseline = "middle"; c.fillText(t.name.toUpperCase(), 18, 28, w - 120); c.textAlign = "right"; c.fillText(String(d[1]), w - 18, 28);
+        c.fillStyle = "#2a303b"; c.fillRect(30, 80, w - 60, h - 80); c.fillStyle = "rgba(255,255,255,0.05)"; for (let y = 86; y < h; y += 12) c.fillRect(30, y, w - 60, 2); });   // a half-open roller door
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(gw - 0.6, 5.6), new THREE.MeshLambertMaterial({ map: tex })); pl.rotation.y = -Math.PI / 2; pl.position.set(-0.05, 2.9, -L / 2 + gw * (n + 0.5)); g.add(pl); n++; }
+    scene.add(g);
+    // pit lane and pit wall
+    const lane = ribbon((k) => RUN_R[k] + 0.6, (k) => RUN_R[k] + 14.8, 0.02, roadMat, 1, 1 / 32, (k) => { const sk = k * DS; return sk > s0 - L / 2 - 40 && sk < s0 + L / 2 + 40; }); lane.receiveShadow = true;
+    ribbon((k) => RUN_R[k] + 7.5, (k) => RUN_R[k] + 7.75, 0.05, new THREE.MeshBasicMaterial({ color: 0xf2f2f2 }), 1, 1, (k) => { const sk = k * DS; return sk > s0 - L / 2 && sk < s0 + L / 2 && Math.floor(sk / 4) % 2 === 0; });
+  }
 }
 // trackside: boards along the barriers on the straights, and a bridge over the back straight
 { const words = ["APEX GRAND PRIX", "ARALIA PARK", "TURON GP", "6.02 KM", "LIGHTS OUT", "VOLT RACING", "AZURE STORM", "SCARLET FALCON"];
