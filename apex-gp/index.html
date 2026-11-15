@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Apex Grand Prix</title>
+<title>Formula Racing Web</title>
 <meta name="theme-color" content="#0a0e13">
-<meta name="description" content="Apex Grand Prix: a free open-wheel racing game in your browser. Twenty cars, start lights, DRS, a 5.3 km marina circuit at sunset, time trial with a ghost.">
+<meta name="description" content="Formula Racing Web: a free open-wheel racing game in your browser. Twenty cars, start lights, DRS, a 5.3 km marina circuit at sunset, time trial with a ghost.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -178,7 +178,16 @@ button:focus-visible { outline: 1px solid var(--ice); outline-offset: 3px; }
 .gbottom { position: absolute; left: 50%; transform: translateX(-50%); bottom: max(24px, env(safe-area-inset-bottom)); display: flex; gap: 10px; }
 .slider { display: flex; align-items: center; gap: 12px; } .slider input { width: 180px; accent-color: #8fd3ff; } .slider output { font-variant-numeric: tabular-nums; color: var(--fg); font-size: 14px; min-width: 36px; }
 .screen .race-only[hidden], .screen .noquali[hidden] { display: none; }
-.titlescr .btn { padding: 18px 46px 18px 40px; font-size: 13px; }
+/* title: the live race behind, the game's wordmark top right, a big PLAY in the middle */
+.titlescr { background: linear-gradient(180deg, rgba(10,14,19,0) 55%, rgba(10,14,19,0.75) 100%), linear-gradient(90deg, rgba(10,14,19,0.25), rgba(10,14,19,0) 40%); display: block; }
+.tlogo { position: absolute; right: max(28px, env(safe-area-inset-right)); top: max(24px, env(safe-area-inset-top)); display: grid; justify-items: end; line-height: 0.86; transform: skewX(-12deg); text-shadow: 0 6px 30px rgba(0,0,0,0.45); }
+.tlogo b { font-family: var(--body); font-weight: 900; font-style: italic; font-size: clamp(30px, min(7.4vw, 12vh), 92px); letter-spacing: -0.02em; color: #fff; }
+.tlogo b + b { color: #fff; } .tlogo i { font-style: normal; font-family: var(--display); font-size: clamp(14px, 2.4vw, 28px); letter-spacing: 0.5em; color: #fff; background: #e10600; padding: 4px 6px 4px 14px; margin-top: 10px; transform: skewX(12deg); }
+.playbtn { position: absolute; left: 50%; top: 56%; transform: translate(-50%, -50%) skewX(-12deg); border: 0; cursor: pointer; background: #e10600; color: #fff; font-family: var(--body); font-weight: 900; font-style: italic; font-size: clamp(22px, 4vw, 40px); letter-spacing: 0.08em; padding: 18px 64px; box-shadow: 0 14px 40px rgba(225,6,0,0.45); transition: transform 0.15s, background 0.15s; }
+.playbtn:hover, .playbtn:focus-visible { background: #ff2a1f; transform: translate(-50%, -50%) skewX(-12deg) scale(1.05); }
+.tinfo { position: absolute; left: 50%; top: calc(56% + 62px); transform: translateX(-50%); margin: 0; font-family: var(--display); font-size: 10px; letter-spacing: 0.3em; color: rgba(255,255,255,0.85); white-space: nowrap; text-shadow: 0 2px 10px rgba(0,0,0,0.6); }
+.thelp { position: absolute; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); margin: 0; white-space: nowrap; color: rgba(255,255,255,0.7); }
+@media (max-width: 640px), (pointer: coarse) { .thelp { display: none; } }
 /* sector times under the timing strip */
 .sectors { position: absolute; top: calc(max(14px, env(safe-area-inset-top)) + 58px); left: 50%; transform: translateX(-50%); display: flex; gap: 4px; }
 .sectors div { min-width: 86px; padding: 4px 10px 5px; background: var(--glass); clip-path: var(--cut-s); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
@@ -198,7 +207,7 @@ button:focus-visible { outline: 1px solid var(--ice); outline-offset: 3px; }
 <body>
 <canvas id="view"></canvas>
 
-<div class="boot" id="boot"><div><p class="eyebrow">APEX GRAND PRIX</p><b id="bootTxt">LOADING</b><i></i></div></div>
+<div class="boot" id="boot"><div><p class="eyebrow">FORMULA RACING WEB</p><b id="bootTxt">LOADING</b><i></i></div></div>
 <div class="hud" id="hud" hidden>
   <div class="tower panel" id="tower"></div>
   <div class="lapbox">
@@ -243,13 +252,10 @@ button:focus-visible { outline: 1px solid var(--ice); outline-offset: 3px; }
 </div>
 
 <div class="screen titlescr" id="menu">
-  <div class="card">
-    <p class="eyebrow" id="tEyebrow">ARALIA MARINA · 5.28 KM · 20 CARS</p>
-    <h1 class="logo">APEX<br><span>GRAND PRIX</span></h1>
-    <p class="sub" id="tSub">Sunset over the desert, a kilometre-long back straight between two hairpins, then the marina and the hotel.</p>
-    <div class="go"><button class="btn" id="bStart" type="button">START</button></div>
-    <p class="help"><kbd>↑</kbd> throttle · <kbd>↓</kbd> brake · <kbd>←</kbd><kbd>→</kbd> steer · <kbd>E</kbd> DRS · <kbd>C</kbd> camera · <kbd>L</kbd> racing line · <kbd>B</kbd> pit stop · <kbd>Esc</kbd> pause. W A S D and a gamepad work too; on a tablet the pedals appear on screen.</p>
-  </div>
+  <div class="tlogo" aria-label="Formula Racing Web"><b>FORMULA</b><b>RACING</b><i>WEB</i></div>
+  <button class="playbtn" id="bStart" type="button">ИГРАТЬ</button>
+  <p class="tinfo"><span id="tEyebrow">ARALIA MARINA · 5.28 KM · 20 CARS</span><span id="tSub" hidden></span></p>
+  <p class="help thelp"><kbd>↑</kbd> throttle · <kbd>↓</kbd> brake · <kbd>←</kbd><kbd>→</kbd> steer · <kbd>E</kbd> DRS · <kbd>C</kbd> camera · <kbd>B</kbd> pit stop · <kbd>Esc</kbd> pause</p>
 </div>
 <div class="garage" id="garage" hidden>
   <div class="gtop"><p class="eyebrow">GARAGE · <span id="gIdx">1 / 10</span><button class="gren" id="gRename" type="button">RENAME</button></p><h2 class="gname" id="gName">TEAM</h2><div class="gdrivers" id="gDrivers"></div></div>
@@ -844,7 +850,7 @@ else { const dm = new THREE.MeshLambertMaterial({ color: 0xcfae84 });
   }
 }
 // trackside: boards along the barriers on the straights, and a bridge over the back straight
-{ const words = ["APEX GRAND PRIX", TRACK.name.toUpperCase(), "TURON GP", TRACK.km + " KM", "LIGHTS OUT", "VOLT RACING", "AZURE STORM", "SCARLET FALCON"];
+{ const words = ["FORMULA RACING WEB", TRACK.name.toUpperCase(), "TURON GP", TRACK.km + " KM", "LIGHTS OUT", "VOLT RACING", "AZURE STORM", "SCARLET FALCON"];
   const boardTex = words.map((w, i) => canvasTex(512, 64, (g, W2, H) => { const bg = ["#0b1b44", "#c8202a", "#0d0f13", "#f2f2f2"][i % 4], fg = i % 4 === 3 ? "#0b1b44" : "#ffffff";
     g.fillStyle = bg; g.fillRect(0, 0, W2, H); g.fillStyle = fg; g.font = "34px Michroma, sans-serif"; g.textBaseline = "middle"; g.textAlign = "center"; g.fillText(w, W2 / 2, H / 2 + 2, W2 - 30); }));
   const mats = boardTex.map((t) => new THREE.MeshLambertMaterial({ map: t })), bg = new THREE.PlaneGeometry(14, 1.75), v = new THREE.Vector3(); let n = 0;
@@ -1761,7 +1767,7 @@ function frame(now) {
   for (const c of CARS) poseCar(c, dt);
   if (!paused) { stepSparks(dt); stepCrews(dt); if (phase !== "menu") RADIO.tick(dt); }
   lineMesh.visible = !!player && phase !== "menu" && (showLine && SET.assist === "on" || (showLine && SET.mode === "tt")); if (lineMesh.visible) updateLine(player);
-  if (phase !== "menu") { updateCamera(dt); updateHud(dt); updateAudio(dt); updatePitGuide(); } else menuCam(now);
+  if (phase !== "menu") { demoHide(); updateCamera(dt); updateHud(dt); updateAudio(dt); updatePitGuide(); } else if (menuStep === "title") demoStep(dt); else { demoHide(); menuCam(now); }
   { const f = player || CARS[0]; const tx = f ? f.x : camera.position.x, tz = f ? f.z : camera.position.z; sun.target.position.set(tx, 0, tz); sun.position.set(tx + SUN_OFF.x, SUN_OFF.y, tz + SUN_OFF.z); }
   if (phase === "menu" && menuStep === "garage") { GAR.step(dt); renderer.render(GAR.sc, GAR.cam); } else renderer.render(scene, camera);
   requestAnimationFrame(frame);
@@ -1812,6 +1818,21 @@ function ttGhost(dt) {
     if (a && b) { const k = f - i; ghostMesh.position.set(lerp(a[0], b[0], k), 0, lerp(a[1], b[1], k)); ghostMesh.rotation.y = a[2] + wrapA(b[2] - a[2]) * k; } }
 }
 // menu backdrop: a slow orbit round the grid
+const DEMO = { cars: [], camS: 0, t: 0 };
+function demoStep(dt) { dt = clamp(dt, 0, 0.05);   // the title backdrop: eight cars lapping on the racing line, filmed from low beside the track
+  if (!DEMO.cars.length) { const pick = [0, 3, 1, 4, 2, 7, 9, 5]; pick.forEach((ti, k) => { const t = TEAMS[ti], m = buildCar(t, t.drivers[0][1], false); scene.add(m); DEMO.cars.push({ m, s: 300 - k * 14, lane: (k % 2 ? 1 : -1) * 1.6, v: 0, k }); }); DEMO.camS = 420; }
+  const v = new THREE.Vector3(), w = new THREE.Vector3();
+  for (const c of DEMO.cars) { c.m.visible = true; c.v = vAt(c.s) * (0.93 - c.k * 0.004); c.s += c.v * dt; const off = clamp(lineAt(c.s) + c.lane, -HW + 1.2, HW - 1.2);
+    pointAt(c.s, off, v); pointAt(c.s + 2, clamp(lineAt(c.s + 2) + c.lane, -HW + 1.2, HW - 1.2), w); c.m.position.set(v.x, 0, v.z); c.m.rotation.set(0, Math.atan2(-(w.x - v.x), -(w.z - v.z)), 0);
+    c.m.userData.wheels.forEach((wh) => (wh.t.rotation.x -= c.v * dt / 0.36)); }
+  // the camera rides with the pack: a low front-quarter shot of one car with the others behind it, changing angle every few seconds
+  DEMO.t += Math.max(0, dt); const shot = Math.floor(DEMO.t / 6) % 3, star = DEMO.cars[[0, 1, 2][shot]].m, f = new THREE.Vector3(0, 0, -1).applyQuaternion(star.quaternion), r = new THREE.Vector3(-f.z, 0, f.x);
+  const [ahead, sideO, up, fov] = [[7.5, 3.4, 0.8, 34], [-1.5, 4.8, 1.0, 42], [10, -3.0, 0.7, 30]][shot];
+  const want = star.position.clone().addScaledVector(f, ahead).addScaledVector(r, sideO); want.y = up;
+  if (!DEMO.cam || DEMO.lastShot !== shot) { DEMO.cam = want.clone(); DEMO.lastShot = shot; } else DEMO.cam.lerp(want, Math.min(1, dt * 6));
+  camera.position.copy(DEMO.cam); camera.lookAt(star.position.x - f.x * 1.5, 0.55, star.position.z - f.z * 1.5); if (camera.fov !== fov) { camera.fov = fov; camera.updateProjectionMatrix(); }
+}
+function demoHide() { for (const c of DEMO.cars) c.m.visible = false; }
 function menuCam(now) { const t = now / 1000 * 0.06, p = PTS[40]; camera.position.set(p.x + Math.cos(t) * 90, 32, p.z + Math.sin(t) * 90); camera.lookAt(p.x, 0, p.z); }
 
 // ================= RESULTS, PAUSE, MENU =================
