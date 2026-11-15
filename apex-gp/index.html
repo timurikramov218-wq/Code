@@ -59,6 +59,10 @@ button:focus-visible { outline: 1px solid var(--ice); outline-offset: 3px; }
 .dash .flags { display: flex; gap: 6px; margin-top: 10px; }
 .tag { font-size: 9px; font-weight: 600; letter-spacing: 0.16em; padding: 3px 7px; border: 1px solid var(--line); color: var(--fg3); }
 .tag.on { border-color: var(--go); color: var(--go); } .tag.warn { border-color: var(--amber); color: var(--amber); }
+.dmgbox { position: absolute; left: max(14px, env(safe-area-inset-left)); top: calc(max(14px, env(safe-area-inset-top)) + 300px); width: 76px; padding: 8px 8px 7px; display: grid; justify-items: center; gap: 4px; }
+.dmgbox svg { width: 46px; height: 95px; } .dmgbox small { font-family: var(--display); font-size: 7px; letter-spacing: 0.16em; color: var(--fg3); text-align: center; }
+.dmgbox rect, .dmgbox path { fill: rgba(220,232,242,0.16); stroke: rgba(220,232,242,0.45); stroke-width: 1; } .dmgbox .tyre { fill: rgba(220,232,242,0.08); }
+@media (max-width: 640px) { .dmgbox { top: calc(max(14px, env(safe-area-inset-top)) + 240px); width: 60px; } .dmgbox svg { width: 36px; height: 74px; } }
 .minimap { position: absolute; right: max(14px, env(safe-area-inset-right)); top: max(14px, env(safe-area-inset-top)); width: 176px; height: 138px; }
 .msg { position: absolute; left: 50%; top: 24%; transform: translateX(-50%); font-family: var(--display); font-size: 24px; letter-spacing: 0.08em; text-align: center; text-shadow: 0 2px 18px rgba(0,0,0,0.6); white-space: nowrap; transition: opacity 0.4s; }
 .msg small { display: block; font-family: var(--body); font-size: 13px; font-weight: 500; letter-spacing: 0.14em; color: var(--fg2); margin-top: 8px; text-transform: uppercase; }
@@ -73,9 +77,10 @@ button:focus-visible { outline: 1px solid var(--ice); outline-offset: 3px; }
 .tbtn::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 10px; height: 2px; background: var(--line2); }
 .tbtn.on { background: rgba(143,211,255,0.22); } .tbtn.on::after { background: var(--ice); }
 #tGas.on::after { background: var(--go); } #tBrake.on::after { background: var(--stop); }
-#tLeft, #tRight { width: 86px; height: 104px; bottom: max(18px, env(safe-area-inset-bottom)); }
-#tLeft { left: max(16px, env(safe-area-inset-left)); } #tRight { left: calc(max(16px, env(safe-area-inset-left)) + 96px); }
-#tLeft svg, #tRight svg { width: 22px; height: 22px; }
+#tLeft, #tRight { width: 132px; height: 150px; bottom: max(16px, env(safe-area-inset-bottom)); }
+#tLeft { left: max(14px, env(safe-area-inset-left)); } #tRight { left: calc(max(14px, env(safe-area-inset-left)) + 144px); }
+#tLeft svg, #tRight svg { width: 40px; height: 40px; stroke-width: 2.2; }
+@media (max-width: 640px) { #tLeft, #tRight { width: 104px; height: 124px; } #tRight { left: calc(max(14px, env(safe-area-inset-left)) + 114px); } }
 #tGas { right: max(16px, env(safe-area-inset-right)); bottom: calc(max(16px, env(safe-area-inset-bottom)) + 156px); width: 84px; height: 156px; }
 #tBrake { right: calc(max(16px, env(safe-area-inset-right)) + 94px); bottom: calc(max(16px, env(safe-area-inset-bottom)) + 156px); width: 84px; height: 112px; }
 #tDrs { right: calc(max(16px, env(safe-area-inset-right)) + 94px); bottom: calc(max(16px, env(safe-area-inset-bottom)) + 278px); width: 84px; height: 34px; }
@@ -141,6 +146,12 @@ button:focus-visible { outline: 1px solid var(--ice); outline-offset: 3px; }
     <div class="flags"><span class="tag" id="hDrs">DRS</span><span class="tag" id="hOff">TRACK</span><span class="tag" id="hDelta">LAST —</span></div>
   </div>
   <div class="lights" id="lights" hidden></div>
+  <div class="dmgbox panel" id="dmgBox"><svg viewBox="0 0 60 124" aria-label="Car damage">
+    <rect x="17" y="17" width="5" height="12" rx="1.5" class="tyre"/><rect x="38" y="17" width="5" height="12" rx="1.5" class="tyre"/><rect x="15" y="88" width="6" height="14" rx="1.5" class="tyre"/><rect x="39" y="88" width="6" height="14" rx="1.5" class="tyre"/>
+    <rect id="dFL" x="5" y="4" width="24" height="7" rx="1"/><rect id="dFR" x="31" y="4" width="24" height="7" rx="1"/>
+    <path class="body" d="M27 11 L33 11 L35 44 L35 86 L33 100 L27 100 L25 86 L25 44 Z"/>
+    <rect id="dSL" x="12" y="46" width="11" height="34" rx="3"/><rect id="dSR" x="37" y="46" width="11" height="34" rx="3"/>
+    <rect id="dRW" x="13" y="106" width="34" height="9" rx="1"/></svg><small id="dmgTxt">CAR OK</small></div>
   <div class="msg" id="msg"></div>
 </div>
 <div class="touch" id="touch" hidden>
@@ -249,7 +260,13 @@ for (let i = 0; i < N; i++) { const a = T[(i - 2 + N) % N], b = T[(i + 2) % N]; 
 const smooth = (arr, r) => arr.map((_, i) => { let s = 0; for (let k = -r; k <= r; k++) s += arr[(i + k + N) % N]; return s / (2 * r + 1); });
 const KS = smooth(K, 6), KW = smooth(K, 14);
 // racing line: towards the inside of each bend, smoothed so it runs out-in-out
-const LINE = smooth(KW.map((k) => clamp(k * 260, -1, 1) * (HW - 1.6)), 10);
+// the racing line: the straightest path the track's width allows (out, apex, out). Start from the inside of each bend and
+// relax: each point moves sideways towards the midpoint of its neighbours, within the white lines (a kerb's width to spare)
+const LINE = (() => { const lim = HW - 0.9, o = Float32Array.from(smooth(KW.map((k) => clamp(k * 260, -1, 1) * (HW - 1.6)), 10));
+  for (const [span, iters] of [[24, 120], [12, 160], [6, 220], [3, 200]]) for (let it = 0; it < iters; it++) for (let i = 0; i < N; i++) {
+    const a = (i - span + N) % N, b = (i + span) % N, mx = (PTS[a].x + R[a].x * o[a] + PTS[b].x + R[b].x * o[b]) / 2, mz = (PTS[a].z + R[a].z * o[a] + PTS[b].z + R[b].z * o[b]) / 2;
+    const t = (mx - PTS[i].x) * R[i].x + (mz - PTS[i].z) * R[i].z; o[i] = clamp(o[i] + (t - o[i]) * 0.6, -lim, lim); }
+  return Array.from(smooth(Array.from(o), 2)); })();
 // the line's own curvature, measured on the line itself (it is wider than the centre line), for the speed it can carry
 const LP = PTS.map((p, i) => [p.x + R[i].x * LINE[i], p.z + R[i].z * LINE[i]]);
 const LK = smooth(LP.map((b, i) => { const a = LP[(i - 3 + N) % N], c = LP[(i + 3) % N], ab = Math.hypot(b[0] - a[0], b[1] - a[1]), bc = Math.hypot(c[0] - b[0], c[1] - b[1]), ac = Math.hypot(c[0] - a[0], c[1] - a[1]);
@@ -352,14 +369,36 @@ wall((k) => RUN_R[k], 1); wall((k) => RUN_L[k], -1);
   const pg = new THREE.CylinderGeometry(0.06, 0.06, 3.4, 5); pg.translate(0, 2.75, 0); const im = new THREE.InstancedMesh(pg, new THREE.MeshStandardMaterial({ color: 0x8b939d, metalness: 0.5, roughness: 0.5 }), posts.length), m4 = new THREE.Matrix4();
   posts.forEach(([x, z], k) => { m4.makeTranslation(x, 0, z); im.setMatrixAt(k, m4); }); scene.add(im); }
 // racing line (assist): green where you accelerate, red where you brake
+const LSEG = 96;   // samples of the line drawn ahead of you
 const lineMesh = (() => {
-  const pos = [], col = [], idx = [];
-  for (let i = 0; i <= N; i++) { const k = i % N, p = PTS[k], r = R[k], o = LINE[k], c = BRAKE_ZONE[k] ? [0.95, 0.15, 0.1] : VP[k] < 80 ? [1, 0.82, 0.15] : [0.2, 0.85, 0.35];
-    for (const e of [-0.45, 0.45]) { pos.push(p.x + r.x * (o + e), 0.07, p.z + r.z * (o + e)); col.push(...c); }
-    if (i < N) { const b = i * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); } }
-  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx);
-  const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -8 })); m.renderOrder = 2; scene.add(m); return m;
+  const g = new THREE.BufferGeometry(), n = (LSEG + 1) * 2;
+  g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(n * 3), 3).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute("col", new THREE.BufferAttribute(new Float32Array(n * 4), 4).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute("lin", new THREE.BufferAttribute(new Float32Array(n * 2), 2).setUsage(THREE.DynamicDrawUsage));
+  const idx = []; for (let k = 0; k < LSEG; k++) { const b = k * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); } g.setIndex(idx);
+  const m = new THREE.Mesh(g, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -8,
+    vertexShader: "attribute vec4 col; attribute vec2 lin; varying vec4 vC; varying vec2 vL; void main(){ vC = col; vL = lin; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+    fragmentShader: `varying vec4 vC; varying vec2 vL;
+      void main(){ float across = abs(vL.x - 0.5) * 2.0;                       // 0 in the middle, 1 at the edge
+        float chev = fract((vL.y - across * 1.1) / 3.2);                         // forward-pointing chevrons every 3.2 m
+        float a = smoothstep(1.0, 0.75, across) * (chev < 0.42 ? 1.0 : 0.38);
+        gl_FragColor = vec4(vC.rgb, vC.a * a); }` }));
+  m.frustumCulled = false; m.renderOrder = 2; scene.add(m); return m;
 })();
+const LC = { go: [0.18, 0.86, 0.42], lift: [1.0, 0.8, 0.2], brake: [1.0, 0.18, 0.12] };
+function updateLine(c) {   // green: keep your foot down; amber: you'll have to slow down for what's ahead; red: brake now
+  const g = lineMesh.geometry, P = g.attributes.position.array, C = g.attributes.col.array, Lz = g.attributes.lin.array, v = c.v, dec = brakeAt(Math.max(v, 20)) * 0.85;
+  const s0 = c.s + 4; let along = 0;
+  for (let k = 0; k <= LSEG; k++) { const ss = s0 + k * 3.2, f = ((ss % TL) + TL) % TL / DS, i = Math.floor(f) % N, j2 = (i + 1) % N, t = f - Math.floor(f);
+    const off = lerp(LINE[i], LINE[j2], t), px = lerp(PTS[i].x, PTS[j2].x, t), pz = lerp(PTS[i].z, PTS[j2].z, t), rx = lerp(R[i].x, R[j2].x, t), rz = lerp(R[i].z, R[j2].z, t);
+    for (const [e, side] of [[-0.75, 0], [0.75, 1]]) { const q = (k * 2 + side); P[q * 3] = px + rx * (off + e); P[q * 3 + 1] = 0.075; P[q * 3 + 2] = pz + rz * (off + e); Lz[q * 2] = side; Lz[q * 2 + 1] = along; }
+    const vHere = VP[i], d = k * 3.2 + 4, need = v * v - vHere * vHere;
+    const col = need > 2 * dec * Math.max(1, d - 8) ? LC.brake : v > vHere + 3 ? LC.lift : LC.go;
+    const fade = Math.min(1, k / 4) * (1 - Math.pow(k / LSEG, 2));
+    for (const side of [0, 1]) { const q = k * 2 + side; C[q * 4] = col[0]; C[q * 4 + 1] = col[1]; C[q * 4 + 2] = col[2]; C[q * 4 + 3] = 0.95 * fade; }
+    along += 3.2; }
+  g.attributes.position.needsUpdate = g.attributes.col.needsUpdate = g.attributes.lin.needsUpdate = true;
+}
 // start/finish line and the grid
 const S0 = 0;   // the line at the start of the samples
 { const chk = canvasTex(128, 32, (g, w, h) => { for (let x = 0; x < 16; x++) for (let y = 0; y < 4; y++) { g.fillStyle = (x + y) % 2 ? "#111" : "#fff"; g.fillRect(x * 8, y * 8, 8, 8); } });
@@ -659,7 +698,7 @@ const NCP = 40;   // timing checkpoints per lap
 function newCar(teamIdx, d, isPlayer, skill) {
   const team = TEAMS[teamIdx], mesh = buildCar(team, d[1], isPlayer); scene.add(mesh);
   const car = { team, teamIdx, code: d[0], num: d[1], mesh, isPlayer, skill, x: 0, z: 0, yaw: 0, v: 0, beta: 0, yawRate: 0, steer: 0, thr: 0, brk: 0, gear: 1, rpm: 4000,
-    idx: 0, s: 0, d: 0, lap: 0, lapStart: 0, lastLap: 0, bestLap: 0, cp: new Map(), lastCp: -1, lane: 0, laneT: 0, drsOpen: false, finished: false, finishT: 0, spin: 0, prog: 0 };
+    idx: 0, s: 0, d: 0, lap: 0, lapStart: 0, lastLap: 0, bestLap: 0, cp: new Map(), lastCp: -1, lane: 0, laneT: 0, dmg: { fl: 0, fr: 0, rw: 0, sl: 0, sr: 0 }, dnf: false, out: false, dnfT: 0, drsOpen: false, finished: false, finishT: 0, spin: 0, prog: 0 };
   if (!isPlayer) { car.label = labelSprite(d[0], team.c1); mesh.add(car.label); }
   CARS.push(car); return car;
 }
@@ -738,14 +777,17 @@ function stepCar(car, dt, inp, assist) {
   // keys and buttons are all-or-nothing: the wheel winds on gently (and comes back a little quicker)
   const rate = car.isPlayer ? (Math.abs(inp.steer) < Math.abs(car.steer) || inp.steer * car.steer < 0 ? 4.2 : 2.2) : 6;
   car.steer += clamp(inp.steer - car.steer, -rate * dt, rate * dt);
-  const surf = surfaceAt(car), mu = PH.mu * GRIP[surf], down = PH.g + DFc * v * v, gripA = mu * down;
+  // damage: a broken front wing loses front grip (understeer) and pulls to the damaged side; a broken rear wing loses downforce;
+  // bent suspension pulls the car over and costs speed
+  const D = car.dmg, wingF = (D.fl + D.fr) / 2, side = Math.max(D.sl, D.sr);
+  const surf = surfaceAt(car), mu = PH.mu * GRIP[surf] * (1 - 0.16 * wingF - 0.12 * D.rw - 0.08 * side), down = PH.g + DFc * (1 - 0.3 * wingF - 0.38 * D.rw) * v * v, gripA = mu * down;
   // longitudinal
   const drs = car.drsOpen;
-  let ax = car.thr * Math.min(PH.P / (PH.m * Math.max(v, 4)), gripA * 0.62) - car.brk * gripA * 0.95 - DRc * (drs ? 0.78 : 1) * v * v - ROLL[surf] * (v > 1 ? 1 : v);
+  let ax = car.thr * Math.min(PH.P * (1 - 0.22 * side) / (PH.m * Math.max(v, 4)), gripA * 0.62) - car.brk * gripA * 0.95 - DRc * (drs ? 0.78 : 1) * v * v - ROLL[surf] * (v > 1 ? 1 : v);
   // lateral: the nose turns at the rate the front wheels ask for (a little more than grip allows when you overdo it);
   // the direction of travel follows only as fast as the tyres' grip lets it: the difference is the slide
-  const delta = car.steer * sMax, wantYaw = v * Math.tan(delta) / PH.L, latLeft = gripA * Math.sqrt(Math.max(0.08, 1 - (ax / (gripA * 1.05)) ** 2));
-  const limit = v > 2 ? latLeft / v : 9, yawRate = clamp(wantYaw, -limit * 1.06, limit * 1.06);
+  const pull = (D.fr - D.fl) * 0.07 + (D.sr - D.sl) * 0.09, delta = (car.steer + pull) * sMax, wantYaw = v * Math.tan(delta) / PH.L, latLeft = gripA * Math.sqrt(Math.max(0.08, 1 - (ax / (gripA * 1.05)) ** 2));
+  const limit = (v > 2 ? latLeft / v : 9) * (1 - 0.22 * wingF), yawRate = clamp(wantYaw, -limit * 1.06, limit * 1.06);
   car.yawRate = lerp(car.yawRate, yawRate, Math.min(1, dt * 9));
   car.yaw -= car.yawRate * dt;   // a right turn (positive steer) turns clockwise seen from above
   let slip = wrapA(car.yaw - car.psi);
@@ -757,14 +799,25 @@ function stepCar(car, dt, inp, assist) {
   car.v = Math.max(0, v + ax * dt);
   car.x += -Math.sin(car.psi) * car.v * dt; car.z += -Math.cos(car.psi) * car.v * dt;
 }
+function retireStep(car, dt) {   // out of the race: coast to the side of the track, stop, then the marshals clear the car away
+  car.dnfT += dt; const side = car.d >= 0 ? 1 : -1, tgt = pointAt(car.s + 25, side * (HW + 6), V1);
+  const dx = tgt.x - car.x, dz = tgt.z - car.z, fx = -Math.sin(car.yaw), fz = -Math.cos(car.yaw), ang = Math.atan2(dx * -fz + dz * fx, dx * fx + dz * fz);
+  stepCar(car, dt, { steer: clamp(ang * 2, -1, 1), thr: 0, brk: car.v > 10 ? 0.5 : 1 }, false);
+  if (car.dnfT > 9 && !car.out) { car.out = true; car.mesh.visible = false; }
+}
 function stepAI(car, dt, lead) {
   // the AI drives the same car as you, with the same physics: it steers for a point on its line ahead and works the pedals
   // to the speed it can carry there (scaled by its skill); behind a slower car it moves over to pass
   if (phase !== "race" && phase !== "cooldown") { stepCar(car, dt, { steer: 0, thr: 0, brk: 1 }, false); return; }
+  if (car.dnf) { retireStep(car, dt); return; }
   let want = vAt(car.s + Math.max(15, car.v * 0.6)) * car.skill;
-  const ahead = lead; if (ahead) { const gap = ahead.prog - car.prog; if (gap < 16 && gap > 0) { if (Math.abs(ahead.lane - car.lane) < 2.6) { car.laneT = car.lane > 0.5 ? -3.2 : 3.2; if (gap < 10) want = Math.min(want, ahead.v + (gap - 7) * 0.5); } } }
+  const ahead = lead; if (ahead) { const gap = ahead.prog - car.prog, close = car.v - ahead.v;
+    // keep a gap that stays safe if the car ahead brakes: never close faster than the room left allows
+    if (gap < 60) want = Math.min(want, ahead.v + Math.max(0, gap - 9) * 0.55 + (ahead.dnf ? -20 : 0));
+    if (gap < 18 && close > -2 && !ahead.dnf) car.laneT = ahead.d > car.d ? -3.4 : 3.4;   // go round it
+    if (ahead.dnf && gap < 80) car.laneT = ahead.d > 0 ? -4.5 : 4.5; }
   // off the start they keep to their own side of the grid down to the first corner, then settle onto the racing line
-  const launch = car.gridSide !== undefined && car.lap < 1 && car.prog < 900, lw = launch ? clamp((car.prog - 500) / 400, 0, 1) * 0.85 : 0.85;
+  const launch = car.gridSide !== undefined && car.lap < 1 && car.prog < 900, lw = launch ? clamp((car.prog - 500) / 400, 0, 1) * 0.96 : 0.96;
   if (launch && car.prog < 500 && Math.abs(car.laneT) < 3) car.laneT = car.gridSide;
   car.lane = lerp(car.lane, car.laneT, Math.min(1, dt * 0.8)); if (!launch && Math.random() < dt * 0.15) car.laneT *= 0.5;
   const look = 8 + car.v * 0.45, tgt = pointAt(car.s + look, clamp(lineAt(car.s + look) * lw + car.lane, -HW + 1.3, HW - 1.3), V1);
@@ -775,30 +828,69 @@ function stepAI(car, dt, lead) {
 const V1 = new THREE.Vector3(), V2 = new THREE.Vector3();
 const wrapA = (a) => { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; };
 function gearOf(car) { const kmh = car.v * 3.6, tops = [85, 128, 165, 200, 236, 270, 305, 345]; let g = 1; while (g < 8 && kmh > tops[g - 1] * 0.97) g++; const lo = g > 1 ? tops[g - 2] * 0.8 : 0, hi = tops[g - 1]; car.gear = car.v < 0.5 && car.thr < 0.1 ? 0 : g; car.rpm = clamp(4200 + (kmh - lo) / (hi - lo) * 8300, 4000, 12500); }
+// ---- impacts: the car bounces off the wall it hits (most of the speed into it is lost), spins with the contact, and breaks parts ----
+const DMG_NAMES = { fl: "FRONT WING (LEFT)", fr: "FRONT WING (RIGHT)", rw: "REAR WING", sl: "LEFT SUSPENSION", sr: "RIGHT SUSPENSION" };
+function hitPart(car, dx, dz, vn) {   // (dx, dz): unit direction from the car's centre to the contact; vn: impact speed into it (m/s)
+  if (car.out || vn < 4) return;
+  const fx = -Math.sin(car.yaw), fz = -Math.cos(car.yaw), rx = -fz, rz = fx, lon = dx * fx + dz * fz, lat = dx * rx + dz * rz, amt = Math.max(0, vn - 5) / 30;
+  const D = car.dmg, before = { ...D };
+  if (lon > 0.55) { if (lat > 0.18) D.fr += amt; else if (lat < -0.18) D.fl += amt; else { D.fl += amt * 0.7; D.fr += amt * 0.7; } }
+  else if (lon < -0.55) D.rw += amt; else if (lat > 0) D.sr += amt * 0.8; else D.sl += amt * 0.8;
+  for (const k in D) D[k] = Math.min(1, D[k]);
+  sparks(car.x + dx * 1.2, car.z + dz * 1.8, vn);
+  const total = D.fl + D.fr + D.rw + D.sl + D.sr;
+  if (!car.dnf && SET.mode !== "tt" && (vn > 42 || total > 2.6 || (vn > 24 && Object.keys(D).some((k) => D[k] >= 1 && before[k] < 1)))) {
+    car.dnf = true; car.dnfT = 0; if (car.isPlayer) onPlayerDNF(); else if (player) msg(`${car.code} OUT`, `${car.team.name} · accident`, 2.2); }
+  if (car.isPlayer) for (const k in D) { const lvl = D[k] >= 0.7 ? 2 : D[k] >= 0.3 ? 1 : 0, was = before[k] >= 0.7 ? 2 : before[k] >= 0.3 ? 1 : 0; if (lvl > was && !car.dnf) msg(`${DMG_NAMES[k]} ${lvl === 2 ? "BROKEN" : "DAMAGED"}`, lvl === 2 ? "the car will be hard to drive" : "you'll feel it in the corners", 2.4); }
+}
+function onPlayerDNF() { msg("DNF", "accident damage: your race is over", 3.5); phase = "cooldown"; setTimeout(showResults, 3600); }
 function collide(dt) {
-  for (const c of CARS) {   // barriers: stop at the wall, lose speed, get turned back along the track
+  for (const c of CARS) {   // barriers
+    if (c.out) continue;
     const wl = c.d >= 0 ? RUN_R[c.idx] - 1.2 : -(RUN_L[c.idx] - 1.2);
-    if (Math.abs(c.d) > Math.abs(wl)) { const r = R[c.idx], push = c.d - wl; c.x -= r.x * push; c.z -= r.z * push; c.d = wl; const hit = c.v; c.v *= 0.55;
-      const t = T[c.idx], want = Math.atan2(-t.x, -t.z); c.yaw = want + wrapA(c.yaw - want) * 0.4; c.psi = c.yaw;
-      if (c.isPlayer && hit > 12) { shake = Math.min(1, hit / 40); thud(hit); } }
+    if (Math.abs(c.d) > Math.abs(wl)) {
+      const sg = Math.sign(c.d) || 1, r = R[c.idx], nx = r.x * sg, nz = r.z * sg, push = c.d - wl; c.x -= r.x * push; c.z -= r.z * push; c.d = wl;
+      let vx = -Math.sin(c.psi) * c.v, vz = -Math.cos(c.psi) * c.v; const vn = vx * nx + vz * nz;
+      if (vn > 0) { vx -= nx * vn * 1.22; vz -= nz * vn * 1.22; const fr = 1 - Math.min(0.45, vn * 0.014); vx *= fr; vz *= fr;   // bounce back 22% and scrub along the wall
+        c.v = Math.hypot(vx, vz); c.psi = Math.atan2(-vx, -vz);
+        const fx = -Math.sin(c.yaw), fz = -Math.cos(c.yaw), lon = nx * fx + nz * fz, lat = nx * -fz + nz * fx;
+        c.yaw += Math.sign(lat || 1) * lon * Math.min(0.55, vn * 0.018);   // a glancing blow with the nose turns it away, with the tail turns it in
+        hitPart(c, nx, nz, vn);
+        if (c.isPlayer && vn > 3) { shake = Math.min(1, vn / 25); thud(vn * 3); } }
+    }
   }
-  // car against car: both are pushed apart; a hit from behind passes speed forward, a side hit nudges both
+  // car against car: pushed apart along the contact; the speed into the contact is shared out and both cars can be damaged
   for (let a = 0; a < CARS.length; a++) for (let b = a + 1; b < CARS.length; b++) {
-    const A = CARS[a], B = CARS[b], dx = B.x - A.x, dz = B.z - A.z; if (Math.abs(dx) > 6 || Math.abs(dz) > 6) continue;
+    const A = CARS[a], B = CARS[b]; if (A.out || B.out) continue; const dx = B.x - A.x, dz = B.z - A.z; if (Math.abs(dx) > 6 || Math.abs(dz) > 6) continue;
     const f = [-Math.sin(A.yaw), -Math.cos(A.yaw)], rt = [-f[1], f[0]], lx = dx * rt[0] + dz * rt[1], lz = dx * f[0] + dz * f[1];
     const HWc = 1.95, HLc = 5.3; if (Math.abs(lx) >= HWc || Math.abs(lz) >= HLc) continue;
-    const penX = HWc - Math.abs(lx), penZ = HLc - Math.abs(lz), rel = Math.abs(A.v - B.v);
-    if (penZ / HLc < penX / HWc) {   // nose to tail
-      const sg = Math.sign(lz) || 1, front = sg > 0 ? B : A, rear = front === A ? B : A, k = penZ / 2 * sg;
-      A.x -= f[0] * k; A.z -= f[1] * k; B.x += f[0] * k; B.z += f[1] * k;
-      if (rear.v > front.v) { const dv = rear.v - front.v; front.v += dv * 0.45; rear.v -= dv * 0.65; }
-    } else {   // side by side
-      const sg = Math.sign(lx) || 1, k = penX / 2 * sg;
-      A.x -= rt[0] * k; A.z -= rt[1] * k; B.x += rt[0] * k; B.z += rt[1] * k;
-      A.yaw += 0.02 * sg; B.yaw -= 0.02 * sg; A.v *= 0.995; B.v *= 0.995;
-    }
-    if ((A.isPlayer || B.isPlayer) && rel > 4) { shake = Math.max(shake, Math.min(0.6, rel / 30)); thud(rel * 2); }
+    const penX = HWc - Math.abs(lx), penZ = HLc - Math.abs(lz), along = penZ / HLc < penX / HWc;
+    const sg = along ? Math.sign(lz) || 1 : Math.sign(lx) || 1, nx = (along ? f[0] : rt[0]) * sg, nz = (along ? f[1] : rt[1]) * sg, k = (along ? penZ : penX) / 2;   // n: from A towards B
+    A.x -= nx * k; A.z -= nz * k; B.x += nx * k; B.z += nz * k;
+    let ax = -Math.sin(A.psi) * A.v, az = -Math.cos(A.psi) * A.v, bx = -Math.sin(B.psi) * B.v, bz = -Math.cos(B.psi) * B.v;
+    const vn = (ax - bx) * nx + (az - bz) * nz;   // closing speed
+    if (vn > 0) { const j = vn * 0.6; ax -= nx * j; az -= nz * j; bx += nx * j; bz += nz * j;
+      A.v = Math.hypot(ax, az); A.psi = Math.atan2(-ax, -az); B.v = Math.hypot(bx, bz); B.psi = Math.atan2(-bx, -bz);
+      if (!along) { A.yaw -= sg * Math.min(0.25, vn * 0.02); B.yaw += sg * Math.min(0.25, vn * 0.02); }
+      hitPart(A, nx, nz, vn - 4); hitPart(B, -nx, -nz, vn - 4);   // wheel-to-wheel nudges don't break parts
+      if ((A.isPlayer || B.isPlayer) && vn > 3) { shake = Math.max(shake, Math.min(0.7, vn / 20)); thud(vn * 3); } }
   }
+}
+// sparks: a little shower of hot points at each impact
+const SPARK = (() => { const n = 240, g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(n * 3), 3).setUsage(THREE.DynamicDrawUsage));
+  const pts = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffc06a, size: 0.35, transparent: true, opacity: 0.95, depthWrite: false, blending: THREE.AdditiveBlending })); pts.frustumCulled = false; scene.add(pts);
+  return { n, g, pts, v: new Float32Array(n * 3), life: new Float32Array(n), i: 0 }; })();
+function sparks(x, z, vn) { const k = Math.min(40, 6 + vn * 1.2) | 0, P = SPARK.g.attributes.position.array;
+  for (let q = 0; q < k; q++) { const i = SPARK.i++ % SPARK.n; P[i * 3] = x; P[i * 3 + 1] = 0.4 + Math.random() * 0.6; P[i * 3 + 2] = z; const a = Math.random() * 6.28, sp = 3 + Math.random() * vn * 0.4;
+    SPARK.v[i * 3] = Math.cos(a) * sp; SPARK.v[i * 3 + 1] = 2 + Math.random() * 5; SPARK.v[i * 3 + 2] = Math.sin(a) * sp; SPARK.life[i] = 0.4 + Math.random() * 0.5; } }
+function stepSparks(dt) { const P = SPARK.g.attributes.position.array; let any = false;
+  for (let i = 0; i < SPARK.n; i++) { if (SPARK.life[i] <= 0) { P[i * 3 + 1] = -50; continue; } any = true; SPARK.life[i] -= dt; SPARK.v[i * 3 + 1] -= 14 * dt;
+    for (let a = 0; a < 3; a++) P[i * 3 + a] += SPARK.v[i * 3 + a] * dt; if (P[i * 3 + 1] < 0.05) { P[i * 3 + 1] = 0.05; SPARK.v[i * 3 + 1] *= -0.3; } }
+  if (any || SPARK.dirty) SPARK.g.attributes.position.needsUpdate = true; SPARK.dirty = any; }
+function drawDamage(c) {
+  const col = (d) => (d < 0.05 ? "rgba(220,232,242,0.16)" : d < 0.35 ? "#ffc857" : d < 0.7 ? "#ff8a3d" : "#ff3b30");
+  for (const [id, k] of [["dFL", "fl"], ["dFR", "fr"], ["dRW", "rw"], ["dSL", "sl"], ["dSR", "sr"]]) $(id).style.fill = c.dnf ? "#ff3b30" : col(c.dmg[k]);
+  const worst = Math.max(...Object.values(c.dmg)); $("dmgTxt").textContent = c.dnf ? "RETIRED" : worst < 0.05 ? "CAR OK" : worst < 0.35 ? "MINOR DAMAGE" : worst < 0.7 ? "DAMAGED" : "HEAVY DAMAGE";
 }
 
 // ================= TIMING =================
@@ -823,7 +915,7 @@ function onPlayerLap(lt) {
   if (SET.mode !== "tt" && player.lap === LAPS - 1) setTimeout(() => msg("FINAL LAP", "", 2), 2700);
 }
 function onPlayerFinish() { const pos = finishOrder.indexOf(player) + 1; msg(pos === 1 ? "WINNER!" : `P${pos}`, "Chequered flag", 3.5, pos === 1); setTimeout(showResults, 3600); phase = "cooldown"; }
-function order() { return CARS.slice().sort((a, b) => { if (a.finished && b.finished) return a.finishT - b.finishT; if (a.finished) return -1; if (b.finished) return 1; return b.prog - a.prog; }); }
+function order() { return CARS.slice().sort((a, b) => { if (a.dnf !== b.dnf) return a.dnf ? 1 : -1; if (a.finished && b.finished) return a.finishT - b.finishT; if (a.finished) return -1; if (b.finished) return 1; return b.prog - a.prog; }); }
 function gapTo(leader, car) { const k = car.lastCp; if (k < 0 || !leader.cp.has(k)) return null; return car.cp.get(k) - leader.cp.get(k); }
 
 // ================= START LIGHTS =================
@@ -862,7 +954,7 @@ const MB = (() => { let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const p o
 const mp = (x, z) => [x * MB.s + MB.ox, z * MB.s + MB.oz];
 let hudT = 0;
 function updateHud(dt) {
-  const c = player; if (!c) return;
+  const c = player; if (!c) return; drawDamage(c);
   const kmh = Math.round(c.v * 3.6); $("hSpd").firstChild.nodeValue = kmh; $("hGear").textContent = c.gear === 0 ? "N" : c.gear;
   const on = Math.round(clamp((c.rpm - 6000) / 6300, 0, 1) * 15); [...leds.children].forEach((d, i) => d.classList.toggle("on", i < on));
   const drsAvail = DRS[c.idx] && phase === "race"; $("hDrs").className = "tag" + (c.drsOpen ? " on" : drsAvail ? " warn" : "");
@@ -931,7 +1023,8 @@ function frame(now) {
     simStep(dt, window.__APEX.auto && phase === "race" ? window.__APEX.auto(player) : inp);
   }
   for (const c of CARS) poseCar(c, dt);
-  lineMesh.visible = showLine && SET.assist === "on" || (showLine && SET.mode === "tt");
+  if (!paused) stepSparks(dt);
+  lineMesh.visible = !!player && phase !== "menu" && (showLine && SET.assist === "on" || (showLine && SET.mode === "tt")); if (lineMesh.visible) updateLine(player);
   if (phase !== "menu") { updateCamera(dt); updateHud(dt); updateAudio(dt); } else menuCam(now);
   { const f = player || CARS[0]; const tx = f ? f.x : camera.position.x, tz = f ? f.z : camera.position.z; sun.target.position.set(tx, 0, tz); sun.position.set(tx + SUN_OFF.x, SUN_OFF.y, tz + SUN_OFF.z); }
   renderer.render(scene, camera);
@@ -952,7 +1045,8 @@ function simStep(dt, inp) {
 }
 // a test driver: runs the race without drawing (used to check the physics; ctrl(car) returns the inputs)
 function simulate(sec, ctrl) { const dt = 1 / 60; let hits = 0; const v0 = shake; for (let t = 0; t < sec; t += dt) { if (phase !== "race" && phase !== "cooldown") break; raceT += dt; shake = 0; simStep(dt, ctrl(player)); if (shake > 0) hits++; } return hits; }
-function aheadOf(car) { let best = null, bg = 1e9; for (const o of CARS) { if (o === car) continue; const g = o.prog - car.prog; if (g > 0 && g < bg) { bg = g; best = o; } } return best; }
+function aheadOf(car) {   // the nearest car ahead that overlaps this one sideways (a car to one side is no obstacle)
+  let best = null, bg = 1e9; for (const o of CARS) { if (o === car || o.out) continue; const g = o.prog - car.prog; if (g > 0 && g < bg && Math.abs(o.d - car.d) < 2.6) { bg = g; best = o; } } return best; }
 function poseCar(c, dt) {
   c.mesh.position.set(c.x, 0, c.z); c.mesh.rotation.set(0, c.yaw, 0);
   const u = c.mesh.userData; u.wheels.forEach((w) => { w.t.rotation.x -= c.v * dt / 0.36; if (w.front) w.piv.rotation.y = -c.steer * 0.35; });
@@ -979,7 +1073,7 @@ function showResults() {
   $("rTitle").textContent = pos === 1 ? "VICTORY" : `P${pos}`; $("rSub").textContent = `${LAPS} laps of Aralia Marina · your best lap ${fmt(player.bestLap)}`;
   const tb = $("rTable"); tb.replaceChildren(); tb.insertAdjacentHTML("beforeend", "<tr><th>POS</th><th>DRIVER</th><th>TEAM</th><th>TIME</th><th>BEST LAP</th></tr>");
   ord.forEach((o, i) => { const tr = document.createElement("tr"); if (o === player) tr.className = "me";
-    const time = i === 0 ? fmt(o.finishT || raceT) : o.finished ? `+${(o.finishT - lead.finishT).toFixed(3)}` : (() => { const g = gapTo(lead, o); return g === null ? "—" : `+${g.toFixed(1)}`; })();
+    const time = o.dnf ? "DNF" : i === 0 ? fmt(o.finishT || raceT) : o.finished ? `+${(o.finishT - lead.finishT).toFixed(3)}` : (() => { const g = gapTo(lead, o); return g === null ? "—" : `+${g.toFixed(1)}`; })();
     tr.innerHTML = `<td>${i + 1}</td><td>${o.code} #${o.num}</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${o.team.c1};margin-right:6px"></span>${o.team.name}</td><td>${time}</td><td>${fmt(o.bestLap)}</td>`; tb.append(tr); });
   const wins = store.get("wins", 0); if (pos === 1) store.set("wins", wins + 1);
   $("results").hidden = false;
