@@ -605,7 +605,12 @@ sandTex.repeat.set(220, 220);
   ribbon(HW + 0.2, (k) => RUN_R[k] - 0.5, 0.015, tm, 3, 1 / 12).receiveShadow = true;
   ribbon((k) => -RUN_L[k] + 0.5, -HW - 0.2, 0.015, tm, 3, 1 / 12).receiveShadow = true; }
 // palms
-const PALMS = [];
+const PALMS = [], CROWD_T = { value: 0 };
+// places no tree may grow: grandstands, the pit building and its lane (rectangles in a group's own frame)
+const KEEP = []; function keepOut(g, x0, x1, z0, z1) { g.updateMatrixWorld(true); KEEP.push({ inv: new THREE.Matrix4().copy(g.matrixWorld).invert(), x0, x1, z0, z1 }); }
+const treeOK = (x, z) => { const v = new THREE.Vector3(x, 0, z); for (const k of KEEP) { const l = v.clone().applyMatrix4(k.inv); if (l.x > k.x0 && l.x < k.x1 && l.z > k.z0 && l.z < k.z1) return false; }
+  const q = locate(x, z, -1), ps = pitRel(q.s); if (q.d > 0 && ps > PIT.entry - 15 && ps < PIT.exit + 15 && q.d < RUN_R[q.i] + 30) return false;   // the pit entry and exit ramps
+  return true; };
 function addPalm(x, z, s) { PALMS.push([x, z, s || rnd(0.85, 1.25), Math.random() * Math.PI * 2]); }
 // the marina: the water in the infield, its quays and the boats
 // the water fills the lower loop of the circuit (inside turns 9 to 14), kept 34 m clear of the track; a quay rims it
@@ -691,7 +696,7 @@ if (!PARK) { let i = 0, best = 1e9; for (let k = Math.floor(N * 0.665); k < N * 
   shell.position.y = 0; g.add(shell); scene.add(g); scene.userData.shell = shell; }
 // floodlight masts round the track (it is a sunset race that runs into the night)
 if (!PARK) { const poles = [], heads = [], v = new THREE.Vector3();
-  for (let i = 0; i < N; i += 16) for (const side of [-1, 1]) { const off = side > 0 ? RUN_R[i] + 3 : -(RUN_L[i] + 3); pointAt(i * DS, off, v); if (nearWater(v.x, v.z)) continue; if ((i / 16 + (side > 0 ? 1 : 0)) % 2) continue; poles.push([v.x, v.z, Math.atan2(T[i].x, T[i].z) + (side > 0 ? Math.PI / 2 : -Math.PI / 2)]); }
+  for (let i = 0; i < N; i += 16) for (const side of [-1, 1]) { if (side > 0 && inPitZone(i)) continue; const off = side > 0 ? RUN_R[i] + 3 : -(RUN_L[i] + 3); pointAt(i * DS, off, v); if (nearWater(v.x, v.z)) continue; if ((i / 16 + (side > 0 ? 1 : 0)) % 2) continue; poles.push([v.x, v.z, Math.atan2(T[i].x, T[i].z) + (side > 0 ? Math.PI / 2 : -Math.PI / 2)]); }
   const pg = new THREE.CylinderGeometry(0.22, 0.35, 24, 6); pg.translate(0, 12, 0); const hg = new THREE.BoxGeometry(3.2, 1.4, 0.5); hg.translate(0, 24, 0.6);
   const pm = new THREE.InstancedMesh(pg, new THREE.MeshStandardMaterial({ color: 0x9aa3ae, roughness: 0.5, metalness: 0.5 }), poles.length), hm = new THREE.InstancedMesh(hg, new THREE.MeshBasicMaterial({ color: 0xfff6e0 }), poles.length);
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1), ps = new THREE.Vector3();
@@ -736,7 +741,16 @@ else { const dm = new THREE.MeshLambertMaterial({ color: 0xcfae84 });
   crowdTex.anisotropy = 8;
   const concrete = new THREE.MeshStandardMaterial({ color: 0xc9ccd1, roughness: 0.9 }), dark = new THREE.MeshStandardMaterial({ color: 0x2c313b, roughness: 0.8 });
   const roofMat = new THREE.MeshStandardMaterial({ color: 0xf1f2f4, roughness: 0.45, metalness: 0.15, emissive: 0x6a6e75 }), steelM = new THREE.MeshStandardMaterial({ color: 0x8e97a3, roughness: 0.5, metalness: 0.4 });
-  const crowdMat = new THREE.MeshBasicMaterial({ map: crowdTex, color: 0xe6e6e6 });   // spectators lit by the open side of the stand, never in black shadow
+  const crowdMat = new THREE.MeshBasicMaterial({ map: crowdTex, color: 0xe6e6e6 });
+  // a living crowd at no cost in size: the shader lifts each spectator now and then (they jump and cheer), and a Mexican wave runs along the stands
+  crowdMat.onBeforeCompile = (sh) => { sh.uniforms.uT = CROWD_T;
+    sh.fragmentShader = "uniform float uT;\n" + sh.fragmentShader.replace("#include <map_fragment>", `
+      float slot = floor(fract(vUv.x) * 2048.0 / 13.0) + floor(vUv.x) * 157.0;
+      float h = fract(sin(slot * 12.9898) * 43758.5453);
+      float jump = max(0.0, sin(uT * (2.2 + h * 2.5) + h * 40.0) - 0.55) * 0.13;
+      float wave = pow(max(0.0, sin(slot * 0.035 - uT * 1.6)), 24.0) * 0.12;
+      vec4 texelColor = texture2D(map, vec2(vUv.x, vUv.y - jump - wave));
+      texelColor = mapTexelToLinear(texelColor); diffuseColor *= texelColor;`); };   // spectators lit by the open side of the stand, never in black shadow
   function grandstand(L) {
     const rows = 14, rd = 0.85, rr = 0.52, y0 = 1.5, g = new THREE.Group(), steps = [], crowd = [];
     steps.push(bx(0.4, y0 + 0.5, L, 0.2, (y0 + 0.5) / 2, 0));   // a low front wall
@@ -756,11 +770,11 @@ else { const dm = new THREE.MeshLambertMaterial({ color: 0xcfae84 });
   }
   const v = new THREE.Vector3();
   for (const s0 of [-215, -95, 25, 145]) { const i = Math.round(((s0 + TL) % TL) / DS) % N; pointAt(s0, -(RUN_L[i] + 5), v);
-    const g = grandstand(118); g.position.copy(v); g.rotation.y = Math.atan2(T[i].x, T[i].z); if (placeClear(g, 7, 0, 8, 61)) scene.add(g); }
+    const g = grandstand(118); g.position.copy(v); g.rotation.y = Math.atan2(T[i].x, T[i].z); if (placeClear(g, 7, 0, 8, 61)) { scene.add(g); keepOut(g, -5, 18, -64, 64); } }
   // pit building: garages in team colours below, a glass hospitality floor above; pit lane between it and the barrier
   { const s0 = -10, i = Math.round(((s0 + TL) % TL) / DS) % N, L = 330, depth = 22, H = 12, base = RUN_R[i] + 15; pointAt(s0, base, v);
     const g = new THREE.Group(); g.position.copy(v); g.rotation.y = Math.atan2(T[i].x, T[i].z) + Math.PI;   // local +x points away from the track on this side
-    placeClear(g, depth / 2, 0, depth / 2 + 4, L / 2 + 2, 30);
+    placeClear(g, depth / 2, 0, depth / 2 + 4, L / 2 + 2, 30); keepOut(g, -20, depth + 6, -L / 2 - 12, L / 2 + 12);   // the building and the lane in front of it
     // the building: hospitality floors on top, open garages below (9 m deep, 6.4 m high), each with its own back wall, lights, tyres and tools
     const GD = 9, GH = 6.4, white = new THREE.MeshStandardMaterial({ color: 0xe6e8eb, roughness: 0.6 });
     { const top = new THREE.Mesh(new THREE.BoxGeometry(depth, H - GH, L), white); top.position.set(depth / 2, GH + (H - GH) / 2, 0); top.castShadow = true; g.add(top);
@@ -843,6 +857,8 @@ else { const dm = new THREE.MeshLambertMaterial({ color: 0xcfae84 });
     const sign = canvasTex(1024, 96, (c, w, h) => { c.fillStyle = "#0b1b44"; c.fillRect(0, 0, w, h); c.fillStyle = "#c8202a"; c.fillRect(0, h - 10, w, 10); c.fillStyle = "#fff"; c.font = "54px Michroma, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(TRACK.name.toUpperCase(), w / 2, h / 2 - 4); });
     for (const z of [-3.05, 3.05]) { const pl = new THREE.Mesh(new THREE.PlaneGeometry(span * 0.7, 2.1), new THREE.MeshBasicMaterial({ map: sign })); pl.position.set(mid, 9.5, z); if (z > 0) pl.rotation.y = Math.PI; g.add(pl); }
     scene.add(g); } }
+// clear the trees out of the stands and the pit lane
+{ const ok = PALMS.filter(([x, z]) => treeOK(x, z)); PALMS.length = 0; PALMS.push(...ok); }
 // park trees: broadleaf (a trunk and a lumpy crown) and conifers, two instanced meshes
 if (PARK) { const jit = (g, a) => { const p = g.attributes.position; for (let k = 0; k < p.count; k++) p.setXYZ(k, p.getX(k) * (1 + (Math.random() - 0.5) * a), p.getY(k) * (1 + (Math.random() - 0.5) * a), p.getZ(k) * (1 + (Math.random() - 0.5) * a)); g.computeVertexNormals(); return g; };
   const trunk = new THREE.CylinderGeometry(0.28, 0.42, 6, 6); trunk.translate(0, 3, 0);
@@ -1683,7 +1699,7 @@ function thud(v) { if (!AC) return; const now = performance.now(); if (now - thu
 // ================= MAIN LOOP =================
 let last = performance.now();
 function frame(now) {
-  { const t = now / 1000; if (scene.userData.water) scene.userData.water.material.uniforms.uT.value = t; if (scene.userData.shell) scene.userData.shell.material.uniforms.uT.value = t; }
+  { const t = now / 1000; if (scene.userData.water) scene.userData.water.material.uniforms.uT.value = t; if (scene.userData.shell) scene.userData.shell.material.uniforms.uT.value = t; CROWD_T.value = t % 1000; }
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (phase !== "menu" && !paused) {
     if (phase === "lights") stepLights(dt);
