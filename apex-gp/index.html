@@ -236,9 +236,9 @@ button:focus-visible { outline: 1px solid var(--ice); outline-offset: 3px; }
 
 <div class="screen titlescr" id="menu">
   <div class="card">
-    <p class="eyebrow">ARALIA MARINA · 5.28 KM · 20 CARS</p>
+    <p class="eyebrow" id="tEyebrow">ARALIA MARINA · 5.28 KM · 20 CARS</p>
     <h1 class="logo">APEX<br><span>GRAND PRIX</span></h1>
-    <p class="sub">Sunset over the desert, a kilometre-long back straight between two hairpins, then the marina and the hotel.</p>
+    <p class="sub" id="tSub">Sunset over the desert, a kilometre-long back straight between two hairpins, then the marina and the hotel.</p>
     <div class="go"><button class="btn" id="bStart" type="button">START</button></div>
     <p class="help"><kbd>↑</kbd> throttle · <kbd>↓</kbd> brake · <kbd>←</kbd><kbd>→</kbd> steer · <kbd>E</kbd> DRS · <kbd>C</kbd> camera · <kbd>L</kbd> racing line · <kbd>B</kbd> pit stop · <kbd>Esc</kbd> pause. W A S D and a gamepad work too; on a tablet the pedals appear on screen.</p>
   </div>
@@ -255,6 +255,7 @@ button:focus-visible { outline: 1px solid var(--ice); outline-offset: 3px; }
     <p class="eyebrow" id="sTeam">RACE WEEKEND</p>
     <h1 class="logo" style="font-size:clamp(26px,5vw,40px)">RACE<br><span>SETUP</span></h1>
     <div class="grid2">
+      <div class="opt"><h3>CIRCUIT</h3><div class="seg" id="sTrack"><button data-v="yas">Aralia Marina</button><button data-v="monza">Parco Brianza</button></div></div>
       <div class="opt"><h3>MODE</h3><div class="seg" data-k="mode"><button data-v="race">Race weekend</button><button data-v="tt">Time trial</button></div></div>
       <div class="opt race-only"><h3>QUALIFYING</h3><div class="seg" data-k="quali"><button data-v="on">One flying lap</button><button data-v="off">Skip</button></div></div>
       <div class="opt race-only noquali"><h3>START FROM</h3><div class="seg" data-k="grid"><button data-v="back">Back</button><button data-v="mid">Middle</button><button data-v="pole">Pole</button></div></div>
@@ -305,6 +306,15 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), lerp = (a, b, t) => a + 
 const store = { get(k, d) { try { const v = localStorage.getItem("apex-" + k); return v === null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem("apex-" + k, JSON.stringify(v)); } catch {} } };
 const fmt = (t) => { if (!isFinite(t) || t <= 0) return "—"; const m = Math.floor(t / 60), s = t - m * 60; return `${m}:${s < 10 ? "0" : ""}${s.toFixed(3)}`; };
 
+// ================= CIRCUITS =================
+// both layouts come from the open circuit outlines of github.com/bacinger/f1-circuits (MIT licence), in metres: x east, z south,
+// the start line at 0, points in racing order. The names are our own.
+const TRACKS = {
+  yas: { id: "yas", name: "Aralia Marina", km: "5.28", env: "desert", smooth: [3, 5], cp: [[0,0],[240,-32],[252,-36],[262,-46],[269,-60],[270,-73],[266,-88],[228,-250],[221,-267],[212,-280],[197,-293],[185,-299],[117,-320],[94,-332],[77,-343],[62,-357],[51,-370],[42,-382],[32,-406],[28,-425],[28,-445],[32,-469],[40,-495],[56,-559],[62,-607],[63,-641],[60,-670],[41,-822],[29,-917],[26,-928],[24,-937],[17,-946],[5,-956],[-3,-959],[-11,-960],[-19,-958],[-28,-955],[-35,-948],[-38,-942],[-44,-932],[-58,-888],[-72,-824],[-192,-469],[-239,-332],[-265,-255],[-285,-195],[-305,-121],[-348,15],[-389,137],[-393,149],[-395,158],[-393,163],[-389,168],[-378,169],[-340,164],[-332,164],[-325,172],[-304,254],[-299,270],[-285,303],[-273,328],[-246,367],[-215,402],[-177,435],[-14,563],[24,593],[53,614],[92,639],[125,658],[180,684],[229,706],[303,740],[334,753],[352,753],[371,750],[388,740],[397,731],[403,722],[409,710],[413,697],[415,686],[413,667],[409,653],[404,639],[396,628],[384,617],[370,607],[355,601],[334,598],[162,584],[141,581],[132,579],[122,576],[30,518],[20,512],[14,504],[7,486],[-14,387],[-13,379],[-8,374],[0,371],[76,360],[85,356],[91,353],[97,347],[103,336],[105,322],[105,253],[99,241],[92,234],[82,230],[68,227],[55,225],[39,224],[22,226],[-138,250],[-151,251],[-169,250],[-186,247],[-198,244],[-206,236],[-214,228],[-258,149],[-280,112],[-285,102],[-288,87],[-290,75],[-290,60],[-287,50],[-281,43],[-274,40],[-257,37]],
+    sub: "Sunset over the desert, a kilometre-long back straight between two hairpins, then the marina and the hotel." },
+  monza: { id: "monza", name: "Parco Brianza", km: "5.77", env: "park", smooth: [2, 3], cp: [[0,0],[37,-426],[53,-605],[55,-613],[60,-617],[66,-618],[74,-617],[82,-616],[89,-617],[93,-620],[97,-626],[98,-630],[98,-635],[72,-733],[68,-760],[67,-784],[69,-810],[78,-937],[82,-958],[87,-977],[94,-998],[103,-1020],[113,-1042],[129,-1067],[145,-1087],[167,-1110],[190,-1130],[217,-1149],[245,-1165],[277,-1181],[308,-1192],[343,-1201],[383,-1208],[424,-1212],[582,-1225],[775,-1237],[787,-1238],[793,-1241],[798,-1246],[804,-1269],[807,-1275],[812,-1279],[819,-1282],[846,-1287],[874,-1293],[915,-1306],[1096,-1366],[1112,-1370],[1126,-1370],[1141,-1367],[1151,-1363],[1161,-1357],[1170,-1351],[1181,-1339],[1188,-1329],[1192,-1317],[1195,-1303],[1202,-1218],[1217,-1072],[1217,-1059],[1214,-1050],[1211,-1043],[1205,-1038],[1194,-1031],[1075,-967],[979,-913],[919,-881],[890,-864],[857,-841],[834,-823],[813,-805],[708,-716],[634,-649],[476,-511],[381,-428],[368,-415],[363,-407],[362,-398],[362,-388],[366,-367],[366,-355],[366,-337],[365,-328],[361,-316],[356,-302],[347,-288],[334,-273],[320,-261],[308,-252],[302,-246],[298,-236],[294,-219],[284,-140],[274,-56],[196,696],[192,723],[189,736],[183,749],[174,759],[164,769],[149,778],[134,784],[116,787],[101,786],[86,783],[70,776],[54,769],[42,761],[27,750],[11,733],[0,717],[-10,700],[-18,681],[-26,659],[-32,636],[-34,617],[-38,588],[-38,559],[-39,531],[-40,476],[-41,428],[-40,376],[-34,308],[-11,92]],
+    sub: "The temple of speed: flat out through the royal park, three chicanes, the Lesmos, and the long Parabolica onto the straight." },
+};
 // ================= TEAMS (all fictional) =================
 const TEAMS = [   // all teams and drivers are fictional
   { name: "Scarlet Falcon", c1: "#d0102a", c2: "#f4f4f4", drivers: [["FAL", 16, "Marco Falcone"], ["ROS", 55, "Rafael Rossetti"]] },
@@ -319,6 +329,9 @@ const TEAMS = [   // all teams and drivers are fictional
   { name: "Navy Hawk", c1: "#0c1f4a", c2: "#e8e8e8", drivers: [["HAW", 20, "Henrik Hawke"], ["LAI", 77, "Kevin Laird"]] },
 ];
 const SET = Object.assign({ mode: "race", laps: "5", skill: "0.95", grid: "mid", assist: "on", touch: "auto", team: 2, quali: "on", sens: "1", tyre: "M", radio: "voice" }, store.get("set", {}));
+const TRACK = TRACKS[SET.track] || TRACKS.yas; SET.track = TRACK.id;
+const PARK = TRACK.env === "park";
+const TRK_KEY = (k) => (TRACK.id === "yas" ? k : k + "-" + TRACK.id);   // personal bests and ghosts are kept per circuit
 // your own names for the teams (kept on this device only); an empty name brings the original back
 const TEAM_DEF = TEAMS.map((t) => t.name);
 { const nm = store.get("names", {}); for (const k in nm) if (TEAMS[k] && nm[k]) TEAMS[k].name = String(nm[k]).slice(0, 24); }
@@ -331,27 +344,31 @@ renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xf0a873); scene.fog = new THREE.Fog(0xe9b48c, 700, 4200);
+scene.background = new THREE.Color(PARK ? 0x9cc3e8 : 0xf0a873); scene.fog = PARK ? new THREE.Fog(0xb9cfe0, 900, 4600) : new THREE.Fog(0xe9b48c, 700, 4200);
 const camera = new THREE.PerspectiveCamera(62, 1, 0.25, 6000);
-scene.add(new THREE.HemisphereLight(0xa9c3ee, 0xd2a77c, 0.8));
-const sun = new THREE.DirectionalLight(0xffc48c, 1.35); sun.position.set(-600, 900, 400); scene.add(sun, sun.target);
+scene.add(PARK ? new THREE.HemisphereLight(0xbcd6f5, 0x5d7a45, 0.85) : new THREE.HemisphereLight(0xa9c3ee, 0xd2a77c, 0.8));
+const sun = new THREE.DirectionalLight(PARK ? 0xfff2dc : 0xffc48c, PARK ? 1.5 : 1.35); sun.position.set(-600, 900, 400); scene.add(sun, sun.target);
 sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, near: 10, far: 400 }); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
-const SUN_DIR = new THREE.Vector3(-0.78, 0.3, 0.42).normalize(), SUN_OFF = SUN_DIR.clone().multiplyScalar(220);   // low in the west: golden hour
+const SUN_DIR = (PARK ? new THREE.Vector3(-0.45, 0.72, 0.52) : new THREE.Vector3(-0.78, 0.3, 0.42)).normalize(), SUN_OFF = SUN_DIR.clone().multiplyScalar(220);   // low in the west: golden hour
 function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); try { GAR.cam.aspect = w / h; GAR.cam.updateProjectionMatrix(); } catch {} }   // the garage doesn't exist yet on the first call
 addEventListener("resize", resize); resize();
 const lam = (c) => new THREE.MeshLambertMaterial({ color: c });
 function canvasTex(w, h, draw, rep) { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; } return t; }
 
 // ================= TRACK =================
-// Aralia Marina: the 5.28 km layout of the Abu Dhabi circuit (2021 configuration), from the open circuit outlines of
-// github.com/bacinger/f1-circuits (MIT licence), in metres: x east, z south, the start line at 0. The cars run in this order.
-const CP = [[0,0],[240,-32],[252,-36],[262,-46],[269,-60],[270,-73],[266,-88],[228,-250],[221,-267],[212,-280],[197,-293],[185,-299],[117,-320],[94,-332],[77,-343],[62,-357],[51,-370],[42,-382],[32,-406],[28,-425],[28,-445],[32,-469],[40,-495],[56,-559],[62,-607],[63,-641],[60,-670],[41,-822],[29,-917],[26,-928],[24,-937],[17,-946],[5,-956],[-3,-959],[-11,-960],[-19,-958],[-28,-955],[-35,-948],[-38,-942],[-44,-932],[-58,-888],[-72,-824],[-192,-469],[-239,-332],[-265,-255],[-285,-195],[-305,-121],[-348,15],[-389,137],[-393,149],[-395,158],[-393,163],[-389,168],[-378,169],[-340,164],[-332,164],[-325,172],[-304,254],[-299,270],[-285,303],[-273,328],[-246,367],[-215,402],[-177,435],[-14,563],[24,593],[53,614],[92,639],[125,658],[180,684],[229,706],[303,740],[334,753],[352,753],[371,750],[388,740],[397,731],[403,722],[409,710],[413,697],[415,686],[413,667],[409,653],[404,639],[396,628],[384,617],[370,607],[355,601],[334,598],[162,584],[141,581],[132,579],[122,576],[30,518],[20,512],[14,504],[7,486],[-14,387],[-13,379],[-8,374],[0,371],[76,360],[85,356],[91,353],[97,347],[103,336],[105,322],[105,253],[99,241],[92,234],[82,230],[68,227],[55,225],[39,224],[22,226],[-138,250],[-151,251],[-169,250],[-186,247],[-198,244],[-206,236],[-214,228],[-258,149],[-280,112],[-285,102],[-288,87],[-290,75],[-290,60],[-287,50],[-281,43],[-274,40],[-257,37]];
+// the chosen circuit (see TRACKS)
+const CP = TRACK.cp;
 const W = 16, HW = W / 2;              // track width (16 m: room to race side by side)
 const curve = new THREE.CatmullRomCurve3(CP.map(([x, z]) => new THREE.Vector3(x, 0, z)), true, "centripetal");
+curve.arcLengthDivisions = 24000;   // measure the length finely, or the samples bunch up on long, sparse straights
 const N = 1600, PTS = curve.getSpacedPoints(N).slice(0, N);
 // the outline is a polyline with sharp vertices: smooth it into real corner radii (a few passes of a short moving average)
-for (let pass = 0; pass < 3; pass++) { const src = PTS.map((p) => p.clone()); for (let i = 0; i < N; i++) { let x = 0, z = 0; for (let k = -5; k <= 5; k++) { const q = src[(i + k + N) % N]; x += q.x; z += q.z; } PTS[i].set(x / 11, 0, z / 11); } }
-const TL = curve.getLength(), DS = TL / N;
+{ const [passes, rad] = TRACK.smooth; for (let pass = 0; pass < passes; pass++) { const src = PTS.map((p) => p.clone()); for (let i = 0; i < N; i++) { let x = 0, z = 0; for (let k = -rad; k <= rad; k++) { const q = src[(i + k + N) % N]; x += q.x; z += q.z; } PTS[i].set(x / (2 * rad + 1), 0, z / (2 * rad + 1)); } } }
+// then space the smoothed samples evenly again: the same distance between every pair, so distances along the lap are true
+const TL = (() => { const cum = [0]; for (let i = 1; i <= N; i++) cum.push(cum[i - 1] + PTS[i % N].distanceTo(PTS[i - 1]));
+  const L = cum[N], src = PTS.map((p) => p.clone()); let j = 0;
+  for (let k = 0; k < N; k++) { const d = k * L / N; while (cum[j + 1] < d) j++; const t = (d - cum[j]) / (cum[j + 1] - cum[j] || 1); PTS[k].copy(src[j]).lerp(src[(j + 1) % N], t); }
+  return L; })(), DS = TL / N;
 const T = [], R = [], K = [];          // tangent, right normal, curvature (+ = right-hand bend)
 for (let i = 0; i < N; i++) { const a = PTS[(i - 1 + N) % N], b = PTS[(i + 1) % N]; const t = new THREE.Vector3(b.x - a.x, 0, b.z - a.z).normalize(); T.push(t); R.push(new THREE.Vector3(-t.z, 0, t.x)); }
 for (let i = 0; i < N; i++) { const a = T[(i - 2 + N) % N], b = T[(i + 2) % N]; K.push((a.x * b.z - a.z * b.x) / (4 * DS)); }
@@ -379,8 +396,10 @@ function brakeAt(v) { return PH.mu * (PH.g + DFc * v * v) * 0.92 + DRc * v * v; 
 const VP = new Float32Array(N);
 for (let i = 0; i < N; i++) VP[i] = maxCornerV(LK[i], PH.mu);
 for (let pass = 0; pass < 2; pass++) {
-  for (let i = N * 2; i > 0; i--) { const a = i % N, b = (i + 1) % N; VP[a] = Math.min(VP[a], Math.sqrt(VP[b] * VP[b] + 2 * brakeAt(VP[b]) * DS)); }
-  for (let i = 0; i < N * 2; i++) { const a = i % N, b = (i + 1) % N; VP[b] = Math.min(VP[b], Math.sqrt(VP[a] * VP[a] + 2 * Math.max(0.5, accelAt(VP[a], false)) * DS)); }
+  for (let i = N * 2; i > 0; i--) { const a = i % N, b = (i + 1) % N, v = VP[b], lat = v * v * Math.abs(LK[b]) / (PH.mu * (PH.g + DFc * v * v)), left = Math.sqrt(Math.max(0.15, 1 - lat * lat));
+    VP[a] = Math.min(VP[a], Math.sqrt(v * v + 2 * brakeAt(v) * left * DS)); }
+  for (let i = 0; i < N * 2; i++) { const a = i % N, b = (i + 1) % N, v = VP[a], lat = v * v * Math.abs(LK[a]) / (PH.mu * (PH.g + DFc * v * v)), left = Math.sqrt(Math.max(0.05, 1 - lat * lat));
+    VP[b] = Math.min(VP[b], Math.sqrt(v * v + 2 * Math.max(0.5, accelAt(v, false) * left) * DS)); }   // out of a bend the tyres can only push as hard as cornering leaves them
 }
 const BRAKE_ZONE = new Uint8Array(N); for (let i = 0; i < N; i++) BRAKE_ZONE[i] = VP[(i + 4) % N] < VP[i] - 1.5 ? 1 : 0;
 // DRS zones: the two longest full-throttle stretches
@@ -543,17 +562,21 @@ function placeClear(g, cx, cz, hw, hl, maxPush = 40) {
     vertexShader: "varying vec3 vD; void main(){ vD = normalize(position); vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }",
     fragmentShader: `uniform vec3 uSun; varying vec3 vD;
       void main(){ float h = clamp(vD.y, -0.2, 1.0), s = max(dot(normalize(vD), uSun), 0.0);
-        vec3 top = vec3(0.10, 0.20, 0.42), mid = vec3(0.45, 0.48, 0.66), hor = vec3(0.98, 0.62, 0.38), low = vec3(0.86, 0.64, 0.48);
+        ${PARK ? "vec3 top = vec3(0.16, 0.38, 0.72), mid = vec3(0.42, 0.62, 0.86), hor = vec3(0.80, 0.87, 0.93), low = vec3(0.62, 0.70, 0.62);" : "vec3 top = vec3(0.10, 0.20, 0.42), mid = vec3(0.45, 0.48, 0.66), hor = vec3(0.98, 0.62, 0.38), low = vec3(0.86, 0.64, 0.48);"}
         vec3 c = h > 0.0 ? mix(mix(hor, mid, smoothstep(0.0, 0.18, h)), top, smoothstep(0.18, 0.75, h)) : low;
-        c += vec3(1.0, 0.55, 0.25) * pow(s, 8.0) * 0.45 + vec3(1.0, 0.86, 0.62) * smoothstep(0.9993, 0.9997, s) * 1.6;   // glow and disc
+        c += ${PARK ? "vec3(1.0, 0.95, 0.85) * pow(s, 8.0) * 0.25" : "vec3(1.0, 0.55, 0.25) * pow(s, 8.0) * 0.45"} + vec3(1.0, 0.86, 0.62) * smoothstep(0.9993, 0.9997, s) * 1.6;   // glow and disc
         gl_FragColor = vec4(c, 1.0); }` }));
   sky.frustumCulled = false; sky.renderOrder = -1; scene.add(sky); scene.userData.sky = sky; }
-// sand, with wind ripples
-const sandTex = canvasTex(512, 512, (g, w, h) => { g.fillStyle = "#d7bd94"; g.fillRect(0, 0, w, h);
+// the circuit's footprint: its centre and size, for the scenery around it
+const CEN = (() => { let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const p of PTS) { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); z0 = Math.min(z0, p.z); z1 = Math.max(z1, p.z); } return { x: (x0 + x1) / 2, z: (z0 + z1) / 2, x0, x1, z0, z1 }; })();
+// sand, with wind ripples (or grass in the park)
+const sandTex = PARK ? canvasTex(512, 512, (g, w, h) => { g.fillStyle = "#5c8a3e"; g.fillRect(0, 0, w, h);   // the park: mown grass
+  for (let i = 0; i < 30000; i++) { const v = Math.random(); g.fillStyle = v < 0.5 ? "rgba(70,110,45,0.4)" : "rgba(120,160,80,0.35)"; g.fillRect(Math.random() * w, Math.random() * h, 1.6, 1.6); }
+  for (let i = 0; i < 40; i++) { g.fillStyle = "rgba(60,95,40,0.18)"; g.beginPath(); g.arc(Math.random() * w, Math.random() * h, 10 + Math.random() * 30, 0, 7); g.fill(); } }, true) : canvasTex(512, 512, (g, w, h) => { g.fillStyle = "#d7bd94"; g.fillRect(0, 0, w, h);
   for (let i = 0; i < 26000; i++) { const v = Math.random(); g.fillStyle = v < 0.5 ? "rgba(180,150,110,0.35)" : "rgba(240,222,190,0.35)"; g.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5); }
   for (let y = 0; y < h; y += 9) { g.strokeStyle = "rgba(160,128,92,0.18)"; g.lineWidth = 2; g.beginPath(); for (let x = 0; x <= w; x += 16) g.lineTo(x, y + Math.sin(x / 40 + y) * 3); g.stroke(); } }, true);
 sandTex.repeat.set(220, 220);
-{ const g = new THREE.Mesh(new THREE.PlaneGeometry(9000, 9000), new THREE.MeshLambertMaterial({ map: sandTex })); g.receiveShadow = true; g.rotation.x = -Math.PI / 2; g.position.set(150, -0.06, -350); scene.add(g); }
+{ const g = new THREE.Mesh(new THREE.PlaneGeometry(9000, 9000), new THREE.MeshLambertMaterial({ map: sandTex })); g.receiveShadow = true; g.rotation.x = -Math.PI / 2; g.position.set(CEN.x, -0.06, CEN.z); scene.add(g); }
 // landscaped turf between the track and the barriers (where there is no painted run-off or gravel)
 { const turf = canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#4f8f3c"; g.fillRect(0, 0, w, h); for (let i = 0; i < 5000; i++) { g.fillStyle = Math.random() < 0.5 ? "rgba(62,120,46,0.5)" : "rgba(104,160,70,0.45)"; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); } for (let y = 0; y < h; y += 64) { g.fillStyle = "rgba(255,255,255,0.05)"; g.fillRect(0, y, w, 32); } }, true);
   const tm = new THREE.MeshLambertMaterial({ map: turf, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
@@ -564,7 +587,7 @@ const PALMS = [];
 function addPalm(x, z, s) { PALMS.push([x, z, s || rnd(0.85, 1.25), Math.random() * Math.PI * 2]); }
 // the marina: the water in the infield, its quays and the boats
 // the water fills the lower loop of the circuit (inside turns 9 to 14), kept 34 m clear of the track; a quay rims it
-const MARINA = (() => {
+const MARINA = PARK ? { x0: 0, x1: 0, z0: 0, z1: 0, w: 0, h: 0, res: 2, mask: new Uint8Array(0), at: () => 0 } : (() => {
   const loop = PTS.filter((_, k) => { const f = k / N; return f > 0.455 && f < 0.875; });   // the stretch that wraps round the harbour
   let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const p of loop) { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); z0 = Math.min(z0, p.z); z1 = Math.max(z1, p.z); }
   const res = 2, w = Math.ceil((x1 - x0) / res), h = Math.ceil((z1 - z0) / res), mask = new Uint8Array(w * h), poly = loop.map((p) => [p.x, p.z]);
@@ -578,7 +601,7 @@ const MARINA = (() => {
 })();
 const inWater = (x, z, m) => { if (!m) return MARINA.at(x, z) === 2; for (const [dx, dz] of [[0, 0], [m, 0], [-m, 0], [0, m], [0, -m]]) if (MARINA.at(x + dx, z + dz) !== 2) return false; return true; };
 const nearWater = (x, z) => MARINA.at(x, z) > 0;
-{ const { x0, x1, z0, z1, w, h, mask } = MARINA, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+if (!PARK) { const { x0, x1, z0, z1, w, h, mask } = MARINA, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
   const mk = (val) => { const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"), im = g.createImageData(w, h);
     for (let k = 0; k < w * h; k++) { const on = val(mask[k]) ? 255 : 0; im.data[k * 4] = im.data[k * 4 + 1] = im.data[k * 4 + 2] = on; im.data[k * 4 + 3] = 255; } g.putImageData(im, 0, 0); const t = new THREE.CanvasTexture(c); t.flipY = false; return t; };
   const waterMask = mk((v) => v === 2), quayMask = mk((v) => v >= 1);
@@ -618,7 +641,7 @@ const nearWater = (x, z) => MARINA.at(x, z) > 0;
   for (let j = 0; j < MARINA.h; j += 6) for (let i = 0; i < MARINA.w; i += 6) if (mask[j * MARINA.w + i] === 1 && Math.random() < 0.5) addPalm(x0 + i * MARINA.res, z0 + j * MARINA.res);
 }
 // the hotel: two buildings either side of the track joined by a bridge, under one glowing lattice shell
-{ let i = 0, best = 1e9; for (let k = Math.floor(N * 0.665); k < N * 0.76; k++) { let m = 0; for (let q = -20; q <= 20; q++) m = Math.max(m, Math.abs(KS[(k + q + N) % N])); if (m < best) { best = m; i = k; } }
+if (!PARK) { let i = 0, best = 1e9; for (let k = Math.floor(N * 0.665); k < N * 0.76; k++) { let m = 0; for (let q = -20; q <= 20; q++) m = Math.max(m, Math.abs(KS[(k + q + N) % N])); if (m < best) { best = m; i = k; } }
   const p = PTS[i], ang = Math.atan2(T[i].x, T[i].z), g = new THREE.Group(); g.position.set(p.x, 0, p.z); g.rotation.y = ang;
   const glassTex = canvasTex(512, 512, (c, w, h) => { const g2 = c.createLinearGradient(0, 0, 0, h); g2.addColorStop(0, "#3b5f86"); g2.addColorStop(1, "#1d324c"); c.fillStyle = g2; c.fillRect(0, 0, w, h);
       for (let y = 0; y < h; y += 64) { for (let x = 0; x < w; x += 64) if (Math.random() < 0.22) { c.fillStyle = "rgba(255,214,160,0.75)"; c.fillRect(x + 4, y + 10, 56, 46); }
@@ -645,7 +668,7 @@ const nearWater = (x, z) => MARINA.at(x, z) > 0;
         gl_FragColor = vec4(mix(c * 0.55, vec3(0.92, 0.95, 1.0), line), 0.16 + line * 0.75); }` }));
   shell.position.y = 0; g.add(shell); scene.add(g); scene.userData.shell = shell; }
 // floodlight masts round the track (it is a sunset race that runs into the night)
-{ const poles = [], heads = [], v = new THREE.Vector3();
+if (!PARK) { const poles = [], heads = [], v = new THREE.Vector3();
   for (let i = 0; i < N; i += 16) for (const side of [-1, 1]) { const off = side > 0 ? RUN_R[i] + 3 : -(RUN_L[i] + 3); pointAt(i * DS, off, v); if (nearWater(v.x, v.z)) continue; if ((i / 16 + (side > 0 ? 1 : 0)) % 2) continue; poles.push([v.x, v.z, Math.atan2(T[i].x, T[i].z) + (side > 0 ? Math.PI / 2 : -Math.PI / 2)]); }
   const pg = new THREE.CylinderGeometry(0.22, 0.35, 24, 6); pg.translate(0, 12, 0); const hg = new THREE.BoxGeometry(3.2, 1.4, 0.5); hg.translate(0, 24, 0.6);
   const pm = new THREE.InstancedMesh(pg, new THREE.MeshStandardMaterial({ color: 0x9aa3ae, roughness: 0.5, metalness: 0.5 }), poles.length), hm = new THREE.InstancedMesh(hg, new THREE.MeshBasicMaterial({ color: 0xfff6e0 }), poles.length);
@@ -654,11 +677,14 @@ const nearWater = (x, z) => MARINA.at(x, z) > 0;
 // palms along the outside of the circuit, and a few groves
 { for (let i = 0; i < N; i += 7) for (const side of [-1, 1]) { if (Math.random() < 0.35) continue; const off = side > 0 ? RUN_R[i] + rnd(9, 22) : -(RUN_L[i] + rnd(9, 22)), v = pointAt(i * DS, off, new THREE.Vector3());
     if (nearWater(v.x, v.z)) continue; if (!nearTrack(v.x, v.z, 24)) addPalm(v.x, v.z); }
-  for (let n = 0; n < 260; n++) { const x = rnd(-1100, 1100), z = rnd(-1300, 1100); if (nearWater(x, z)) continue; if (!nearTrack(x, z, 70)) addPalm(x, z); } }
-// low dunes and a city skyline across the water on the horizon
-{ const dm = new THREE.MeshLambertMaterial({ color: 0xcfae84 });
-  for (let k = 0; k < 26; k++) { const a = k / 26 * Math.PI * 2, r = 2600 + Math.random() * 700, m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), dm); m.scale.set(rnd(300, 700), rnd(40, 120), rnd(200, 500)); m.position.set(150 + Math.cos(a) * r, -5, -350 + Math.sin(a) * r); m.rotation.y = a; scene.add(m); }
-  const towers = []; for (let k = 0; k < 90; k++) { const a = rnd(-2.6, -1.0), r = rnd(2300, 3400); towers.push([150 + Math.cos(a) * r, -350 + Math.sin(a) * r, rnd(18, 45), rnd(60, 280)]); }
+  for (let n = 0; n < (PARK ? 2600 : 260); n++) { const x = rnd(CEN.x0 - 600, CEN.x1 + 600), z = rnd(CEN.z0 - 600, CEN.z1 + 600); if (nearWater(x, z)) continue; if (!nearTrack(x, z, PARK ? 46 : 70)) addPalm(x, z); } }
+// on the horizon: low dunes and a city skyline (desert), or wooded hills (park)
+if (PARK) { const hm = new THREE.MeshLambertMaterial({ color: 0x4d6f3a }), fm = new THREE.MeshLambertMaterial({ color: 0x3c5c30 });
+  for (let k = 0; k < 34; k++) { const a = k / 34 * Math.PI * 2, r = 2700 + Math.random() * 800, m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), k % 3 ? hm : fm); m.scale.set(rnd(400, 900), rnd(60, 220), rnd(300, 600)); m.position.set(CEN.x + Math.cos(a) * r, -5, CEN.z + Math.sin(a) * r); m.rotation.y = a; scene.add(m); }
+  const alps = new THREE.MeshLambertMaterial({ color: 0x8ea3bd }); for (let k = 0; k < 9; k++) { const m = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 6), alps); m.scale.set(rnd(500, 900), rnd(500, 900), rnd(500, 900)); m.position.set(CEN.x + rnd(-2500, 2500), 150, CEN.z - 4600 + rnd(-200, 200)); scene.add(m); } }
+else { const dm = new THREE.MeshLambertMaterial({ color: 0xcfae84 });
+  for (let k = 0; k < 26; k++) { const a = k / 26 * Math.PI * 2, r = 2600 + Math.random() * 700, m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), dm); m.scale.set(rnd(300, 700), rnd(40, 120), rnd(200, 500)); m.position.set(CEN.x + Math.cos(a) * r, -5, CEN.z + Math.sin(a) * r); m.rotation.y = a; scene.add(m); }
+  const towers = []; for (let k = 0; k < 90; k++) { const a = rnd(-2.6, -1.0), r = rnd(2300, 3400); towers.push([CEN.x + Math.cos(a) * r, CEN.z + Math.sin(a) * r, rnd(18, 45), rnd(60, 280)]); }
   const tg = new THREE.BoxGeometry(1, 1, 1); tg.translate(0, 0.5, 0);
   const winTex = canvasTex(64, 256, (c, w, h) => { c.fillStyle = "#26324a"; c.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 6) for (let x = 0; x < w; x += 6) if (Math.random() < 0.3) { c.fillStyle = "rgba(255,214,150,0.85)"; c.fillRect(x + 1, y + 1, 3, 3); } }, true);
   const tm = new THREE.InstancedMesh(tg, new THREE.MeshStandardMaterial({ map: winTex, emissive: 0xffffff, emissiveMap: winTex, emissiveIntensity: 0.25, roughness: 0.3, metalness: 0.5 }), towers.length);
@@ -736,7 +762,7 @@ const nearWater = (x, z) => MARINA.at(x, z) > 0;
   }
 }
 // trackside: boards along the barriers on the straights, and a bridge over the back straight
-{ const words = ["APEX GRAND PRIX", "ARALIA MARINA", "TURON GP", "5.27 KM", "LIGHTS OUT", "VOLT RACING", "AZURE STORM", "SCARLET FALCON"];
+{ const words = ["APEX GRAND PRIX", TRACK.name.toUpperCase(), "TURON GP", TRACK.km + " KM", "LIGHTS OUT", "VOLT RACING", "AZURE STORM", "SCARLET FALCON"];
   const boardTex = words.map((w, i) => canvasTex(512, 64, (g, W2, H) => { const bg = ["#0b1b44", "#c8202a", "#0d0f13", "#f2f2f2"][i % 4], fg = i % 4 === 3 ? "#0b1b44" : "#ffffff";
     g.fillStyle = bg; g.fillRect(0, 0, W2, H); g.fillStyle = fg; g.font = "34px Michroma, sans-serif"; g.textBaseline = "middle"; g.textAlign = "center"; g.fillText(w, W2 / 2, H / 2 + 2, W2 - 30); }));
   const mats = boardTex.map((t) => new THREE.MeshLambertMaterial({ map: t })), bg = new THREE.PlaneGeometry(14, 1.75), v = new THREE.Vector3(); let n = 0;
@@ -749,11 +775,23 @@ const nearWater = (x, z) => MARINA.at(x, z) > 0;
     const span = RUN_L[i] + RUN_R[i] + 8, mid = (RUN_R[i] - RUN_L[i]) / 2, steel = lam(0x2b3240);
     const deck = new THREE.Mesh(new THREE.BoxGeometry(span, 1.6, 6), steel); deck.position.set(mid, 9.5, 0); g.add(deck);
     for (const sx of [-1, 1]) { const tw = new THREE.Mesh(new THREE.BoxGeometry(2.5, 11, 6), lam(0x8c96a6)); tw.position.set(mid + sx * (span / 2 - 1.25), 5.5, 0); g.add(tw); }
-    const sign = canvasTex(1024, 96, (c, w, h) => { c.fillStyle = "#0b1b44"; c.fillRect(0, 0, w, h); c.fillStyle = "#c8202a"; c.fillRect(0, h - 10, w, 10); c.fillStyle = "#fff"; c.font = "54px Michroma, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("ARALIA MARINA", w / 2, h / 2 - 4); });
+    const sign = canvasTex(1024, 96, (c, w, h) => { c.fillStyle = "#0b1b44"; c.fillRect(0, 0, w, h); c.fillStyle = "#c8202a"; c.fillRect(0, h - 10, w, 10); c.fillStyle = "#fff"; c.font = "54px Michroma, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(TRACK.name.toUpperCase(), w / 2, h / 2 - 4); });
     for (const z of [-3.05, 3.05]) { const pl = new THREE.Mesh(new THREE.PlaneGeometry(span * 0.7, 2.1), new THREE.MeshBasicMaterial({ map: sign })); pl.position.set(mid, 9.5, z); if (z > 0) pl.rotation.y = Math.PI; g.add(pl); }
     scene.add(g); } }
+// park trees: broadleaf (a trunk and a lumpy crown) and conifers, two instanced meshes
+if (PARK) { const jit = (g, a) => { const p = g.attributes.position; for (let k = 0; k < p.count; k++) p.setXYZ(k, p.getX(k) * (1 + (Math.random() - 0.5) * a), p.getY(k) * (1 + (Math.random() - 0.5) * a), p.getZ(k) * (1 + (Math.random() - 0.5) * a)); g.computeVertexNormals(); return g; };
+  const trunk = new THREE.CylinderGeometry(0.28, 0.42, 6, 6); trunk.translate(0, 3, 0);
+  const crown = THREE.BufferGeometryUtils.mergeBufferGeometries([[0, 9, 0, 4.2], [2.2, 7.6, 1, 3.2], [-2, 8, -1.2, 3.4], [0.6, 11.2, -0.4, 3]].map(([x, y, z, r]) => { const g = THREE.BufferGeometryUtils.mergeVertices(new THREE.IcosahedronGeometry(r, 2)); g.deleteAttribute("uv"); jit(g, 0.22); g.translate(x, y, z); return g; }));
+  const pine = THREE.BufferGeometryUtils.mergeBufferGeometries([[0, 7, 4.2, 6], [0, 10.5, 3.3, 5.5], [0, 13.8, 2.3, 4.6]].map(([x, y, r, h]) => { const g = new THREE.ConeGeometry(r, h, 8); g.translate(x, y, 0); return g; }));
+  const A = PALMS.filter((_, k) => k % 3), B = PALMS.filter((_, k) => !(k % 3));
+  const ti = new THREE.InstancedMesh(trunk, lam(0x5a4430), PALMS.length), ci = new THREE.InstancedMesh(crown, new THREE.MeshLambertMaterial({ color: 0xffffff }), A.length), pi = new THREE.InstancedMesh(pine, new THREE.MeshLambertMaterial({ color: 0x2c4f2a }), B.length);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0), col = new THREE.Color();
+  PALMS.forEach(([x, z, s2, a], k) => { q.setFromAxisAngle(Y, a); m4.compose(ps.set(x, 0, z), q, sc.set(s2 * 1.1, s2 * 1.15, s2 * 1.1)); ti.setMatrixAt(k, m4); });
+  A.forEach(([x, z, s2, a], k) => { q.setFromAxisAngle(Y, a); m4.compose(ps.set(x, 0, z), q, sc.set(s2 * 1.1, s2 * 1.15, s2 * 1.1)); ci.setMatrixAt(k, m4); ci.setColorAt(k, col.setHSL(0.24 + Math.random() * 0.06, 0.45, 0.24 + Math.random() * 0.1)); });
+  B.forEach(([x, z, s2, a], k) => { q.setFromAxisAngle(Y, a); m4.compose(ps.set(x, 0, z), q, sc.set(s2 * 1.1, s2 * 1.2, s2 * 1.1)); pi.setMatrixAt(k, m4); });
+  ti.castShadow = ci.castShadow = pi.castShadow = true; scene.add(ti, ci, pi); }
 // palms: a gently bent trunk with ring scars, and a crown of drooping fronds
-{ const trunkTex = canvasTex(32, 128, (g, w, h) => { g.fillStyle = "#8a6a48"; g.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 6) { g.fillStyle = "rgba(60,42,26,0.55)"; g.fillRect(0, y, w, 2); g.fillStyle = "rgba(190,160,120,0.3)"; g.fillRect(0, y + 2, w, 1); } }, true);
+else { const trunkTex = canvasTex(32, 128, (g, w, h) => { g.fillStyle = "#8a6a48"; g.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 6) { g.fillStyle = "rgba(60,42,26,0.55)"; g.fillRect(0, y, w, 2); g.fillStyle = "rgba(190,160,120,0.3)"; g.fillRect(0, y + 2, w, 1); } }, true);
   const tg = new THREE.CylinderGeometry(0.2, 0.34, 10, 7, 6); const tp = tg.attributes.position; for (let k = 0; k < tp.count; k++) { const y = tp.getY(k) + 5; tp.setX(k, tp.getX(k) + 0.012 * y * y); } tg.translate(0, 5, 0); tg.computeVertexNormals();
   const leaf = canvasTex(64, 256, (g, w, h) => { g.clearRect(0, 0, w, h); g.strokeStyle = "#3f6f2a"; g.lineWidth = 3; g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.stroke();
     for (let y = 6; y < h - 4; y += 6) { const l = (1 - y / h) * 0.55 + 0.25; for (const sx of [-1, 1]) { g.strokeStyle = y % 12 ? "#4f8a33" : "#5f9a3d"; g.lineWidth = 3; g.beginPath(); g.moveTo(w / 2, y); g.lineTo(w / 2 + sx * w / 2 * l, y + 14); g.stroke(); } } });
@@ -857,13 +895,14 @@ function clearCars() { for (const c of CARS) scene.remove(c.mesh); CARS.length =
 let QUALI = null, inQuali = false;
 const IDEAL = Array.from(VP).reduce((a, v) => a + DS / v, 0);   // a perfect lap on the racing line
 function setupRace(opts = {}) {
+  raceId++;
   clearCars(); finishOrder = []; raceT = 0; inQuali = !!opts.quali; msgT = 0; $("msg").style.opacity = 0; LAPS = SET.mode === "tt" || inQuali ? 99 : +SET.laps;
   BEST_SEC = [Infinity, Infinity, Infinity]; FL = { car: null, t: Infinity }; for (const q of [0, 1, 2]) { const el = $("sc" + q); el.className = ""; el.lastChild.textContent = "—"; }
   const skill = +SET.skill, pt = +SET.team;
   if (ghostMesh) { scene.remove(ghostMesh); ghostMesh = null; }
   if (SET.mode === "tt" || inQuali) {   // alone on the track: an out lap from behind the grid, then flying laps
     player = newCar(pt, TEAMS[pt].drivers[0], true, 1); place(player, gridSlot(19).s - 40, 0);
-    if (!inQuali) { ghost = store.get("ghost", null); ghostRec = [];
+    if (!inQuali) { ghost = store.get(TRK_KEY("ghost"), null); ghostRec = [];
       if (ghost) { ghostMesh = buildCar(TEAMS[pt], 0); ghostMesh.traverse((o) => { if (o.material) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.35; o.material.depthWrite = false; } }); scene.add(ghostMesh); } }
   } else {
     let order;
@@ -999,7 +1038,9 @@ function stepAI(car, dt, lead) {
   const look = 8 + car.v * 0.45, tgt = pointAt(car.s + look, clamp(lineAt(car.s + look) * lw + car.lane, -HW + 1.3, HW - 1.3), V1);
   const dx = tgt.x - car.x, dz = tgt.z - car.z, fx = -Math.sin(car.yaw), fz = -Math.cos(car.yaw), ang = Math.atan2(dx * -fz + dz * fx, dx * fx + dz * fz);
   const steer = clamp(ang * 1.2 / Math.max(0.05, steerMax(car.v)), -1, 1);
-  stepCar(car, dt, { steer, thr: clamp((want - car.v) * 0.6, 0, 1), brk: clamp((car.v - want - 0.5) * 0.35, 0, 1) }, false);
+  // the tyres' grip is shared between turning and accelerating: out of a bend only press the throttle as hard as the turn leaves room for
+  const v = car.v, k = Math.abs(LK[Math.floor(((car.s % TL) + TL) % TL / DS) % N]), lat = Math.min(1, v * v * k / (PH.mu * tyreGrip(car) * (PH.g + DFc * v * v))), room = Math.sqrt(Math.max(0.12, 1 - lat * lat));
+  stepCar(car, dt, { steer, thr: Math.min(clamp((want - v) * 0.6, 0, 1), room * 1.25), brk: clamp((v - want - 0.5) * 0.35, 0, 1) }, false);
 }
 const V1 = new THREE.Vector3(), V2 = new THREE.Vector3();
 const wrapA = (a) => { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; };
@@ -1021,7 +1062,8 @@ function hitPart(car, dx, dz, vn) {   // (dx, dz): unit direction from the car's
       if (SET.mode !== "tt" && !inQuali && (k === "fl" || k === "fr" || k === "rw")) RADIO.say(`We see ${k === "rw" ? "rear" : "front"} wing damage. Box for a new ${k === "rw" ? "wing" : "nose"}?`);
       else if (SET.mode !== "tt" && !inQuali) RADIO.say("Suspension damage. Careful over the kerbs."); } }
 }
-function onPlayerDNF() { msg("DNF", "accident damage: your race is over", 3.5); phase = "cooldown"; setTimeout(showResults, 3600); }
+let raceId = 0; const laterInRace = (fn, ms) => { const id = raceId; setTimeout(() => { if (id === raceId) fn(); }, ms); };   // timers die with the race they belong to
+function onPlayerDNF() { msg("DNF", "accident damage: your race is over", 3.5); phase = "cooldown"; laterInRace(showResults, 3600); }
 function collide(dt) {
   for (const c of CARS) {   // barriers
     if (c.out || c.pit) continue;
@@ -1353,8 +1395,8 @@ function recSec(car, k, t) {
 const wrapS = (ds) => { if (ds > TL / 2) ds -= TL; if (ds < -TL / 2) ds += TL; return ds; };
 function onPlayerLap(lt) {
   if (inQuali) { msg(fmt(lt), "Qualifying lap", 2.4, true); const t = lt; setTimeout(() => finishQuali(t), 2500); return; }
-  const pb = store.get("best", 0), isPb = !pb || lt < pb; if (isPb) store.set("best", lt);
-  if (SET.mode === "tt") { if (ghostRec.length && (!ghost || isPb)) { store.set("ghost", { t: lt, p: ghostRec }); } ghostRec = []; ghost = store.get("ghost", null);
+  const pb = store.get(TRK_KEY("best"), 0), isPb = !pb || lt < pb; if (isPb) store.set(TRK_KEY("best"), lt);
+  if (SET.mode === "tt") { if (ghostRec.length && (!ghost || isPb)) { store.set(TRK_KEY("ghost"), { t: lt, p: ghostRec }); } ghostRec = []; ghost = store.get(TRK_KEY("ghost"), null);
     if (ghost && !ghostMesh) { ghostMesh = buildCar(player.team, 0); ghostMesh.traverse((o) => { if (o.material) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.35; o.material.depthWrite = false; } }); scene.add(ghostMesh); } }
   msg(fmt(lt), isPb ? "NEW PERSONAL BEST" : `Lap ${player.lap}`, 2.6, isPb);
   if (SET.mode !== "tt" && player.lap === LAPS - 1) { setTimeout(() => msg("FINAL LAP", "", 2), 2700); RADIO.say("Final lap. Bring it home."); }
@@ -1362,7 +1404,7 @@ function onPlayerLap(lt) {
     const bits = [`P${me + 1}.`]; if (a && ga !== null && ga > 0) bits.push(`Gap to ${a.code} ahead ${ga.toFixed(1)}.`); if (b && gb !== null && gb > 0) bits.push(`${b.code} behind, ${gb.toFixed(1)}.`);
     if (Math.random() < 0.7) RADIO.say(bits.join(" ")); }
 }
-function onPlayerFinish() { const pos = finishOrder.indexOf(player) + 1; player.boxReq = null; RADIO.say(pos === 1 ? "P1! Get in there! What a drive, mate!" : pos <= 3 ? `P${pos}, that's a podium! Great job.` : pos <= 10 ? `P${pos}. Points today, good job.` : `P${pos}. Tough one. We'll go again.`); msg(pos === 1 ? "WINNER!" : `P${pos}`, "Chequered flag", 3.5, pos === 1); setTimeout(showResults, 3600); phase = "cooldown"; }
+function onPlayerFinish() { const pos = finishOrder.indexOf(player) + 1; player.boxReq = null; RADIO.say(pos === 1 ? "P1! Get in there! What a drive, mate!" : pos <= 3 ? `P${pos}, that's a podium! Great job.` : pos <= 10 ? `P${pos}. Points today, good job.` : `P${pos}. Tough one. We'll go again.`); msg(pos === 1 ? "WINNER!" : `P${pos}`, "Chequered flag", 3.5, pos === 1); laterInRace(showResults, 3600); phase = "cooldown"; }
 function order() { return CARS.slice().sort((a, b) => { if (a.dnf !== b.dnf) return a.dnf ? 1 : -1; if (a.finished && b.finished) return a.finishT - b.finishT; if (a.finished) return -1; if (b.finished) return 1; return b.prog - a.prog; }); }
 function gapTo(leader, car) { const k = car.lastCp; if (k < 0 || !leader.cp.has(k)) return null; return car.cp.get(k) - leader.cp.get(k); }
 
@@ -1419,7 +1461,7 @@ function updateHud(dt) {
   const surf = surfaceAt(c); $("hOff").textContent = c.pit ? "PIT LANE" : surf === "road" ? "TRACK" : surf === "paint" ? "RUN-OFF" : surf.toUpperCase(); $("hOff").className = "tag" + (surf === "grass" || surf === "gravel" ? " warn" : "");
   const lapNo = clamp(c.lap + 1, 1, LAPS); $("hLap").textContent = SET.mode === "tt" ? `${Math.max(1, c.lap + 1)}` : `${lapNo}/${LAPS}`;
   const curLap = phase === "race" || phase === "cooldown" ? raceT - c.lapStart : 0; $("hTime").textContent = c.lap < 0 ? (SET.mode === "tt" ? "OUT LAP" : fmt(raceT)) : fmt(curLap);
-  $("hBest").textContent = fmt(c.bestLap || store.get("best", 0)); $("hDelta").textContent = `LAST ${c.lastLap ? fmt(c.lastLap) : "—"}`;
+  $("hBest").textContent = fmt(c.bestLap || store.get(TRK_KEY("best"), 0)); $("hDelta").textContent = `LAST ${c.lastLap ? fmt(c.lastLap) : "—"}`;
   if (msgT > 0) { msgT -= dt; if (msgT <= 0) $("msg").style.opacity = 0; }
   hudT -= dt; if (hudT > 0) return; hudT = 0.25;
   const ord = order(), me = ord.indexOf(c); $("hPos").textContent = SET.mode === "tt" ? "—" : `P${me + 1}`;
@@ -1532,7 +1574,7 @@ function showResults() {
   if (!player || inQuali) return;
   phase = "results"; $("hud").hidden = true; $("touch").hidden = true; $("topBtns").hidden = true;
   const ord = order(), pos = ord.indexOf(player) + 1, lead = ord[0];
-  $("rTitle").textContent = pos === 1 ? "VICTORY" : `P${pos}`; $("rSub").textContent = `${LAPS} laps of Aralia Marina · your best lap ${fmt(player.bestLap)}`;
+  $("rTitle").textContent = pos === 1 ? "VICTORY" : `P${pos}`; $("rSub").textContent = `${LAPS} laps of ${TRACK.name} · your best lap ${fmt(player.bestLap)}`;
   const tb = $("rTable"); tb.replaceChildren(); tb.insertAdjacentHTML("beforeend", "<tr><th>POS</th><th>DRIVER</th><th>TEAM</th><th>TIME</th><th>BEST LAP</th><th>PITS</th></tr>");
   ord.forEach((o, i) => { const tr = document.createElement("tr"); if (o === player) tr.className = "me";
     const time = o.dnf ? "DNF" : i === 0 ? fmt(o.finishT || raceT) : o.finished ? `+${(o.finishT - lead.finishT).toFixed(3)}` : (() => { const g = gapTo(lead, o); return g === null ? "—" : `+${g.toFixed(1)}`; })();
@@ -1593,6 +1635,11 @@ const GAR = (() => {
   return { sc, cam, show, refresh, get idx() { return idx; }, set idx(v) { idx = v; }, step(dt) { idle += dt; if (drag === null) ang += dt * (idle > 2 ? 0.35 : 0.12); table.rotation.y = ang; } };
 })();
 window.__APEX = { simulate, lineAt, vAt, pointAt, DRS, get raceT() { return raceT; }, CARS, get player() { return player; }, get phase() { return phase; }, set phase(v) { phase = v; }, TL, VP, setupRace, SET, order, stepPlayer, locate, PIT, KW, RUN_R, N, DS, toggleBox, RADIO, TYRES, setTyre, get camMode() { return camMode; }, set camMode(v) { camMode = v; }, get paused() { return paused; }, set paused(v) { paused = v; }, place, simStep };
+// the circuit: the whole world is built for one layout, so switching reloads the page and comes back to this screen
+$("tEyebrow").textContent = `${TRACK.name.toUpperCase()} · ${TRACK.km} KM · 20 CARS`; $("tSub").textContent = TRACK.sub;
+$("sTrack").querySelectorAll("button").forEach((b) => { b.setAttribute("aria-pressed", String(b.dataset.v === TRACK.id));
+  b.addEventListener("click", () => { if (b.dataset.v === TRACK.id) return; SET.track = b.dataset.v; store.set("set", SET); try { sessionStorage.setItem("apex-resume", "setup"); } catch {} $("sTrack").style.opacity = 0.5; location.reload(); }); });
+try { if (sessionStorage.getItem("apex-resume") === "setup") { sessionStorage.removeItem("apex-resume"); GAR.idx = +SET.team || 0; showStep("setup"); } } catch {}
 requestAnimationFrame(frame);
 })();
 </script>
