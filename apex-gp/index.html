@@ -27,6 +27,11 @@ canvas#view { position: fixed; inset: 0; width: 100%; height: 100%; display: blo
 button { font-family: var(--body); color: inherit; }
 button:focus-visible { outline: 1px solid var(--ice); outline-offset: 3px; }
 .hud { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
+.boot { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: var(--ink); text-align: center; }
+.boot[hidden] { display: none; }
+.boot b { display: block; font-family: var(--display); font-weight: 400; font-size: clamp(16px, 3vw, 24px); letter-spacing: 0.14em; margin-bottom: 18px; }
+.boot i { display: block; width: 180px; height: 2px; margin: 0 auto; background: linear-gradient(90deg, transparent, var(--ice), transparent); background-size: 50% 100%; background-repeat: no-repeat; animation: bootbar 1.1s linear infinite; }
+@keyframes bootbar { from { background-position: -100% 0; } to { background-position: 200% 0; } }
 .hud[hidden] { display: none; }
 .panel { background: var(--glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); clip-path: var(--cut); }
 /* timing tower */
@@ -193,6 +198,7 @@ button:focus-visible { outline: 1px solid var(--ice); outline-offset: 3px; }
 <body>
 <canvas id="view"></canvas>
 
+<div class="boot" id="boot"><div><p class="eyebrow">APEX GRAND PRIX</p><b id="bootTxt">LOADING</b><i></i></div></div>
 <div class="hud" id="hud" hidden>
   <div class="tower panel" id="tower"></div>
   <div class="lapbox">
@@ -681,7 +687,7 @@ if (!PARK) { const poles = [], heads = [], v = new THREE.Vector3();
 // palms along the outside of the circuit, and a few groves
 { for (let i = 0; i < N; i += 7) for (const side of [-1, 1]) { if (Math.random() < 0.35) continue; const off = side > 0 ? RUN_R[i] + rnd(9, 22) : -(RUN_L[i] + rnd(9, 22)), v = pointAt(i * DS, off, new THREE.Vector3());
     if (nearWater(v.x, v.z)) continue; if (!nearTrack(v.x, v.z, 24)) addPalm(v.x, v.z); }
-  for (let n = 0; n < (PARK ? 2600 : 260); n++) { const x = rnd(CEN.x0 - 600, CEN.x1 + 600), z = rnd(CEN.z0 - 600, CEN.z1 + 600); if (nearWater(x, z)) continue; if (!nearTrack(x, z, PARK ? 46 : 70)) addPalm(x, z); } }
+  for (let n = 0; n < (PARK ? 1500 : 260); n++) { const x = rnd(CEN.x0 - 600, CEN.x1 + 600), z = rnd(CEN.z0 - 600, CEN.z1 + 600); if (nearWater(x, z)) continue; if (!nearTrack(x, z, PARK ? 46 : 70)) addPalm(x, z); } }
 // on the horizon: low dunes and a city skyline (desert), or wooded hills (park)
 if (PARK) { const hm = new THREE.MeshLambertMaterial({ color: 0x4d6f3a }), fm = new THREE.MeshLambertMaterial({ color: 0x3c5c30 });
   for (let k = 0; k < 34; k++) { const a = k / 34 * Math.PI * 2, r = 2700 + Math.random() * 800, m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), k % 3 ? hm : fm); m.scale.set(rnd(400, 900), rnd(60, 220), rnd(300, 600)); m.position.set(CEN.x + Math.cos(a) * r, -5, CEN.z + Math.sin(a) * r); m.rotation.y = a; scene.add(m); }
@@ -785,7 +791,7 @@ else { const dm = new THREE.MeshLambertMaterial({ color: 0xcfae84 });
 // park trees: broadleaf (a trunk and a lumpy crown) and conifers, two instanced meshes
 if (PARK) { const jit = (g, a) => { const p = g.attributes.position; for (let k = 0; k < p.count; k++) p.setXYZ(k, p.getX(k) * (1 + (Math.random() - 0.5) * a), p.getY(k) * (1 + (Math.random() - 0.5) * a), p.getZ(k) * (1 + (Math.random() - 0.5) * a)); g.computeVertexNormals(); return g; };
   const trunk = new THREE.CylinderGeometry(0.28, 0.42, 6, 6); trunk.translate(0, 3, 0);
-  const crown = THREE.BufferGeometryUtils.mergeBufferGeometries([[0, 9, 0, 4.2], [2.2, 7.6, 1, 3.2], [-2, 8, -1.2, 3.4], [0.6, 11.2, -0.4, 3]].map(([x, y, z, r]) => { const g = THREE.BufferGeometryUtils.mergeVertices(new THREE.IcosahedronGeometry(r, 2)); g.deleteAttribute("uv"); jit(g, 0.22); g.translate(x, y, z); return g; }));
+  const crown = THREE.BufferGeometryUtils.mergeBufferGeometries([[0, 9, 0, 4.2], [2.2, 7.6, 1, 3.2], [-2, 8, -1.2, 3.4], [0.6, 11.2, -0.4, 3]].map(([x, y, z, r]) => { const g = THREE.BufferGeometryUtils.mergeVertices(new THREE.IcosahedronGeometry(r, 1)); g.deleteAttribute("uv"); jit(g, 0.22); g.translate(x, y, z); return g; }));
   const pine = THREE.BufferGeometryUtils.mergeBufferGeometries([[0, 7, 4.2, 6], [0, 10.5, 3.3, 5.5], [0, 13.8, 2.3, 4.6]].map(([x, y, r, h]) => { const g = new THREE.ConeGeometry(r, h, 8); g.translate(x, y, 0); return g; }));
   const A = PALMS.filter((_, k) => k % 3), B = PALMS.filter((_, k) => !(k % 3));
   const ti = new THREE.InstancedMesh(trunk, lam(0x5a4430), PALMS.length), ci = new THREE.InstancedMesh(crown, new THREE.MeshLambertMaterial({ color: 0xffffff }), A.length), pi = new THREE.InstancedMesh(pine, new THREE.MeshLambertMaterial({ color: 0x2c4f2a }), B.length);
@@ -1657,8 +1663,12 @@ window.__APEX = { simulate, lineAt, vAt, pointAt, DRS, get raceT() { return race
 // the circuit: the whole world is built for one layout, so switching reloads the page and comes back to this screen
 $("tEyebrow").textContent = `${TRACK.name.toUpperCase()} · ${TRACK.km} KM · 20 CARS`; $("tSub").textContent = TRACK.sub;
 $("sTrack").querySelectorAll("button").forEach((b) => { b.setAttribute("aria-pressed", String(b.dataset.v === TRACK.id));
-  b.addEventListener("click", () => { if (b.dataset.v === TRACK.id) return; SET.track = b.dataset.v; store.set("set", SET); try { sessionStorage.setItem("apex-resume", "setup"); } catch {} $("sTrack").style.opacity = 0.5; location.reload(); }); });
-try { if (sessionStorage.getItem("apex-resume") === "setup") { sessionStorage.removeItem("apex-resume"); GAR.idx = +SET.team || 0; showStep("setup"); } } catch {}
+  b.addEventListener("click", () => { if (b.dataset.v === TRACK.id) return; SET.track = b.dataset.v; store.set("set", SET); store.set("resume", Date.now());
+    $("bootTxt").textContent = `LOADING ${TRACKS[SET.track].name.toUpperCase()}`; $("boot").hidden = false;
+    requestAnimationFrame(() => requestAnimationFrame(() => location.reload())); }); });   // let the loading screen show before the page goes
+{ const r = store.get("resume", 0); if (r) { store.set("resume", 0); if (Date.now() - r < 60000) { GAR.idx = +SET.team || 0; showStep("setup"); } } }
+$("bootTxt").textContent = `LOADING ${TRACK.name.toUpperCase()}`;
+let bootFrames = 0; const bootDone = () => { if (++bootFrames < 3) { requestAnimationFrame(bootDone); return; } $("boot").hidden = true; }; requestAnimationFrame(bootDone);
 requestAnimationFrame(frame);
 })();
 </script>
