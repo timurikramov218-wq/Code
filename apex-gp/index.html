@@ -263,7 +263,7 @@ button:focus-visible { outline: 1px solid var(--ice); outline-offset: 3px; }
     <p class="eyebrow" id="sTeam">RACE WEEKEND</p>
     <h1 class="logo" style="font-size:clamp(26px,5vw,40px)">RACE<br><span>SETUP</span></h1>
     <div class="grid2">
-      <div class="opt"><h3>CIRCUIT</h3><div class="seg" id="sTrack"><button data-v="yas">Aralia Marina</button><button data-v="monza">Parco Brianza</button></div></div>
+      <div class="opt"><h3>CIRCUIT</h3><div class="seg" id="sTrack"><button data-v="yas">Aralia Marina</button><button data-v="monza">Parco Brianza</button><button data-v="silverstone">Ashford Fields</button></div></div>
       <div class="opt"><h3>MODE</h3><div class="seg" data-k="mode"><button data-v="race">Race weekend</button><button data-v="tt">Time trial</button></div></div>
       <div class="opt race-only"><h3>QUALIFYING</h3><div class="seg" data-k="quali"><button data-v="on">One flying lap</button><button data-v="off">Skip</button></div></div>
       <div class="opt race-only noquali"><h3>START FROM</h3><div class="seg" data-k="grid"><button data-v="back">Back</button><button data-v="mid">Middle</button><button data-v="pole">Pole</button></div></div>
@@ -322,6 +322,8 @@ const TRACKS = {
     sub: "Sunset over the desert, a kilometre-long back straight between two hairpins, then the marina and the hotel." },
   monza: { id: "monza", name: "Parco Brianza", km: "5.77", env: "park", smooth: [2, 3], cp: [[0,0],[37,-426],[53,-605],[55,-613],[60,-617],[66,-618],[74,-617],[82,-616],[89,-617],[93,-620],[97,-626],[98,-630],[98,-635],[72,-733],[68,-760],[67,-784],[69,-810],[78,-937],[82,-958],[87,-977],[94,-998],[103,-1020],[113,-1042],[129,-1067],[145,-1087],[167,-1110],[190,-1130],[217,-1149],[245,-1165],[277,-1181],[308,-1192],[343,-1201],[383,-1208],[424,-1212],[582,-1225],[775,-1237],[787,-1238],[793,-1241],[798,-1246],[804,-1269],[807,-1275],[812,-1279],[819,-1282],[846,-1287],[874,-1293],[915,-1306],[1096,-1366],[1112,-1370],[1126,-1370],[1141,-1367],[1151,-1363],[1161,-1357],[1170,-1351],[1181,-1339],[1188,-1329],[1192,-1317],[1195,-1303],[1202,-1218],[1217,-1072],[1217,-1059],[1214,-1050],[1211,-1043],[1205,-1038],[1194,-1031],[1075,-967],[979,-913],[919,-881],[890,-864],[857,-841],[834,-823],[813,-805],[708,-716],[634,-649],[476,-511],[381,-428],[368,-415],[363,-407],[362,-398],[362,-388],[366,-367],[366,-355],[366,-337],[365,-328],[361,-316],[356,-302],[347,-288],[334,-273],[320,-261],[308,-252],[302,-246],[298,-236],[294,-219],[284,-140],[274,-56],[196,696],[192,723],[189,736],[183,749],[174,759],[164,769],[149,778],[134,784],[116,787],[101,786],[86,783],[70,776],[54,769],[42,761],[27,750],[11,733],[0,717],[-10,700],[-18,681],[-26,659],[-32,636],[-34,617],[-38,588],[-38,559],[-39,531],[-40,476],[-41,428],[-40,376],[-34,308],[-11,92]],
     sub: "The temple of speed: flat out through the royal park, three chicanes, the Lesmos, and the long Parabolica onto the straight." },
+  silverstone: { id: "silverstone", name: "Ashford Fields", km: "5.89", env: "park", smooth: [2, 3], cp: [[0,0],[187,-16],[220,-14],[245,-6],[262,5],[282,28],[294,54],[305,87],[319,143],[333,197],[342,258],[345,296],[350,388],[352,467],[356,498],[367,526],[390,567],[399,589],[399,607],[394,627],[363,710],[361,743],[366,767],[377,788],[408,831],[415,851],[416,874],[411,895],[392,919],[368,936],[334,955],[309,971],[290,988],[269,1023],[228,1100],[1,1516],[-74,1631],[-95,1659],[-112,1674],[-132,1684],[-152,1689],[-171,1688],[-192,1683],[-210,1675],[-226,1663],[-239,1643],[-243,1635],[-264,1591],[-286,1552],[-311,1520],[-327,1500],[-346,1480],[-379,1446],[-452,1359],[-459,1355],[-469,1354],[-479,1358],[-510,1386],[-521,1390],[-531,1388],[-540,1385],[-553,1373],[-566,1359],[-583,1337],[-595,1314],[-603,1290],[-611,1263],[-611,1252],[-609,1241],[-603,1231],[-589,1208],[-365,918],[-315,854],[-305,842],[-286,830],[-264,825],[-247,824],[-222,826],[-153,836],[-130,839],[-107,840],[-80,836],[-56,830],[-34,818],[109,706],[118,699],[129,694],[141,693],[150,696],[158,703],[163,711],[187,796],[194,808],[204,815],[216,816],[229,810],[237,800],[243,789],[253,761],[261,738],[267,715],[270,692],[272,669],[271,644],[266,633],[253,619],[-209,200],[-221,192],[-239,183],[-260,180],[-283,183],[-305,194],[-313,204],[-319,218],[-328,294],[-334,310],[-345,323],[-362,331],[-381,334],[-401,328],[-416,318],[-425,307],[-432,293],[-433,279],[-430,263],[-419,238],[-359,120],[-340,98],[-321,79],[-295,56],[-273,41],[-245,30],[-221,22],[-171,16]],
+    sub: "An old airfield in the English countryside: the flat-out sweeps of the fast esses, two long straights and a tight final complex." },
 };
 // ================= TEAMS (all fictional) =================
 const TEAMS = [   // all teams and drivers are fictional
@@ -482,6 +484,7 @@ let PIT_RS = 22;   // the barrier's offset beside the garages (set once the run-
 const pitRel = (s) => { let d = s - PIT.s0; d -= Math.round(d / TL) * TL; return d + PIT.s0; };   // s brought into the pit's range
 const inPitZone = (k) => { const s = pitRel(k * DS); return s > PIT.entry - 5 && s < PIT.exit + 5; };
 const pitGap = (k) => { const s = pitRel(k * DS); return inPitZone(k) && !(s > PIT.boxA + 10 && s < PIT.boxB - 10); };   // open barrier at the pit entry and exit
+const uInS = (ps) => sm01((ps - PIT.entry) / (PIT.boxA + 12 - PIT.entry)), uOutS = (ps) => sm01((ps - PIT.boxB + 12) / (PIT.exit - PIT.boxB + 12));   // how far along the entry and exit ramps
 const sm01 = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 PIT_RS = RUN_R[Math.round(((PIT.s0 + TL) % TL) / DS) % N];
 const PIT_FAST = () => PIT_RS + 4, PIT_BOXOFF = () => PIT_RS + 11;   // the fast lane and the working lane in front of the garages
@@ -813,7 +816,7 @@ else { const dm = new THREE.MeshLambertMaterial({ color: 0xcfae84 });
     const lane = ribbon((k) => RUN_R[k] + 0.6, (k) => RUN_R[k] + 14.8, 0.02, roadMat, 1, 1 / 32, (k) => { let d = k * DS - s0; d -= Math.round(d / TL) * TL; return Math.abs(d) < L / 2 && Math.abs(KW[k]) < 0.002; }); lane.receiveShadow = true;
     ribbon((k) => RUN_R[k] + 7.5, (k) => RUN_R[k] + 7.75, 0.05, new THREE.MeshBasicMaterial({ color: 0xf2f2f2 }), 1, 1, (k) => { let d = k * DS - s0; d -= Math.round(d / TL) * TL; return Math.abs(d) < L / 2 && Math.floor((k * DS) / 4) % 2 === 0; });
     const RS = PIT_RS, uIn = (k) => sm01((pitRel(k * DS) - PIT.entry) / (PIT.boxA + 12 - PIT.entry)), uOut = (k) => sm01((pitRel(k * DS) - PIT.boxB + 12) / (PIT.exit - PIT.boxB + 12));
-    ribbon((k) => RUN_R[k] - 0.8, (k) => lerp(RUN_R[k] + 2, RS + 14.8, uIn(k)), 0.03, roadMat, 1, 1 / 32, (k) => { const q = pitRel(k * DS); return q > PIT.entry - 6 && q < PIT.boxA + 14; }).receiveShadow = true;
+    ribbon((k) => HW + 0.3, (k) => lerp(RUN_R[k] + 2, RS + 14.8, uIn(k)), 0.035, roadMat, 1, 1 / 32, (k) => { const q = pitRel(k * DS); return q > PIT.entry - 6 && q < PIT.boxA + 14; }).receiveShadow = true;
     ribbon((k) => lerp(RS + 0.6, HW + 0.4, uOut(k)), (k) => lerp(RS + 14.8, HW + 7, uOut(k)), 0.03, roadMat, 1, 1 / 32, (k) => { const q = pitRel(k * DS); return q > PIT.boxB - 14 && q < PIT.exit + 6; }).receiveShadow = true;
     // each car's box, painted in front of its garage: a white frame, the team colour where the nose stops, the number
     { const v2 = new THREE.Vector3(); let n2 = 0;
@@ -1047,7 +1050,7 @@ function setupRace(opts = {}) {
     if (c.isPlayer) { setTyre(c, TYRES[SET.tyre] ? SET.tyre : "M"); c.plan = c.tyre === "H" ? "M" : "H"; continue; }
     const r = Math.random(), t0 = r < 0.25 ? "S" : r < 0.85 ? "M" : "H"; setTyre(c, t0);
     const life = tyreLife(t0); if (life < LAPS * 0.98) { c.stopLap = clamp(Math.round(life * (0.78 + Math.random() * 0.22)), 1, LAPS - 1); c.nextTyre = softestFor(LAPS - c.stopLap); } }
-  RADIO.reset(); buildPitMenu(); attachCockpit(player);
+  RADIO.reset(); buildPitMenu(); attachCockpit(player); buildPitGuide(race ? player : null); if (player) { player.pitP = null; player.limiter = false; }
   $("bBox").hidden = !race;
   phase = "lights"; lights = { t: 0, n: 0, out: 2.6 + Math.random() * 1.2 }; drawLights();
   camSnap = true; for (const id of ["results", "menu", "pause", "setup", "qres", "garage"]) $(id).hidden = true; $("hud").hidden = false; $("topBtns").hidden = false; $("bSkip").hidden = !inQuali; syncTouch(); menuStep = "";
@@ -1101,11 +1104,12 @@ function syncTouch() { const coarse = matchMedia("(pointer: coarse)").matches; $
 function surfaceAt(car) {
   const ad = Math.abs(car.d), side = car.d >= 0 ? 1 : -1, k = car.idx;
   if (ad <= HW) return "road";
+  if (side > 0 && inPitZone(k) && (car.d > RUN_R[k] - 1.5 || pitRel(car.s) < PIT.boxA + 12 || pitRel(car.s) > PIT.boxB - 12)) return "pit";   // the pit lane and its tarmac ramps
   if (ad <= HW + 1.6 && kerbAt(k, side)) return "kerb";
   if ((side > 0 ? GRAV_R[k] : GRAV_L[k]) && ad > HW + 1.6) return ad <= HW + 1.6 + PAINT ? "paint" : "gravel";
   return "grass";
 }
-const GRIP = { road: 1, kerb: 0.9, paint: 0.82, grass: 0.5, gravel: 0.42 }, ROLL = { road: 0.15, kerb: 0.4, paint: 0.4, grass: 1.4, gravel: 3.2 };
+const GRIP = { road: 1, pit: 1, kerb: 0.9, paint: 0.82, grass: 0.5, gravel: 0.42 }, ROLL = { road: 0.15, pit: 0.15, kerb: 0.4, paint: 0.4, grass: 1.4, gravel: 3.2 };
 const steerMax = (v) => lerp(0.33, 0.05, clamp(v / 70, 0, 1));   // less lock the faster you go
 function stepPlayer(car, dt, inp) { stepCar(car, dt, inp, SET.assist === "on"); }
 function stepCar(car, dt, inp, assist) {
@@ -1194,11 +1198,17 @@ function hitPart(car, dx, dz, vn) {   // (dx, dz): unit direction from the car's
 let raceId = 0; const laterInRace = (fn, ms) => { const id = raceId; setTimeout(() => { if (id === raceId) fn(); }, ms); };   // timers die with the race they belong to
 function onPlayerDNF() { msg("DNF", "accident damage: your race is over", 3.5); phase = "cooldown"; laterInRace(showResults, 3600); }
 function collide(dt) {
-  for (const c of CARS) {   // barriers
+  for (const c of CARS) {   // barriers (by the pit lane: its own outer edge, and the pit wall between the lane and the track)
     if (c.out || c.pit) continue;
-    const wl = c.d >= 0 ? RUN_R[c.idx] - 1.2 : -(RUN_L[c.idx] - 1.2);
-    if (Math.abs(c.d) > Math.abs(wl)) {
-      const sg = Math.sign(c.d) || 1, r = R[c.idx], nx = r.x * sg, nz = r.z * sg, push = c.d - wl; c.x -= r.x * push; c.z -= r.z * push; c.d = wl;
+    let wl = c.d >= 0 ? RUN_R[c.idx] - 1.2 : -(RUN_L[c.idx] - 1.2), wIn = null;
+    if (c.d >= 0 && inPitZone(c.idx)) { const ps = pitRel(c.s), k = c.idx;
+      if (ps < PIT.boxA + 10) wl = Math.max(wl, lerp(RUN_R[k] + 2, PIT_RS + 14.8, uInS(ps)) - 1.0);
+      else if (ps < PIT.boxB - 10) { if (c.d > RUN_R[k]) { wl = PIT_RS + 13.6; wIn = RUN_R[k] + 1.6; } }
+      else wl = Math.max(wl, lerp(PIT_RS + 14.8, HW + 7, uOutS(ps)) - 1.2); }
+    let hit = 0;
+    if (Math.abs(c.d) > Math.abs(wl)) hit = 1; else if (wIn !== null && c.d < wIn) { hit = -1; wl = wIn; }
+    if (hit) {
+      const sg = (Math.sign(c.d) || 1) * hit, r = R[c.idx], nx = r.x * sg, nz = r.z * sg, push = c.d - wl; c.x -= r.x * push; c.z -= r.z * push; c.d = wl;
       let vx = -Math.sin(c.psi) * c.v, vz = -Math.cos(c.psi) * c.v; const vn = vx * nx + vz * nz;
       if (vn > 0) { vx -= nx * vn * 1.22; vz -= nz * vn * 1.22; const fr = 1 - Math.min(0.45, vn * 0.014); vx *= fr; vz *= fr;   // bounce back 22% and scrub along the wall
         c.v = Math.hypot(vx, vz); c.psi = Math.atan2(-vx, -vz);
@@ -1208,23 +1218,29 @@ function collide(dt) {
         if (c.isPlayer && vn > 3) { shake = Math.max(shake, Math.min(1, vn / 25)); thud(vn * 3); } }
     }
   }
-  // car against car: pushed apart along the contact; the speed into the contact is shared out and both cars can be damaged
+  // car against car: each car is two discs (front and rear, 1 m radius, 3.3 m apart) so contacts have a smooth, sensible direction.
+  // Overlap is pushed apart evenly; the closing speed along the contact is shared like two equal masses with a soft bounce (30%);
+  // a little of the sliding along the contact is scrubbed off, and an off-centre hit turns the car a touch. No kicks, no launches.
+  const RC = 1.0, OFF = 1.65;
   for (let a = 0; a < CARS.length; a++) for (let b = a + 1; b < CARS.length; b++) {
-    const A = CARS[a], B = CARS[b]; if (A.out || B.out || A.pit || B.pit) continue; const dx = B.x - A.x, dz = B.z - A.z; if (Math.abs(dx) > 6 || Math.abs(dz) > 6) continue;
-    const f = [-Math.sin(A.yaw), -Math.cos(A.yaw)], rt = [-f[1], f[0]], lx = dx * rt[0] + dz * rt[1], lz = dx * f[0] + dz * f[1];
-    const HWc = 1.95, HLc = 5.3; if (Math.abs(lx) >= HWc || Math.abs(lz) >= HLc) continue;
-    const penX = HWc - Math.abs(lx), penZ = HLc - Math.abs(lz), along = penZ / HLc < penX / HWc;
-    const sg = along ? Math.sign(lz) || 1 : Math.sign(lx) || 1, nx = (along ? f[0] : rt[0]) * sg, nz = (along ? f[1] : rt[1]) * sg, k = (along ? penZ : penX) / 2 + 0.04;   // n: from A towards B; a hair of extra room so they part
-    A.x -= nx * k; A.z -= nz * k; B.x += nx * k; B.z += nz * k;
+    const A = CARS[a], B = CARS[b]; if (A.out || B.out || A.pit || B.pit) continue; if (Math.abs(B.x - A.x) > 6 || Math.abs(B.z - A.z) > 6) continue;
+    const fa = [-Math.sin(A.yaw), -Math.cos(A.yaw)], fb = [-Math.sin(B.yaw), -Math.cos(B.yaw)];
+    let best = null;
+    for (const sa of [OFF, -OFF]) for (const sb of [OFF, -OFF]) { const px = A.x + fa[0] * sa, pz = A.z + fa[1] * sa, qx = B.x + fb[0] * sb, qz = B.z + fb[1] * sb, dx = qx - px, dz = qz - pz, d = Math.hypot(dx, dz);
+      if (d < 2 * RC && (!best || d < best.d)) best = { d, dx, dz, sa, sb }; }
+    if (!best) continue;
+    const d = Math.max(best.d, 1e-3), nx = best.dx / d, nz = best.dz / d, pen = 2 * RC - d;   // n: from A towards B
+    const k = Math.min(pen, 0.6) * 0.5; A.x -= nx * k; A.z -= nz * k; B.x += nx * k; B.z += nz * k;
     let ax = -Math.sin(A.psi) * A.v, az = -Math.cos(A.psi) * A.v, bx = -Math.sin(B.psi) * B.v, bz = -Math.cos(B.psi) * B.v;
     const vn = (ax - bx) * nx + (az - bz) * nz;   // closing speed
-    if (vn > 0) { const j = vn * 0.62; ax -= nx * j; az -= nz * j; bx += nx * j; bz += nz * j;
-      if (along) { const kick = Math.min(1.5, 0.3 + vn * 0.08); bx += nx * kick; bz += nz * kick; ax -= nx * kick * 0.5; az -= nz * kick * 0.5; }   // a tap from behind shoves the car in front forward
-      A.v = Math.hypot(ax, az); A.psi = Math.atan2(-ax, -az); B.v = Math.hypot(bx, bz); B.psi = Math.atan2(-bx, -bz);
-      if (!along) { A.yaw -= sg * Math.min(0.25, vn * 0.02); B.yaw += sg * Math.min(0.25, vn * 0.02); }
-      hitPart(A, nx, nz, vn - 4); hitPart(B, -nx, -nz, vn - 4);   // wheel-to-wheel nudges don't break parts
-      if ((A.isPlayer || B.isPlayer) && vn > 3) { shake = Math.max(shake, Math.min(0.7, vn / 20)); thud(vn * 3); } }
-    else if (!along) { const sep = 0.6; ax -= nx * sep; az -= nz * sep; bx += nx * sep; bz += nz * sep; A.v = Math.hypot(ax, az); A.psi = Math.atan2(-ax, -az); B.v = Math.hypot(bx, bz); B.psi = Math.atan2(-bx, -bz); }   // still touching side by side: ease apart
+    if (vn <= 0) continue;
+    const j = vn * 0.65; ax -= nx * j; az -= nz * j; bx += nx * j; bz += nz * j;   // (1 + 0.3) / 2
+    const tx = -nz, tz = nx, vt = (ax - bx) * tx + (az - bz) * tz, ft = clamp(vt * 0.12, -j * 0.4, j * 0.4); ax -= tx * ft; az -= tz * ft; bx += tx * ft; bz += tz * ft;
+    A.v = Math.hypot(ax, az); B.v = Math.hypot(bx, bz); if (A.v > 0.5) A.psi = Math.atan2(-ax, -az); if (B.v > 0.5) B.psi = Math.atan2(-bx, -bz);
+    // turn: a hit on the nose or tail swings the car a little about its middle
+    const tq = (s, f, sgn) => clamp(sgn * s * (f[0] * nz - f[1] * nx) * j * 0.004, -0.06, 0.06); A.yaw += tq(best.sa, fa, 1); B.yaw += tq(best.sb, fb, -1);
+    hitPart(A, nx, nz, vn - 5); hitPart(B, -nx, -nz, vn - 5);   // wheel-to-wheel nudges don't break parts
+    if ((A.isPlayer || B.isPlayer) && vn > 2) { shake = Math.max(shake, Math.min(0.6, vn / 22)); thud(vn * 3); }
   }
 }
 // sparks: a little shower of hot points at each impact
@@ -1264,11 +1280,14 @@ function aiPitCall(car) {   // the rivals' strategy: their planned lap, or now i
   else if (car.wear > 1.02 && left >= 1) car.boxReq = softestFor(left);
   else if (Math.max(car.dmg.fl, car.dmg.fr, car.dmg.rw) >= 0.5 && left >= 1) car.boxReq = softestFor(left);
 }
-function startPit(car, ps) {
+function makePit(car, ps, st) {
   const repair = Math.max(car.dmg.fl, car.dmg.fr, car.dmg.rw) >= 0.3;
   const slow = !car.isPlayer && Math.random() < 0.07 ? 1.2 + Math.random() * 2.5 : 0;   // now and then a wheel nut sticks
-  const P = car.pit = { st: "in", ps, d0: car.d, v: car.v, boxS: boxS(car), dExit: lineAt(PIT.exit), tyre: car.boxReq, t: 0, repair, dur: 2.15 + Math.random() * 0.45 + slow + (repair ? 3.8 : 0), rel: 0 };
-  P.crew = buildCrew(car, P);
+  const P = { st, ps, d0: car.d, v: car.v, boxS: boxS(car), dExit: lineAt(PIT.exit), tyre: car.boxReq, t: 0, repair, dur: 2.15 + Math.random() * 0.45 + slow + (repair ? 3.8 : 0), rel: 0 };
+  P.crew = buildCrew(car, P); return P;
+}
+function startPit(car, ps) {
+  const P = car.pit = makePit(car, ps, "in");
   if (car.isPlayer) { msg("PIT LIMITER", "80 km/h in the pit lane", 2); RADIO.say("Limiter on. Box is ready, " + TYRES[P.tyre].name.toLowerCase() + "s."); }
   else if (player && !player.pit && phase === "race") { const ord = order(), me = ord.indexOf(player), them = ord.indexOf(car);
     if (them === me - 1) RADIO.say(`${car.code} ahead is boxing. Push now, this is your chance.`); else if (them === me + 1) RADIO.say(`${car.code} behind has pitted for ${TYRES[P.tyre].name.toLowerCase()}s.`); }
@@ -1281,7 +1300,8 @@ function pitStep(car, dt) {
     P.v = Math.min(P.v + 8 * dt, vmax, vstop); P.ps += P.v * dt;
     if (P.ps >= P.boxS) { P.ps = P.boxS; P.v = 0; P.st = "stop"; P.t = 0; }
   } else if (P.st === "stop") {
-    P.t += dt; if (P.t >= P.dur) { P.st = "out"; P.rel = 0; releasePit(car); }
+    P.t += dt; if (P.t >= P.dur) { P.st = "out"; P.rel = 0; releasePit(car);
+      if (car.isPlayer) { pitPose(P, P.boxS, PO); car.x = PO.x; car.z = PO.z; car.yaw = car.psi = PO.yaw; car.v = 0; car.lift = 0; car.pit = null; car.pitP = null; car.boxReq = null; if (P.crew) P.crew.leaveT = 3; syncPitMenu(); return; } }
   } else {
     P.rel += dt; const lim = P.ps < PIT.boxB + 5 ? PIT_V : Math.max(PIT_V, vAt(P.ps) * 0.92);
     P.v = Math.min(P.v + (P.ps < PIT.boxB + 5 ? 7 : 10) * dt, lim); P.ps += P.v * dt;
@@ -1294,6 +1314,38 @@ function pitStep(car, dt) {
     car.pit = null; car.boxReq = null; car.lane = car.laneT = 0; car.gridSide = undefined; car.lift = 0;
     if (P.crew) P.crew.leaveT = 2.5; if (car.isPlayer) { const pos = order().indexOf(car) + 1; RADIO.say(`Pit exit. You're P${pos}. Push now, the tyres are fresh.`); }
   }
+}
+// you drive into the pit lane yourself: the limiter holds you to 80 km/h between the white lines; stop on your box and the crew take over
+function playerPit(car, dt) {
+  const ps = pitRel(car.s), k = car.idx, lane = inPitZone(k) && car.d > RUN_R[k] - 0.5;
+  const limited = lane && ps > PIT.boxA && ps < PIT.boxB && car.d > RUN_R[k];
+  if (limited) { if (car.v > PIT_V) car.v = Math.max(PIT_V, car.v - 45 * dt); if (!car.limiter) { car.limiter = true; msg("PIT LIMITER", "80 km/h in the pit lane", 1.6); } } else car.limiter = false;
+  if (car.boxReq && !car.pitP && lane && ps > PIT.entry && ps < P_BOXMAX(car)) { car.pitP = makePit(car, ps, "manual"); RADIO.say("Limiter on. Your box is on the right, stop on the mark."); }
+  const P = car.pitP; if (!P) return; animCrew(car, P, dt);
+  if (Math.abs(ps - P.boxS) < 3.5 && Math.abs(car.d - PIT_BOXOFF()) < 2.8 && car.v < 14) {   // on the mark: the crew take over
+    P.st = "stop"; P.t = 0; P.ps = P.boxS; P.v = 0; P.tyre = car.boxReq || P.tyre; car.pit = P; car.v = 0; return; }
+  if (P.boxS - ps < 45 && P.boxS - ps > 0 && !P.told) { P.told = true; msg("STOP IN YOUR BOX", "brake on the coloured mark", 2.2); }
+  if (ps > P.boxS + 10 || !lane) { if (P.crew) P.crew.leaveT = 0.5; car.pitP = null; if (car.boxReq) RADIO.say("We missed the box. Stay out, we'll go again next lap."); }   // drove past it
+}
+const P_BOXMAX = (car) => boxS(car) - 2;
+// the blue guide line: from the racing line over to the right, through the gap in the wall, down the lane and into your box
+const PIT_GUIDE = { mesh: null, s0: 0, s1: 0 };
+function buildPitGuide(car) {
+  if (PIT_GUIDE.mesh) { scene.remove(PIT_GUIDE.mesh); PIT_GUIDE.mesh.geometry.dispose(); PIT_GUIDE.mesh = null; } if (!car) return;
+  const bS = boxS(car), P0 = { d0: HW - 2.5, boxS: bS, dExit: 0 }, s0 = PIT.entry - 320, s1 = bS + 1, off = (ps) => ps < PIT.entry ? lerp(lineAt(ps), HW - 2.5, sm01((ps - s0) / 300)) : pitOff(P0, ps);
+  const pos = [], uv = [], idx = [], a = new THREE.Vector3(), b = new THREE.Vector3(); let n = 0, acc = 0;
+  for (let ps = s0; ps <= s1; ps += 2) { const o = off(ps); pointAt(ps, o - 0.6, a); pointAt(ps, o + 0.6, b); pos.push(a.x, 0.075, a.z, b.x, 0.075, b.z); uv.push(0, acc / 2.4, 1, acc / 2.4); acc += 2;
+    if (n) { const q = (n - 1) * 2; idx.push(q, q + 1, q + 2, q + 1, q + 3, q + 2); } n++; }
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
+  const tex = canvasTex(64, 64, (c, w, h) => { c.fillStyle = "rgba(40,130,255,0.55)"; c.fillRect(0, 0, w, h); c.strokeStyle = "rgba(220,240,255,0.95)"; c.lineWidth = 7; c.beginPath(); c.moveTo(12, 44); c.lineTo(32, 18); c.lineTo(52, 44); c.stroke(); }, true);
+  tex.wrapS = THREE.ClampToEdgeWrapping;
+  const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -10 }));
+  m.renderOrder = 4; m.visible = false; scene.add(m); PIT_GUIDE.mesh = m; PIT_GUIDE.s0 = s0; PIT_GUIDE.s1 = s1;
+}
+function updatePitGuide() {
+  const m = PIT_GUIDE.mesh, c = player; if (!m) return; const ps = c ? pitRel(c.s) : 0;
+  m.visible = !!(c && c.boxReq && !c.pit && phase === "race" && ps > PIT_GUIDE.s0 - 400 && ps < PIT_GUIDE.s1 + 5);
+  if (m.visible) m.material.map.offset.y = -(performance.now() / 1000) * 0.8 % 1;   // the arrows flow towards the box
 }
 function releasePit(car) {
   const P = car.pit; car.stops++; car.wear = 0; setTyre(car, P.tyre); car.wearMsg = 0; if (P.repair) { car.dmg.fl = car.dmg.fr = car.dmg.rw = 0; }
@@ -1466,8 +1518,8 @@ function syncPitMenu() {
 function pickTyre(k) { const c = player; if (!c || c.pit) return; c.plan = k; if (c.boxReq && c.boxReq !== k) { c.boxReq = k; RADIO.say(`Copy, ${TYRES[k].name.toLowerCase()}s it is.`); } syncPitMenu(); }
 function toggleBox() {
   const c = player; if (!c || c.pit || SET.mode === "tt" || inQuali || phase !== "race" || c.finished || c.dnf) return;
-  if (c.boxReq) { c.boxReq = null; RADIO.say("Understood, stay out. Stay out."); }
-  else { if (c.lap + 1 >= LAPS && pitRel(c.s) > PIT.entry) { RADIO.say("It's the last lap, no stop now."); return; } c.boxReq = c.plan || "M"; RADIO.say(`Box, box. Box this lap for ${TYRES[c.boxReq].name.toLowerCase()}s.`); }
+  if (c.boxReq) { c.boxReq = null; if (c.pitP) { if (c.pitP.crew) c.pitP.crew.leaveT = 0.5; c.pitP = null; } RADIO.say("Understood, stay out. Stay out."); }
+  else { if (c.lap + 1 >= LAPS && pitRel(c.s) > PIT.entry) { RADIO.say("It's the last lap, no stop now."); return; } c.boxReq = c.plan || "M"; RADIO.say(`Box, box. Box this lap for ${TYRES[c.boxReq].name.toLowerCase()}s. Follow the blue line into the pit lane.`); }
   syncPitMenu();
 }
 $("bBox").onclick = () => { $("pitMenu").hidden = !$("pitMenu").hidden; syncPitMenu(); };
@@ -1485,7 +1537,7 @@ function attachCockpit(car) {
   car.mesh.add(COCKPIT.g); COCKPIT.g.visible = false;
 }
 function buildWheel() {
-  const mount = new THREE.Group(), spin = new THREE.Group(); mount.add(spin); mount.position.set(0, 0.765, -0.5); mount.rotation.x = -0.28;
+  const mount = new THREE.Group(), spin = new THREE.Group(); mount.add(spin); mount.position.set(0, 0.87, -0.5); mount.rotation.x = -0.45; mount.scale.setScalar(0.8);
   const M = COCKPIT.mats = { carbon: new THREE.MeshStandardMaterial({ color: 0x17181b, roughness: 0.42, metalness: 0.35 }), rubber: new THREE.MeshStandardMaterial({ color: 0x0b0b0c, roughness: 0.95 }),
     glove: new THREE.MeshStandardMaterial({ color: 0x8fd3ff, roughness: 0.8 }), cuff: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7 }), sleeve: new THREE.MeshStandardMaterial({ color: 0x8fd3ff, roughness: 0.85 }), palm: new THREE.MeshStandardMaterial({ color: 0x1b1c20, roughness: 0.9 }), alu: new THREE.MeshStandardMaterial({ color: 0x8d949c, roughness: 0.3, metalness: 0.9 }) };
   // the body: flat top, flat bottom, the grips swept out at the sides
@@ -1553,7 +1605,7 @@ function timing(car, dt) {
   const q = locate(car.x, car.z, car.idx); car.idx = q.i; car.d = q.d;
   { const ds = wrapS(q.s - car.s); car.s = (q.s + TL) % TL; car.prog += ds;
     if (ds > 0 && !car.pit && car.lap >= 0 && SET.mode !== "tt" && !inQuali) { car.wear += ds / (tyreLife(car.tyre) * TL) * (1 + Math.min(0.8, Math.abs(car.beta) * 4)); if (car.isPlayer) wearRadio(car); }
-    const ps = pitRel(car.s); if (car.boxReq && !car.pit && !car.finished && !car.dnf && phase === "race" && car.lastPs !== undefined && car.lastPs < PIT.entry && ps >= PIT.entry && ps - car.lastPs < 60) startPit(car, ps);
+    const ps = pitRel(car.s); if (!car.isPlayer && car.boxReq && !car.pit && !car.finished && !car.dnf && phase === "race" && car.lastPs !== undefined && car.lastPs < PIT.entry && ps >= PIT.entry && ps - car.lastPs < 60) startPit(car, ps);
     car.lastPs = ps; }
   const lapNow = Math.floor(car.prog / TL);
   if (lapNow > car.lap) {   // crossed the line
@@ -1619,7 +1671,7 @@ function updateCamera(dt) {
   if (c.wasCrew) { c.wasCrew = false; camSnap = true; }
   if (camMode === 0 || camMode === 3) { const back = camMode === 0 ? 7.6 : 13, up = camMode === 0 ? 2.25 : 4.2; want = new THREE.Vector3(c.x - f.x * back, up, c.z - f.z * back); look = new THREE.Vector3(c.x + f.x * 6, 0.9, c.z + f.z * 6); }
   else if (camMode === 1) { want = new THREE.Vector3(c.x + f.x * 0.55, 1.42, c.z + f.z * 0.55); look = new THREE.Vector3(c.x + f.x * 30, 0.6, c.z + f.z * 30); fov = 70; }
-  else { want = new THREE.Vector3(c.x - f.x * 0.05, 0.98, c.z - f.z * 0.05); look = new THREE.Vector3(c.x + f.x * 30, 0.7, c.z + f.z * 30); fov = 74; }
+  else { want = new THREE.Vector3(c.x + f.x * 0.12, 1.12, c.z + f.z * 0.12); look = new THREE.Vector3(c.x + f.x * 30, 0.15, c.z + f.z * 30); fov = 80; }   // the driver's eyes, just above the halo, looking down the road
   const k = camSnap || camMode === 1 || camMode === 2 ? 1 : 1 - Math.exp(-dt * 7);
   camPos.lerp(want, k); camLook.lerp(look, camSnap || camMode ? 1 : 1 - Math.exp(-dt * 12)); camSnap = false;
   camera.position.copy(camPos); if (shake > 0) { camera.position.x += (Math.random() - 0.5) * shake * 0.3; camera.position.y += (Math.random() - 0.5) * shake * 0.2; shake = Math.max(0, shake - dt * 2); }
@@ -1711,7 +1763,7 @@ function frame(now) {
   for (const c of CARS) poseCar(c, dt);
   if (!paused) { stepSparks(dt); stepCrews(dt); if (phase !== "menu") RADIO.tick(dt); }
   lineMesh.visible = !!player && phase !== "menu" && (showLine && SET.assist === "on" || (showLine && SET.mode === "tt")); if (lineMesh.visible) updateLine(player);
-  if (phase !== "menu") { updateCamera(dt); updateHud(dt); updateAudio(dt); } else menuCam(now);
+  if (phase !== "menu") { updateCamera(dt); updateHud(dt); updateAudio(dt); updatePitGuide(); } else menuCam(now);
   { const f = player || CARS[0]; const tx = f ? f.x : camera.position.x, tz = f ? f.z : camera.position.z; sun.target.position.set(tx, 0, tz); sun.position.set(tx + SUN_OFF.x, SUN_OFF.y, tz + SUN_OFF.z); }
   if (phase === "menu" && menuStep === "garage") { GAR.step(dt); renderer.render(GAR.sc, GAR.cam); } else renderer.render(scene, camera);
   requestAnimationFrame(frame);
@@ -1720,7 +1772,7 @@ function simStep(dt, inp) {
   if (!player) return;
   const sub = 2, h = dt / sub;
   for (let k = 0; k < sub; k++) {
-    if (phase !== "lights") { if (player.pit) pitStep(player, h); else stepPlayer(player, h, inp); }
+    if (phase !== "lights") { if (player.pit) pitStep(player, h); else { stepPlayer(player, h, inp); if (phase === "race" && SET.mode !== "tt" && !inQuali) playerPit(player, h); } }
     for (const c of CARS) if (!c.isPlayer) { if (c.pit) pitStep(c, h); else stepAI(c, h, aheadOf(c)); }
     for (const c of CARS) timing(c, h);
     collide(h);
@@ -1830,7 +1882,7 @@ const GAR = (() => {
   const refresh = (i) => { const m = cars.get(i); if (m) { table.remove(m); cars.delete(i); } };
   return { sc, cam, show, refresh, get idx() { return idx; }, set idx(v) { idx = v; }, step(dt) { idle += dt; if (drag === null) ang += dt * (idle > 2 ? 0.35 : 0.12); table.rotation.y = ang; } };
 })();
-window.__APEX = { simulate, lineAt, vAt, pointAt, DRS, get raceT() { return raceT; }, CARS, get player() { return player; }, get phase() { return phase; }, set phase(v) { phase = v; }, TL, VP, setupRace, SET, order, stepPlayer, locate, PIT, KW, RUN_R, N, DS, toggleBox, RADIO, TYRES, setTyre, get camMode() { return camMode; }, set camMode(v) { camMode = v; }, get paused() { return paused; }, set paused(v) { paused = v; }, place, simStep, GAR, buildCar, TEAMS };
+window.__APEX = { simulate, lineAt, vAt, pointAt, DRS, get raceT() { return raceT; }, CARS, get player() { return player; }, get phase() { return phase; }, set phase(v) { phase = v; }, TL, VP, setupRace, SET, order, stepPlayer, locate, PIT, KW, RUN_R, N, DS, toggleBox, RADIO, TYRES, setTyre, get camMode() { return camMode; }, set camMode(v) { camMode = v; }, get paused() { return paused; }, set paused(v) { paused = v; }, place, simStep, GAR, buildCar, TEAMS, pitOff, boxS, PIT_BOXOFF, pitRel, HW, PIT_GUIDE };
 // the circuit: the whole world is built for one layout, so switching reloads the page and comes back to this screen
 $("tEyebrow").textContent = `${TRACK.name.toUpperCase()} · ${TRACK.km} KM · 20 CARS`; $("tSub").textContent = TRACK.sub;
 $("sTrack").querySelectorAll("button").forEach((b) => { b.setAttribute("aria-pressed", String(b.dataset.v === TRACK.id));
