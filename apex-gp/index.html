@@ -155,7 +155,7 @@ button:focus-visible { outline: 1px solid var(--ice); outline-offset: 3px; }
 
 <div class="screen" id="menu">
   <div class="card">
-    <p class="eyebrow">ARALIA MARINA · 5.27 KM · 20 CARS</p>
+    <p class="eyebrow">ARALIA MARINA · 5.28 KM · 20 CARS</p>
     <h1 class="logo">APEX<br><span>GRAND PRIX</span></h1>
     <p class="sub">Sunset over the desert, a kilometre-long back straight between two hairpins, then the marina and the hotel. Choose your team and line up on the grid.</p>
     <div class="grid2">
@@ -234,12 +234,14 @@ const lam = (c) => new THREE.MeshLambertMaterial({ color: c });
 function canvasTex(w, h, draw, rep) { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; } return t; }
 
 // ================= TRACK =================
-// Aralia Marina: an original 5.3 km night-race circuit in the desert, laid out like the great marina tracks: a long back straight
-// between two hairpins, a twisting section along the marina and under the hotel. Control points in metres (x east, z south).
-const CP = [[-169,0],[339,0],[701,0],[791,-23],[819,-124],[797,-226],[831,-328],[904,-407],[938,-508],[960,-633],[938,-712],[870,-723],[831,-667],[814,-599],[723,-588],[339,-633],[-113,-689],[-508,-734],[-633,-746],[-701,-712],[-695,-644],[-633,-616],[-475,-588],[-294,-531],[-169,-475],[-136,-384],[-181,-316],[-260,-282],[-294,-215],[-226,-169],[-147,-147],[-136,-79],[-215,-56],[-339,-68],[-418,-45],[-407,0],[-339,11]];
+// Aralia Marina: the 5.28 km layout of the Abu Dhabi circuit (2021 configuration), from the open circuit outlines of
+// github.com/bacinger/f1-circuits (MIT licence), in metres: x east, z south, the start line at 0. The cars run in this order.
+const CP = [[0,0],[240,-32],[252,-36],[262,-46],[269,-60],[270,-73],[266,-88],[228,-250],[221,-267],[212,-280],[197,-293],[185,-299],[117,-320],[94,-332],[77,-343],[62,-357],[51,-370],[42,-382],[32,-406],[28,-425],[28,-445],[32,-469],[40,-495],[56,-559],[62,-607],[63,-641],[60,-670],[41,-822],[29,-917],[26,-928],[24,-937],[17,-946],[5,-956],[-3,-959],[-11,-960],[-19,-958],[-28,-955],[-35,-948],[-38,-942],[-44,-932],[-58,-888],[-72,-824],[-192,-469],[-239,-332],[-265,-255],[-285,-195],[-305,-121],[-348,15],[-389,137],[-393,149],[-395,158],[-393,163],[-389,168],[-378,169],[-340,164],[-332,164],[-325,172],[-304,254],[-299,270],[-285,303],[-273,328],[-246,367],[-215,402],[-177,435],[-14,563],[24,593],[53,614],[92,639],[125,658],[180,684],[229,706],[303,740],[334,753],[352,753],[371,750],[388,740],[397,731],[403,722],[409,710],[413,697],[415,686],[413,667],[409,653],[404,639],[396,628],[384,617],[370,607],[355,601],[334,598],[162,584],[141,581],[132,579],[122,576],[30,518],[20,512],[14,504],[7,486],[-14,387],[-13,379],[-8,374],[0,371],[76,360],[85,356],[91,353],[97,347],[103,336],[105,322],[105,253],[99,241],[92,234],[82,230],[68,227],[55,225],[39,224],[22,226],[-138,250],[-151,251],[-169,250],[-186,247],[-198,244],[-206,236],[-214,228],[-258,149],[-280,112],[-285,102],[-288,87],[-290,75],[-290,60],[-287,50],[-281,43],[-274,40],[-257,37]];
 const W = 16, HW = W / 2;              // track width (16 m: room to race side by side)
 const curve = new THREE.CatmullRomCurve3(CP.map(([x, z]) => new THREE.Vector3(x, 0, z)), true, "centripetal");
 const N = 1600, PTS = curve.getSpacedPoints(N).slice(0, N);
+// the outline is a polyline with sharp vertices: smooth it into real corner radii (a few passes of a short moving average)
+for (let pass = 0; pass < 3; pass++) { const src = PTS.map((p) => p.clone()); for (let i = 0; i < N; i++) { let x = 0, z = 0; for (let k = -5; k <= 5; k++) { const q = src[(i + k + N) % N]; x += q.x; z += q.z; } PTS[i].set(x / 11, 0, z / 11); } }
 const TL = curve.getLength(), DS = TL / N;
 const T = [], R = [], K = [];          // tangent, right normal, curvature (+ = right-hand bend)
 for (let i = 0; i < N; i++) { const a = PTS[(i - 1 + N) % N], b = PTS[(i + 1) % N]; const t = new THREE.Vector3(b.x - a.x, 0, b.z - a.z).normalize(); T.push(t); R.push(new THREE.Vector3(-t.z, 0, t.x)); }
@@ -253,7 +255,7 @@ const LP = PTS.map((p, i) => [p.x + R[i].x * LINE[i], p.z + R[i].z * LINE[i]]);
 const LK = smooth(LP.map((b, i) => { const a = LP[(i - 3 + N) % N], c = LP[(i + 3) % N], ab = Math.hypot(b[0] - a[0], b[1] - a[1]), bc = Math.hypot(c[0] - b[0], c[1] - b[1]), ac = Math.hypot(c[0] - a[0], c[1] - a[1]);
   const cr = (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]); return 2 * cr / Math.max(1e-6, ab * bc * ac); }), 2);
 // physics constants (shared by you and the AI)
-const PH = { m: 798, g: 9.81, P: 760000, cda: 1.25, cla: 3.6, rho: 1.2, mu: 1.75, L: 3.6 };
+const PH = { m: 798, g: 9.81, P: 760000, cda: 1.25, cla: 4.3, rho: 1.2, mu: 1.95, L: 3.6 };
 const DFc = 0.5 * PH.rho * PH.cla / PH.m, DRc = 0.5 * PH.rho * PH.cda / PH.m;
 function maxCornerV(k, mu) { const kk = Math.abs(k), mc = mu * DFc; if (kk <= mc + 1e-5) return 110; return Math.min(110, Math.sqrt(mu * PH.g / (kk - mc))); }
 function accelAt(v, drs) { const traction = PH.mu * (PH.g + DFc * v * v) * 0.62; return Math.min(PH.P / (PH.m * Math.max(v, 4)), traction) - DRc * (drs ? 0.8 : 1) * v * v - 0.15; }
@@ -393,13 +395,30 @@ sandTex.repeat.set(220, 220);
 const PALMS = [];
 function addPalm(x, z, s) { PALMS.push([x, z, s || rnd(0.85, 1.25), Math.random() * Math.PI * 2]); }
 // the marina: the water in the infield, its quays and the boats
-const MARINA = { x0: -60, x1: 715, z0: -548, z1: -96 };
-{ const W2 = MARINA.x1 - MARINA.x0, D2 = MARINA.z1 - MARINA.z0, cx = (MARINA.x0 + MARINA.x1) / 2, cz = (MARINA.z0 + MARINA.z1) / 2;
-  const water = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2, 1, 1), new THREE.ShaderMaterial({ uniforms: { uT: { value: 0 }, uSun: { value: SUN_DIR } }, fog: false,
-    vertexShader: "varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }",
-    fragmentShader: `uniform float uT; uniform vec3 uSun; varying vec3 vW;
-      vec2 wave(vec2 p, vec2 d, float f, float sp, float a){ float ph = dot(p, d) * f + uT * sp; return d * cos(ph) * a * f; }   // the slope of one travelling wave
-      void main(){ vec2 p = vW.xz; vec2 sl = vec2(0.0);
+// the water fills the lower loop of the circuit (inside turns 9 to 14), kept 34 m clear of the track; a quay rims it
+const MARINA = (() => {
+  const loop = PTS.filter((_, k) => { const f = k / N; return f > 0.455 && f < 0.875; });   // the stretch that wraps round the harbour
+  let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const p of loop) { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); z0 = Math.min(z0, p.z); z1 = Math.max(z1, p.z); }
+  const res = 2, w = Math.ceil((x1 - x0) / res), h = Math.ceil((z1 - z0) / res), mask = new Uint8Array(w * h), poly = loop.map((p) => [p.x, p.z]);
+  const inside = (x, z) => { let c = false; for (let a = 0, b = poly.length - 1; a < poly.length; b = a++) { const [xa, za] = poly[a], [xb, zb] = poly[b]; if ((za > z) !== (zb > z) && x < (xb - xa) * (z - za) / (zb - za) + xa) c = !c; } return c; };
+  const sub = PTS.filter((_, k) => k % 2 === 0);
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const x = x0 + (i + 0.5) * res, z = z0 + (j + 0.5) * res; if (!inside(x, z)) continue;
+    let d = 1e9; for (const p of sub) { const dd = (p.x - x) ** 2 + (p.z - z) ** 2; if (dd < d) d = dd; } d = Math.sqrt(d);
+    mask[j * w + i] = d > 36 ? 2 : d > 32 ? 1 : 0; }   // 2: water, 1: quay
+  const at = (x, z) => { const i = Math.floor((x - x0) / res), j = Math.floor((z - z0) / res); return i < 0 || j < 0 || i >= w || j >= h ? 0 : mask[j * w + i]; };
+  return { x0, x1, z0, z1, w, h, res, mask, at };
+})();
+const inWater = (x, z, m) => { if (!m) return MARINA.at(x, z) === 2; for (const [dx, dz] of [[0, 0], [m, 0], [-m, 0], [0, m], [0, -m]]) if (MARINA.at(x + dx, z + dz) !== 2) return false; return true; };
+const nearWater = (x, z) => MARINA.at(x, z) > 0;
+{ const { x0, x1, z0, z1, w, h, mask } = MARINA, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const mk = (val) => { const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"), im = g.createImageData(w, h);
+    for (let k = 0; k < w * h; k++) { const on = val(mask[k]) ? 255 : 0; im.data[k * 4] = im.data[k * 4 + 1] = im.data[k * 4 + 2] = on; im.data[k * 4 + 3] = 255; } g.putImageData(im, 0, 0); const t = new THREE.CanvasTexture(c); t.flipY = false; return t; };
+  const waterMask = mk((v) => v === 2), quayMask = mk((v) => v >= 1);
+  const water = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.ShaderMaterial({ uniforms: { uT: { value: 0 }, uSun: { value: SUN_DIR }, uMask: { value: waterMask } }, fog: false, transparent: false,
+    vertexShader: "varying vec3 vW; varying vec2 vU; void main(){ vU = vec2(uv.x, 1.0 - uv.y); vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }",
+    fragmentShader: `uniform float uT; uniform vec3 uSun; uniform sampler2D uMask; varying vec3 vW; varying vec2 vU;
+      vec2 wave(vec2 p, vec2 d, float f, float sp, float a){ float ph = dot(p, d) * f + uT * sp; return d * cos(ph) * a * f; }
+      void main(){ if (texture2D(uMask, vU).r < 0.5) discard; vec2 p = vW.xz; vec2 sl = vec2(0.0);
         sl += wave(p, normalize(vec2(1.0, 0.3)), 0.21, 1.3, 0.05); sl += wave(p, normalize(vec2(-0.4, 1.0)), 0.33, 1.7, 0.035);
         sl += wave(p, normalize(vec2(0.8, -0.7)), 0.57, 2.3, 0.02); sl += wave(p, normalize(vec2(-1.0, -0.2)), 1.13, 3.1, 0.012); sl += wave(p, normalize(vec2(0.2, 1.0)), 2.07, 4.2, 0.007);
         vec3 nn = normalize(vec3(-sl.x, 1.0, -sl.y));
@@ -407,34 +426,31 @@ const MARINA = { x0: -60, x1: 715, z0: -548, z1: -96 };
         vec3 deep = vec3(0.02, 0.16, 0.22), sky = mix(vec3(0.36, 0.44, 0.66), vec3(0.98, 0.64, 0.42), 0.6);
         vec3 c = mix(deep, sky, clamp(fr * 1.3, 0.0, 1.0));
         vec3 r = reflect(-v, nn); c += vec3(1.0, 0.78, 0.5) * pow(max(dot(r, uSun), 0.0), 300.0) * 1.8;
-        float d = length(cameraPosition.xz - p); c = mix(c, vec3(0.91, 0.70, 0.55), smoothstep(700.0, 4000.0, d) * 0.7);
         gl_FragColor = vec4(c, 1.0); }` }));
-  water.rotation.x = -Math.PI / 2; water.position.set(cx, 0.0, cz); water.renderOrder = 1; scene.add(water); scene.userData.water = water;
-  // concrete quay round the edge
-  const quay = new THREE.MeshStandardMaterial({ color: 0xd8d2c6, roughness: 0.85 });
-  for (const [w, d, x, z] of [[W2 + 8, 4, cx, MARINA.z0 - 2], [W2 + 8, 4, cx, MARINA.z1 + 2], [4, D2, MARINA.x0 - 2, cz], [4, D2, MARINA.x1 + 2, cz]]) { const b = new THREE.Mesh(new THREE.BoxGeometry(w, 1.2, d), quay); b.position.set(x, 0.3, z); b.receiveShadow = true; scene.add(b); }
-  // pontoons and the boats moored along them
-  const pont = [], boats = [], sail = [];
-  for (let k = 0; k < 6; k++) { const px = MARINA.x0 + 70 + k * (W2 - 140) / 5; pont.push([px, cz, 2.6, D2 * 0.62]);
-    for (let b = -6; b <= 6; b++) { if (Math.random() < 0.18) continue; for (const side of [-1, 1]) if (Math.random() < 0.8) boats.push([px + side * (6 + Math.random()), cz + b * D2 * 0.045, side, rnd(0.8, 1.6), Math.random() < 0.3]); } }
-  const pm = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 0.5, 1), new THREE.MeshLambertMaterial({ color: 0xb59a76 }), pont.length), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3();
-  pont.forEach(([x, z, w, d], i) => { m4.compose(ps.set(x, 0.25, z), q, sc.set(w, 1, d)); pm.setMatrixAt(i, m4); }); scene.add(pm);
-  // a motor yacht: a pointed hull, a white deck house and dark windows
+  water.rotation.x = -Math.PI / 2; water.position.set(cx, 0.02, cz); water.renderOrder = 1; scene.add(water); scene.userData.water = water;
+  const quay = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.MeshStandardMaterial({ color: 0xdcd6ca, roughness: 0.85, alphaMap: quayMask, alphaTest: 0.5, transparent: false }));
+  quayMask.flipY = true; quay.rotation.x = -Math.PI / 2; quay.position.set(cx, 0.012, cz); quay.receiveShadow = true; scene.add(quay);
+  // pontoons across the harbour wherever a long enough stretch of water allows, boats moored either side
+  const pont = [], boats = [];
+  for (let x = x0 + 30; x < x1 - 20; x += 46) { let run = -1; for (let z = z0; z <= z1 + 2; z += 2) { const ok = inWater(x, z, 14); if (ok && run < 0) run = z; if ((!ok || z > z1) && run >= 0) { if (z - run > 60) {
+      const a = run + 6, b = z - 6; pont.push([x, (a + b) / 2, 2.6, b - a]); for (let zz = a + 6; zz < b - 4; zz += 9) for (const side of [-1, 1]) if (Math.random() < 0.8) boats.push([x, zz, side, rnd(0.8, 1.5), Math.random() < 0.3]); }
+      run = -1; } } }
+  const pm = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 0.5, 1), new THREE.MeshLambertMaterial({ color: 0xb59a76 }), Math.max(1, pont.length)), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3();
+  pont.forEach(([x, z, w2, d], i) => { m4.compose(ps.set(x, 0.25, z), q, sc.set(w2, 1, d)); pm.setMatrixAt(i, m4); }); pm.count = pont.length; scene.add(pm);
   const hullShape = new THREE.Shape(); hullShape.moveTo(-1.6, -5); hullShape.lineTo(1.6, -5); hullShape.lineTo(1.7, 2.5); hullShape.quadraticCurveTo(0, 6.5, -1.7, 2.5); hullShape.closePath();
   const hullG = new THREE.ExtrudeGeometry(hullShape, { depth: 1.5, bevelEnabled: false }); hullG.rotateX(-Math.PI / 2); hullG.translate(0, -0.6, 0);
   const cabG = new THREE.BoxGeometry(2.4, 1.2, 4.2); cabG.translate(0, 1.4, -0.8); const winG = new THREE.BoxGeometry(2.5, 0.45, 3.4); winG.translate(0, 1.5, -0.7);
   const mastG = new THREE.CylinderGeometry(0.06, 0.08, 11, 5); mastG.translate(0, 6, 0.5);
-  const hullM = new THREE.InstancedMesh(hullG, new THREE.MeshStandardMaterial({ color: 0xf4f4f2, roughness: 0.4 }), boats.length), cabM = new THREE.InstancedMesh(cabG, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }), boats.length);
-  const winM = new THREE.InstancedMesh(winG, new THREE.MeshStandardMaterial({ color: 0x1b2230, roughness: 0.2, metalness: 0.6 }), boats.length), mastM = new THREE.InstancedMesh(mastG, lam(0xdddddd), boats.length);
+  const nB = Math.max(1, boats.length), hullM = new THREE.InstancedMesh(hullG, new THREE.MeshStandardMaterial({ color: 0xf4f4f2, roughness: 0.4 }), nB), cabM = new THREE.InstancedMesh(cabG, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }), nB);
+  const winM = new THREE.InstancedMesh(winG, new THREE.MeshStandardMaterial({ color: 0x1b2230, roughness: 0.2, metalness: 0.6 }), nB), mastM = new THREE.InstancedMesh(mastG, lam(0xdddddd), nB);
   boats.forEach(([x, z, side, s2, isSail], i) => { q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), side > 0 ? Math.PI / 2 : -Math.PI / 2); m4.compose(ps.set(x + side * 5 * s2, 0.2, z), q, sc.set(s2, s2, s2));
     hullM.setMatrixAt(i, m4); cabM.setMatrixAt(i, m4); winM.setMatrixAt(i, m4); if (!isSail) m4.makeScale(0, 0, 0); mastM.setMatrixAt(i, m4); });
-  for (const m of [hullM, cabM, winM, mastM]) { m.castShadow = true; scene.add(m); }
-  // palms on the quays
-  for (let x = MARINA.x0; x <= MARINA.x1; x += 22) for (const z of [MARINA.z0 - 7, MARINA.z1 + 7]) if (!nearTrack(x, z, 30)) addPalm(x + rnd(-2, 2), z);
-  for (let z = MARINA.z0; z <= MARINA.z1; z += 22) for (const x of [MARINA.x0 - 7, MARINA.x1 + 7]) if (!nearTrack(x, z, 30)) addPalm(x, z + rnd(-2, 2));
+  for (const m of [hullM, cabM, winM, mastM]) { m.count = boats.length; m.castShadow = true; scene.add(m); }
+  // palms along the quay
+  for (let j = 0; j < MARINA.h; j += 6) for (let i = 0; i < MARINA.w; i += 6) if (mask[j * MARINA.w + i] === 1 && Math.random() < 0.5) addPalm(x0 + i * MARINA.res, z0 + j * MARINA.res);
 }
 // the hotel: two buildings either side of the track joined by a bridge, under one glowing lattice shell
-{ const s0 = locate(-262, -282, -1).s, i = Math.round(s0 / DS) % N, p = PTS[i], ang = Math.atan2(T[i].x, T[i].z), g = new THREE.Group(); g.position.set(p.x, 0, p.z); g.rotation.y = ang;
+{ const s0 = locate(98, 294, -1).s, i = Math.round(s0 / DS) % N, p = PTS[i], ang = Math.atan2(T[i].x, T[i].z), g = new THREE.Group(); g.position.set(p.x, 0, p.z); g.rotation.y = ang;
   const glassTex = canvasTex(512, 512, (c, w, h) => { const g2 = c.createLinearGradient(0, 0, 0, h); g2.addColorStop(0, "#3b5f86"); g2.addColorStop(1, "#1d324c"); c.fillStyle = g2; c.fillRect(0, 0, w, h);
       for (let y = 0; y < h; y += 64) { for (let x = 0; x < w; x += 64) if (Math.random() < 0.22) { c.fillStyle = "rgba(255,214,160,0.75)"; c.fillRect(x + 4, y + 10, 56, 46); }
         c.fillStyle = "#e9edf1"; c.fillRect(0, y, w, 8); }   // slab edges, one per floor
@@ -459,15 +475,15 @@ const MARINA = { x0: -60, x1: 715, z0: -548, z1: -96 };
   shell.position.y = 0; g.add(shell); scene.add(g); scene.userData.shell = shell; }
 // floodlight masts round the track (it is a sunset race that runs into the night)
 { const poles = [], heads = [], v = new THREE.Vector3();
-  for (let i = 0; i < N; i += 16) for (const side of [-1, 1]) { const off = side > 0 ? RUN_R[i] + 3 : -(RUN_L[i] + 3); pointAt(i * DS, off, v); if (Math.abs(v.x - (MARINA.x0 + MARINA.x1) / 2) < (MARINA.x1 - MARINA.x0) / 2 + 4 && Math.abs(v.z - (MARINA.z0 + MARINA.z1) / 2) < (MARINA.z1 - MARINA.z0) / 2 + 4) continue; if ((i / 16 + (side > 0 ? 1 : 0)) % 2) continue; poles.push([v.x, v.z, Math.atan2(T[i].x, T[i].z) + (side > 0 ? Math.PI / 2 : -Math.PI / 2)]); }
+  for (let i = 0; i < N; i += 16) for (const side of [-1, 1]) { const off = side > 0 ? RUN_R[i] + 3 : -(RUN_L[i] + 3); pointAt(i * DS, off, v); if (nearWater(v.x, v.z)) continue; if ((i / 16 + (side > 0 ? 1 : 0)) % 2) continue; poles.push([v.x, v.z, Math.atan2(T[i].x, T[i].z) + (side > 0 ? Math.PI / 2 : -Math.PI / 2)]); }
   const pg = new THREE.CylinderGeometry(0.22, 0.35, 24, 6); pg.translate(0, 12, 0); const hg = new THREE.BoxGeometry(3.2, 1.4, 0.5); hg.translate(0, 24, 0.6);
   const pm = new THREE.InstancedMesh(pg, new THREE.MeshStandardMaterial({ color: 0x9aa3ae, roughness: 0.5, metalness: 0.5 }), poles.length), hm = new THREE.InstancedMesh(hg, new THREE.MeshBasicMaterial({ color: 0xfff6e0 }), poles.length);
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1), ps = new THREE.Vector3();
   poles.forEach(([x, z, a], k) => { q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), a); m4.compose(ps.set(x, 0, z), q, one); pm.setMatrixAt(k, m4); hm.setMatrixAt(k, m4); }); scene.add(pm, hm); }
 // palms along the outside of the circuit, and a few groves
 { for (let i = 0; i < N; i += 7) for (const side of [-1, 1]) { if (Math.random() < 0.35) continue; const off = side > 0 ? RUN_R[i] + rnd(9, 22) : -(RUN_L[i] + rnd(9, 22)), v = pointAt(i * DS, off, new THREE.Vector3());
-    if (v.x > MARINA.x0 - 12 && v.x < MARINA.x1 + 12 && v.z > MARINA.z0 - 12 && v.z < MARINA.z1 + 12) continue; if (!nearTrack(v.x, v.z, 24)) addPalm(v.x, v.z); }
-  for (let n = 0; n < 260; n++) { const x = rnd(-1300, 1500), z = rnd(-1300, 650); if (x > MARINA.x0 - 20 && x < MARINA.x1 + 20 && z > MARINA.z0 - 20 && z < MARINA.z1 + 20) continue; if (!nearTrack(x, z, 70)) addPalm(x, z); } }
+    if (nearWater(v.x, v.z)) continue; if (!nearTrack(v.x, v.z, 24)) addPalm(v.x, v.z); }
+  for (let n = 0; n < 260; n++) { const x = rnd(-1100, 1100), z = rnd(-1300, 1100); if (nearWater(x, z)) continue; if (!nearTrack(x, z, 70)) addPalm(x, z); } }
 // low dunes and a city skyline across the water on the horizon
 { const dm = new THREE.MeshLambertMaterial({ color: 0xcfae84 });
   for (let k = 0; k < 26; k++) { const a = k / 26 * Math.PI * 2, r = 2600 + Math.random() * 700, m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), dm); m.scale.set(rnd(300, 700), rnd(40, 120), rnd(200, 500)); m.position.set(150 + Math.cos(a) * r, -5, -350 + Math.sin(a) * r); m.rotation.y = a; scene.add(m); }
@@ -520,10 +536,10 @@ const MARINA = { x0: -60, x1: 715, z0: -548, z1: -96 };
     return g;
   }
   const v = new THREE.Vector3();
-  for (const s0 of [150, 275, 400, 525, 650, 775]) { const i = Math.round(s0 / DS) % N; pointAt(s0, -(RUN_L[i] + 5), v);
+  for (const s0 of [-215, -95, 25, 145]) { const i = Math.round(((s0 + TL) % TL) / DS) % N; pointAt(s0, -(RUN_L[i] + 5), v);
     const g = grandstand(118); g.position.copy(v); g.rotation.y = Math.atan2(T[i].x, T[i].z); scene.add(g); }
   // pit building: garages in team colours below, a glass hospitality floor above; pit lane between it and the barrier
-  { const s0 = 470, i = Math.round(s0 / DS) % N, L = 600, depth = 22, H = 12, base = RUN_R[i] + 15; pointAt(s0, base, v);
+  { const s0 = -20, i = Math.round(((s0 + TL) % TL) / DS) % N, L = 460, depth = 22, H = 12, base = RUN_R[i] + 15; pointAt(s0, base, v);
     const g = new THREE.Group(); g.position.copy(v); g.rotation.y = Math.atan2(T[i].x, T[i].z) + Math.PI;   // local +x points away from the track on this side
     { const bld = new THREE.Mesh(new THREE.BoxGeometry(depth, H, L), new THREE.MeshStandardMaterial({ color: 0xe6e8eb, roughness: 0.6 })); bld.position.set(depth / 2, H / 2, 0); g.add(bld); }
     const glass = new THREE.Mesh(new THREE.PlaneGeometry(L, 4.2), new THREE.MeshStandardMaterial({ color: 0x1d3150, roughness: 0.12, metalness: 0.7 })); glass.rotation.y = -Math.PI / 2; glass.position.set(-0.05, 8.4, 0); g.add(glass);
@@ -538,8 +554,8 @@ const MARINA = { x0: -60, x1: 715, z0: -548, z1: -96 };
       const pl = new THREE.Mesh(new THREE.PlaneGeometry(gw - 0.6, 5.6), new THREE.MeshLambertMaterial({ map: tex })); pl.rotation.y = -Math.PI / 2; pl.position.set(-0.05, 2.9, -L / 2 + gw * (n + 0.5)); g.add(pl); n++; }
     scene.add(g);
     // pit lane and pit wall
-    const lane = ribbon((k) => RUN_R[k] + 0.6, (k) => RUN_R[k] + 14.8, 0.02, roadMat, 1, 1 / 32, (k) => { const sk = k * DS; return sk > s0 - L / 2 - 40 && sk < s0 + L / 2 + 40; }); lane.receiveShadow = true;
-    ribbon((k) => RUN_R[k] + 7.5, (k) => RUN_R[k] + 7.75, 0.05, new THREE.MeshBasicMaterial({ color: 0xf2f2f2 }), 1, 1, (k) => { const sk = k * DS; return sk > s0 - L / 2 && sk < s0 + L / 2 && Math.floor(sk / 4) % 2 === 0; });
+    const lane = ribbon((k) => RUN_R[k] + 0.6, (k) => RUN_R[k] + 14.8, 0.02, roadMat, 1, 1 / 32, (k) => { let d = k * DS - s0; d -= Math.round(d / TL) * TL; return Math.abs(d) < L / 2 + 40; }); lane.receiveShadow = true;
+    ribbon((k) => RUN_R[k] + 7.5, (k) => RUN_R[k] + 7.75, 0.05, new THREE.MeshBasicMaterial({ color: 0xf2f2f2 }), 1, 1, (k) => { let d = k * DS - s0; d -= Math.round(d / TL) * TL; return Math.abs(d) < L / 2 && Math.floor((k * DS) / 4) % 2 === 0; });
   }
 }
 // trackside: boards along the barriers on the straights, and a bridge over the back straight
