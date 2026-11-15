@@ -326,17 +326,17 @@ const TRACKS = {
     sub: "An old airfield in the English countryside: the flat-out sweeps of the fast esses, two long straights and a tight final complex." },
 };
 // ================= TEAMS (all fictional) =================
-const TEAMS = [   // all teams and drivers are fictional
-  { name: "Scarlet Falcon", c1: "#d0102a", c2: "#f4f4f4", drivers: [["FAL", 16, "Marco Falcone"], ["ROS", 55, "Rafael Rossetti"]] },
-  { name: "Azure Storm", c1: "#1747c9", c2: "#ffd200", drivers: [["AZE", 1, "Lukas Azevedo"], ["HAR", 11, "Kai Hartmann"]] },
-  { name: "Turon GP", c1: "#00a7c7", c2: "#f5c242", drivers: [["RAS", 7, "Timur Rashidov"], ["KAR", 27, "Sardor Karimov"]] },
-  { name: "Sunset Comet", c1: "#ff7a00", c2: "#1a3fa8", drivers: [["COM", 4, "Oliver Comber"], ["FAI", 81, "Noah Fairley"]] },
-  { name: "Midnight Steel", c1: "#23272e", c2: "#00d7c3", drivers: [["STB", 44, "Elias Stenberg"], ["VAL", 63, "Viktor Vale"]] },
-  { name: "Volt Racing", c1: "#19a84a", c2: "#111111", drivers: [["VOL", 14, "Jonas Volkov"], ["LAN", 18, "Mateo Landa"]] },
-  { name: "Ivory Lynx", c1: "#f2f2f2", c2: "#7b2cd1", drivers: [["LIN", 10, "Leon Lindqvist"], ["DUV", 31, "Pierre Duval"]] },
-  { name: "Copper Fox", c1: "#b5652b", c2: "#f2e3c0", drivers: [["FOX", 22, "Felix Foxley"], ["KAM", 3, "Yuto Kaminari"]] },
-  { name: "Rose Arrow", c1: "#e5438f", c2: "#222222", drivers: [["MOR", 23, "Andre Moreau"], ["BRA", 2, "Alex Brandt"]] },
-  { name: "Navy Hawk", c1: "#0c1f4a", c2: "#e8e8e8", drivers: [["HAW", 20, "Henrik Hawke"], ["LAI", 77, "Kevin Laird"]] },
+const TEAMS = [   // fictional teams and drivers, painted in the colour schemes of the 2026 grid; car numbers as raced in 2026
+  { name: "Scarlet Falcon", c1: "#dc0000", c2: "#fff200", drivers: [["FAL", 16, "Marco Falcone"], ["ROS", 44, "Rafael Rossetti"]] },
+  { name: "Azure Storm", c1: "#1b2a5c", c2: "#e8002d", drivers: [["AZE", 3, "Lukas Azevedo"], ["HAR", 6, "Kai Hartmann"]] },
+  { name: "Turon GP", c1: "#00594f", c2: "#cedc00", drivers: [["RAS", 14, "Timur Rashidov"], ["KAR", 18, "Sardor Karimov"]] },
+  { name: "Sunset Comet", c1: "#ff8000", c2: "#1d1f24", drivers: [["COM", 1, "Oliver Comber"], ["FAI", 81, "Noah Fairley"]] },
+  { name: "Midnight Steel", c1: "#16181c", c2: "#27f4d2", drivers: [["STB", 63, "Elias Stenberg"], ["VAL", 12, "Viktor Vale"]] },
+  { name: "Volt Racing", c1: "#9aa1a8", c2: "#c4002f", drivers: [["VOL", 27, "Jonas Volkov"], ["LAN", 5, "Mateo Landa"]] },
+  { name: "Ivory Lynx", c1: "#f2f2f2", c2: "#da291c", drivers: [["LIN", 31, "Leon Lindqvist"], ["DUV", 87, "Pierre Duval"]] },
+  { name: "Copper Fox", c1: "#0a4fa8", c2: "#ff87bc", drivers: [["FOX", 10, "Felix Foxley"], ["KAM", 43, "Yuto Kaminari"]] },
+  { name: "Rose Arrow", c1: "#f4f6fb", c2: "#1634cb", drivers: [["MOR", 30, "Andre Moreau"], ["BRA", 41, "Alex Brandt"]] },
+  { name: "Navy Hawk", c1: "#005aff", c2: "#041e42", drivers: [["HAW", 55, "Henrik Hawke"], ["LAI", 23, "Kevin Laird"]] },
 ];
 const SET = Object.assign({ mode: "race", laps: "5", skill: "0.95", grid: "mid", assist: "on", touch: "auto", team: 2, quali: "on", sens: "1", tyre: "M", radio: "voice" }, store.get("set", {}));
 const TRACK = TRACKS[SET.track] || TRACKS.yas; SET.track = TRACK.id;
@@ -586,10 +586,10 @@ const ENV = { tex: null };
   // reflections: the sky baked into an environment map for the lacquered cars and polished metal
   // (a plain vertex-coloured dome with the same colours as the sky, so it bakes cleanly)
   try { const pm = new THREE.PMREMGenerator(renderer), es = new THREE.Scene(), dg = new THREE.SphereGeometry(50, 48, 24), pa = dg.attributes.position, col = [], c = new THREE.Color();
-    const top = PARK ? [0.16, 0.38, 0.72] : [0.10, 0.20, 0.42], mid = PARK ? [0.42, 0.62, 0.86] : [0.45, 0.48, 0.66], hor = PARK ? [0.80, 0.87, 0.93] : [0.98, 0.62, 0.38], low = PARK ? [0.30, 0.42, 0.26] : [0.62, 0.50, 0.38];
+    const top = PARK ? [0.16, 0.38, 0.72] : [0.10, 0.20, 0.42], mid = PARK ? [0.42, 0.62, 0.86] : [0.45, 0.48, 0.66], hor = PARK ? [0.80, 0.87, 0.93] : [0.98, 0.62, 0.38], low = [0.32, 0.33, 0.35];   // neutral below the horizon, or dark paint picks up a brown cast
     const ss = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); }, mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
     for (let k = 0; k < pa.count; k++) { const v = new THREE.Vector3(pa.getX(k), pa.getY(k), pa.getZ(k)).normalize(), h = v.y; let rgb = h > 0 ? mix(mix(hor, mid, ss(0, 0.18, h)), top, ss(0.18, 0.75, h)) : low;
-      const sd = Math.max(0, v.dot(SUN_DIR)); rgb = rgb.map((x, i) => x + [1, 0.8, 0.55][i] * Math.pow(sd, 24) * 1.2); c.setRGB(...rgb).convertSRGBToLinear().multiplyScalar(0.8); col.push(c.r, c.g, c.b); }
+      const sd = Math.max(0, v.dot(SUN_DIR)), gr = (rgb[0] + rgb[1] + rgb[2]) / 3; rgb = rgb.map((x, i) => x * 0.35 + gr * 0.65 + Math.pow(sd, 24) * 1.0);   /* mostly neutral, so paint keeps its own colour */ c.setRGB(...rgb).convertSRGBToLinear().multiplyScalar(0.8); col.push(c.r, c.g, c.b); }
     dg.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)); es.add(new THREE.Mesh(dg, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
     ENV.tex = pm.fromScene(es, 0.03).texture; pm.dispose(); } catch {} }
 // the circuit's footprint: its centre and size, for the scenery around it
@@ -924,13 +924,14 @@ const LIVERY = new Map();
 // the nose from above and the rear wing from behind; so a logo is placed by its spot on the car, in metres
 const SPONSORS = ["KORVEX", "ZYNTRA", "QUELLIX", "VORAXA", "BRIXTEL", "LUMORA", "TERAVON", "OKTALIS", "NEXARO", "SOLVARI", "PYRAXA", "DRAVELL", "ZEPHRIX", "ORBIXA", "HALVEX", "KYNETRA", "MERIDO", "VANTRIS", "AXIOLA", "FENRAX", "CALDERA", "STRIVO", "OPTERRA", "JUNOVA", "RAVELLO", "TIKARO", "ISOMEX", "VELQOR", "ARKADA", "NUVELLE"];
 function seeded(n) { let x = (n * 2654435761) % 4294967296; return () => { x = (x * 1664525 + 1013904223) % 4294967296; return x / 4294967296; }; }
+let NUMBER = null;   // set while painting a car with its own number
 function paintSponsors(g, S, team) {
   const ti = Math.max(0, TEAMS.indexOf(team)), r = seeded(ti + 7);
   const names = [SPONSORS[ti * 3 % 30], SPONSORS[(ti * 3 + 1) % 30], SPONSORS[(ti * 3 + 2) % 30], SPONSORS[(ti * 7 + 5) % 30]], lum = (c) => { const k = new THREE.Color(c); return 0.3 * k.r + 0.59 * k.g + 0.11 * k.b; };
   const ink = lum(team.c1) > 0.55 ? "#111318" : "#ffffff", acc = team.c2 && Math.abs(lum(team.c2) - lum(team.c1)) > 0.25 ? team.c2 : ink;
   const styles = names.map(() => ({ shape: Math.floor(r() * 5), font: r() < 0.5 ? "Michroma, sans-serif" : "Inter, sans-serif", weight: r() < 0.5 ? "800" : "700", italic: r() < 0.4 }));
   // one logo in a box w x h (cm), drawn in the box's own frame
-  const logo = (k, w, h, col, ac) => { if (k < 0) { g.fillStyle = col; g.textBaseline = "middle"; g.font = `${h * 0.8}px Michroma, sans-serif`; g.fillText(team.name.toUpperCase(), 0, h * 0.55, w); return; }
+  const logo = (k, w, h, col, ac) => { if (k < 0) { g.fillStyle = col; g.textBaseline = "middle"; g.font = `${h * 0.85}px Michroma, sans-serif`; g.fillText(team.name.toUpperCase(), 0, h * 0.55, w); return; }
     const st = styles[k], e = h * 0.9; g.save(); g.fillStyle = ac; g.strokeStyle = ac; g.lineWidth = h * 0.12; g.translate(e / 2, h / 2);
     if (st.shape === 0) { g.beginPath(); g.arc(0, 0, e * 0.42, 0, 7); g.fill(); g.fillStyle = col; g.beginPath(); g.arc(e * 0.1, 0, e * 0.25, 0, 7); g.fill(); }
     else if (st.shape === 1) { g.beginPath(); g.moveTo(-e * 0.45, e * 0.38); g.lineTo(0, -e * 0.45); g.lineTo(e * 0.45, e * 0.38); g.closePath(); g.fill(); }
@@ -943,18 +944,15 @@ function paintSponsors(g, S, team) {
     g.save(); if (sign > 0) g.setTransform(0.1257 * s1, 0, 0, -0.1255 * s1, S * (0.1257 * z0 + 0.3692), S * (0.1255 * y0 + vOff));
     else g.setTransform(-0.1257 * s1, 0, 0, -0.1255 * s1, S * (0.1257 * (z0 + w / 100) + 0.3692), S * (0.1255 * y0 + vOff));
     logo(k, w, h, col, ac); g.restore(); };
-  for (const sg of [-1, 1]) {
-    side(0, sg, -0.45, 0.62, 128, 22, ink, acc);    // the title sponsor along the sidepod
-    side(1, sg, 0.75, 1.02, 95, 15, ink, acc);      // the engine cover fin
-    side(3, sg, -1.3, 0.66, 52, 9, ink, acc);       // a small one by the cockpit
-  }
-  // the team's own name under the title sponsor, and a third sponsor low on the engine cover
-  for (const sg of [-1, 1]) { side(-1, sg, -0.2, 0.37, 90, 8, acc, acc); side(2, sg, 1.0, 0.72, 60, 9, ink, acc); }
-  // the rear wing, seen from behind
-  { const s1 = 0.01 * S, x0 = -0.5, y0 = 0.885; g.save(); g.setTransform(0.2493 * s1, 0, -0.0073 * s1, -0.414 * s1, S * (0.2493 * x0 + 0.0073 * y0 + 0.8099), S * (0.414 * y0 - 0.1755)); logo(0, 100, 11, ink, acc); g.restore(); }
+  // the team's name, big along each sidepod, and the car number on the engine cover fin
+  const num = (sg, z0, y0, w, h, n) => { const s1 = 0.01 * S, vOff = sg > 0 ? 0.0095 : 0.1541; g.save();
+    if (sg > 0) g.setTransform(0.1257 * s1, 0, 0, -0.1255 * s1, S * (0.1257 * z0 + 0.3692), S * (0.1255 * y0 + vOff)); else g.setTransform(-0.1257 * s1, 0, 0, -0.1255 * s1, S * (0.1257 * (z0 + w / 100) + 0.3692), S * (0.1255 * y0 + vOff));
+    g.fillStyle = acc; g.textBaseline = "middle"; g.textAlign = "center"; g.font = `800 ${h * 0.9}px Inter, sans-serif`; g.fillText(String(n), w / 2, h * 0.55, w); g.restore(); };
+  for (const sg of [-1, 1]) { side(-1, sg, -0.55, 0.64, 150, 20, ink, ink); if (NUMBER !== null) num(sg, 0.85, 1.05, 50, 16, NUMBER); }
+
 }
-function liveryTex(team, size) {   // paint the mask: red = team colour, green = stripes, blue = carbon; the team name where the old badge was
-  const key = team.name + size; if (LIVERY.has(key)) return LIVERY.get(key);
+function liveryTex(team, size, number) {   // paint the mask: red = team colour, green = stripes, blue = carbon; the team name along the sides, the number on the fin
+  const key = team.name + team.c1 + size + "#" + (number ?? ""); if (LIVERY.has(key)) return LIVERY.get(key);
   const c = document.createElement("canvas"); c.width = c.height = size; const g = c.getContext("2d"), tex = new THREE.CanvasTexture(c);
   tex.flipY = false; tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 4;
   const paint = () => {
@@ -964,7 +962,7 @@ function liveryTex(team, size) {   // paint the mask: red = team colour, green =
     for (let k = 0; k < d.length; k += 4) { const r = d[k], gg = d[k + 1], b = d[k + 2], s = r + gg + b || 1;
       for (let a = 0; a < 3; a++) d[k + a] = (c1[a] * r + c2[a] * gg + cb[a] * b) / s; }
     g.putImageData(im, 0, 0);
-    paintSponsors(g, size, team);
+    NUMBER = number ?? null; paintSponsors(g, size, team); NUMBER = null;
     tex.needsUpdate = true; };
   if (MASK.complete) paint(); else MASK.addEventListener("load", paint);
   LIVERY.set(key, tex); return tex;
@@ -982,7 +980,7 @@ const grainTex = (() => { const t = canvasTex(256, 256, (g, w, h) => { g.fillSty
 function setTyre(car, c) { car.tyre = c; if (car.tyreMat) car.tyreMat.dispose(); const m = car.tyreMat = TYRE_MAT[c].clone(); m.bumpMap = grainTex; m.bumpScale = 0.002; car.wearShown = undefined;
   for (const w of car.mesh.userData.wheels) w.t.traverse((o) => { if (o.userData.tyre) o.material = m; }); }
 function buildCar(team, num, isPlayer) {
-  const body = new THREE.MeshPhysicalMaterial({ map: liveryTex(team, isPlayer ? 1024 : 512), roughness: 0.36, metalness: 0.2, clearcoat: 0.6, clearcoatRoughness: 0.08, envMap: ENV.tex, envMapIntensity: 0.25, side: THREE.DoubleSide });   // glossy lacquer over the paint
+  const body = new THREE.MeshPhysicalMaterial({ map: liveryTex(team, isPlayer ? 1024 : 512, num || null), roughness: 0.36, metalness: 0.2, clearcoat: 0.6, clearcoatRoughness: 0.08, envMap: ENV.tex, envMapIntensity: 0.25, side: THREE.DoubleSide });   // glossy lacquer over the paint
   const matOf = (m) => (m === 0 ? body : m === 1 ? MAT_SHARED.light : m === 2 ? MAT_SHARED.tyre : MAT_SHARED.cover);
   const root = new THREE.Group(), lod = new THREE.LOD(), flaps = [];
   for (const [lvl, dist] of isPlayer ? [["lod0", 0], ["lod0m", 60], ["lod1", 140]] : [["lod0", 0], ["lod0m", 12], ["lod1", 30]]) { const g = new THREE.Group(); for (const p of CARGEO[lvl]) { const m = new THREE.Mesh(p.g, matOf(p.mat)); m.castShadow = true;
@@ -1859,8 +1857,8 @@ const GAR = (() => {
   const sc = new THREE.Scene(); sc.background = new THREE.Color(0x0a0e13); sc.fog = new THREE.Fog(0x0a0e13, 16, 40);
   const cam = new THREE.PerspectiveCamera(34, innerWidth / innerHeight, 0.1, 120); cam.position.set(6.4, 2.3, 7.4); cam.lookAt(0, 0.45, 0);
   sc.add(new THREE.HemisphereLight(0xa9c3e6, 0x0d1117, 0.55));
-  const key = new THREE.SpotLight(0xfff1de, 2.2, 40, 0.55, 0.6, 1.2); key.position.set(2, 11, 4); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); key.shadow.bias = -0.0005; sc.add(key, key.target);
-  for (const [x, z, c] of [[-7, -5, 0x8fd3ff], [7, -6, 0x8fd3ff], [0, 8, 0xffd1a8]]) { const l = new THREE.PointLight(c, 0.9, 30); l.position.set(x, 3.5, z); sc.add(l); }
+  const key = new THREE.SpotLight(0xf6f8ff, 2.2, 40, 0.55, 0.6, 1.2); key.position.set(2, 11, 4); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); key.shadow.bias = -0.0005; sc.add(key, key.target);
+  for (const [x, z, c] of [[-7, -5, 0x8fd3ff], [7, -6, 0x8fd3ff], [0, 8, 0xe8eeff]]) { const l = new THREE.PointLight(c, 0.9, 30); l.position.set(x, 3.5, z); sc.add(l); }
   const floor = new THREE.Mesh(new THREE.CircleGeometry(40, 64), new THREE.MeshStandardMaterial({ color: 0x0d1218, roughness: 0.55, metalness: 0.3 })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; sc.add(floor);
   const disc = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 4.7, 0.12, 72), new THREE.MeshStandardMaterial({ color: 0x1a222c, roughness: 0.35, metalness: 0.6 })); disc.position.y = 0.06; disc.receiveShadow = true; sc.add(disc);
   const ring = new THREE.Mesh(new THREE.TorusGeometry(4.66, 0.025, 6, 128), new THREE.MeshBasicMaterial({ color: 0x8fd3ff })); ring.rotation.x = Math.PI / 2; ring.position.y = 0.125; sc.add(ring);
