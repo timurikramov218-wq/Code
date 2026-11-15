@@ -474,6 +474,7 @@ ribbon(HW + 1.6 + PAINT, (k) => RUN_R[k] - 1, 0.025, gravelMat, 4, 1 / 8, (k) =>
 ribbon((k) => -RUN_L[k] + 1, -HW - 1.6 - PAINT, 0.025, gravelMat, 4, 1 / 8, (k) => GRAV_L[k]);
 // barriers: armco on posts, tyre walls in front where the runoff is gravel
 const wallTex = canvasTex(128, 32, (g, w, h) => { g.fillStyle = "#d9dbdd"; g.fillRect(0, 0, w, h); for (let k = 0; k < 600; k++) { g.fillStyle = "rgba(120,120,125,0.12)"; g.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5); } g.fillStyle = "rgba(0,0,0,0.25)"; g.fillRect(w - 2, 0, 2, h); g.fillStyle = "#1c3fae"; g.fillRect(0, h - 6, w / 2, 6); g.fillStyle = "#c8202a"; g.fillRect(w / 2, h - 6, w / 2, 6); }, true);   // concrete blocks with a blue and red foot
+const PITWALL = [];   // the teams' stands on the pit wall (their engineers are seated once the crew can be built)
 // the pit lane runs beside the start-finish straight on the right: an entry ramp, the garages, an exit ramp
 const PIT = { s0: -10, L: 330 }; PIT.boxA = PIT.s0 - PIT.L / 2; PIT.boxB = PIT.s0 + PIT.L / 2; PIT.entry = PIT.boxA - 80; PIT.exit = PIT.boxB + 75;
 let PIT_RS = 22;   // the barrier's offset beside the garages (set once the run-off is known)
@@ -749,17 +750,39 @@ else { const dm = new THREE.MeshLambertMaterial({ color: 0xcfae84 });
   { const s0 = -10, i = Math.round(((s0 + TL) % TL) / DS) % N, L = 330, depth = 22, H = 12, base = RUN_R[i] + 15; pointAt(s0, base, v);
     const g = new THREE.Group(); g.position.copy(v); g.rotation.y = Math.atan2(T[i].x, T[i].z) + Math.PI;   // local +x points away from the track on this side
     placeClear(g, depth / 2, 0, depth / 2 + 4, L / 2 + 2, 30);
-    { const bld = new THREE.Mesh(new THREE.BoxGeometry(depth, H, L), new THREE.MeshStandardMaterial({ color: 0xe6e8eb, roughness: 0.6 })); bld.position.set(depth / 2, H / 2, 0); g.add(bld); }
+    // the building: hospitality floors on top, open garages below (9 m deep, 6.4 m high), each with its own back wall, lights, tyres and tools
+    const GD = 9, GH = 6.4, white = new THREE.MeshStandardMaterial({ color: 0xe6e8eb, roughness: 0.6 });
+    { const top = new THREE.Mesh(new THREE.BoxGeometry(depth, H - GH, L), white); top.position.set(depth / 2, GH + (H - GH) / 2, 0); top.castShadow = true; g.add(top);
+      const back = new THREE.Mesh(new THREE.BoxGeometry(depth - GD, GH, L), white); back.position.set(GD + (depth - GD) / 2, GH / 2, 0); g.add(back);
+      const ceil = new THREE.Mesh(new THREE.PlaneGeometry(GD, L), new THREE.MeshStandardMaterial({ color: 0x2a2f38, roughness: 0.8 })); ceil.rotation.x = Math.PI / 2; ceil.position.set(GD / 2, GH - 0.02, 0); g.add(ceil); }
     const glass = new THREE.Mesh(new THREE.PlaneGeometry(L, 4.2), new THREE.MeshStandardMaterial({ color: 0x1d3150, roughness: 0.12, metalness: 0.7 })); glass.rotation.y = -Math.PI / 2; glass.position.set(-0.05, 8.4, 0); g.add(glass);
     const mull = []; for (let z = -L / 2; z <= L / 2; z += 3) mull.push(bx(0.2, 4.2, 0.12, -0.12, 8.4, z)); mull.push(bx(0.3, 0.3, L, -0.15, 6.2, 0), bx(0.3, 0.3, L, -0.15, 10.6, 0)); g.add(new THREE.Mesh(mergeG(mull), steelM));
     const lip = new THREE.Mesh(new THREE.BoxGeometry(4, 0.4, L + 2), roofMat); lip.position.set(-1.6, H + 0.1, 0); g.add(lip);
-    // twenty garages, two per team, each with the team colour, its name and the car number
-    const gw = L / 20; let n = 0;
-    for (const t of TEAMS) for (const d of t.drivers) {
-      const tex = canvasTex(512, 256, (c, w, h) => { c.fillStyle = "#1b1f27"; c.fillRect(0, 0, w, h); c.fillStyle = t.c1; c.fillRect(0, 0, w, 54); c.fillStyle = t.c2; c.fillRect(0, 54, w, 6);
-        c.fillStyle = "#fff"; c.font = "30px Michroma, sans-serif"; c.textBaseline = "middle"; c.fillText(t.name.toUpperCase(), 18, 28, w - 120); c.textAlign = "right"; c.fillText(String(d[1]), w - 18, 28);
-        c.fillStyle = "#2a303b"; c.fillRect(30, 80, w - 60, h - 80); c.fillStyle = "rgba(255,255,255,0.05)"; for (let y = 86; y < h; y += 12) c.fillRect(30, y, w - 60, 2); });   // a half-open roller door
-      const pl = new THREE.Mesh(new THREE.PlaneGeometry(gw - 0.6, 5.6), new THREE.MeshLambertMaterial({ map: tex })); pl.rotation.y = -Math.PI / 2; pl.position.set(-0.05, 2.9, -L / 2 + gw * (n + 0.5)); g.add(pl); n++; }
+    // twenty garages, two per team: team-coloured walls, a sign over the door with the name and number, light panels, tyre stacks, tool chests
+    const gw = L / 20, walls = [], lights = [], chests = [], tyres = [], tyreG = new THREE.CylinderGeometry(0.34, 0.34, 0.36, 16); tyreG.translate(0, 0.18, 0);
+    const lightM = new THREE.MeshBasicMaterial({ color: 0xf4f8ff }), tyreM = new THREE.MeshStandardMaterial({ color: 0x141416, roughness: 0.9 });
+    for (let k = 0; k <= 20; k++) walls.push(bx(GD, GH, 0.3, GD / 2, GH / 2, -L / 2 + gw * k));
+    let n = 0;
+    for (const t of TEAMS) for (const d of t.drivers) { const zc = -L / 2 + gw * (n + 0.5);
+      const sign = canvasTex(512, 64, (c, w, h) => { c.fillStyle = t.c1; c.fillRect(0, 0, w, h); c.fillStyle = t.c2; c.fillRect(0, h - 6, w, 6); c.fillStyle = "#fff"; c.font = "30px Michroma, sans-serif"; c.textBaseline = "middle"; c.fillText(t.name.toUpperCase(), 16, 30, w - 110); c.textAlign = "right"; c.fillText(String(d[1]), w - 16, 30); });
+      const sp = new THREE.Mesh(new THREE.PlaneGeometry(gw - 0.4, 0.9), new THREE.MeshBasicMaterial({ map: sign })); sp.rotation.y = -Math.PI / 2; sp.position.set(-0.06, GH - 0.5, zc); g.add(sp);
+      const wallTex2 = canvasTex(512, 256, (c, w, h) => { const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, t.c1); gr.addColorStop(1, "#14171d"); c.fillStyle = gr; c.fillRect(0, 0, w, h);
+        c.fillStyle = "rgba(255,255,255,0.08)"; for (let x = 0; x < w; x += 32) c.fillRect(x, 0, 2, h); c.fillStyle = t.c2; c.fillRect(0, 150, w, 5);
+        c.fillStyle = "#fff"; c.font = "34px Michroma, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(t.name.toUpperCase(), w / 2, 90, w - 40); c.font = "600 22px Inter, sans-serif"; c.fillText(d[2].toUpperCase() + "  ·  " + d[1], w / 2, 190, w - 40); });
+      const bw = new THREE.Mesh(new THREE.PlaneGeometry(gw - 0.3, GH), new THREE.MeshLambertMaterial({ map: wallTex2 })); bw.rotation.y = -Math.PI / 2; bw.position.set(GD - 0.02, GH / 2, zc); g.add(bw);
+      const sideTex = canvasTex(256, 128, (c, w, h) => { const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, t.c1); gr.addColorStop(1, "#1a1e25"); c.fillStyle = gr; c.fillRect(0, 0, w, h); c.fillStyle = t.c2; c.fillRect(0, h * 0.62, w, 3); c.fillStyle = "rgba(255,255,255,0.07)"; for (let x = 0; x < w; x += 24) c.fillRect(x, 0, 1, h); });
+      const sm = new THREE.MeshLambertMaterial({ map: sideTex });
+      for (const sz of [-1, 1]) { const sw = new THREE.Mesh(new THREE.PlaneGeometry(GD - 0.2, GH - 0.1), sm); sw.rotation.y = sz > 0 ? Math.PI : 0; sw.position.set(GD / 2, GH / 2, zc + sz * (gw / 2 - 0.17)); g.add(sw); }
+      const fl = new THREE.Mesh(new THREE.PlaneGeometry(GD, gw - 0.3), new THREE.MeshStandardMaterial({ color: 0x3a3f48, roughness: 0.35, metalness: 0.1 })); fl.rotation.x = -Math.PI / 2; fl.position.set(GD / 2, 0.025, zc); fl.receiveShadow = true; g.add(fl);
+      for (const lx of [2, 4.5, 7]) lights.push(bx(0.6, 0.06, gw - 2.5, lx, GH - 0.08, zc));
+      for (const side of [-1, 1]) { const cz = zc + side * (gw / 2 - 1.1);
+        chests.push([GD - 1.3, cz, t.c1]); chests.push([GD - 3.1, cz, t.c2]);
+        for (let st = 0; st < 2; st++) for (let h2 = 0; h2 < 4; h2++) tyres.push([GD - 5.2 - st * 0.8, h2 * 0.37, cz]); }
+      n++; }
+    g.add(new THREE.Mesh(mergeG(walls), white), new THREE.Mesh(mergeG(lights), lightM));
+    { const cg = new THREE.BoxGeometry(1.4, 1.1, 0.7); cg.translate(0, 0.55, 0); const ci = new THREE.InstancedMesh(cg, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4, metalness: 0.3 }), chests.length), m4 = new THREE.Matrix4(), col = new THREE.Color();
+      chests.forEach(([x, z, c], k) => { m4.makeTranslation(x, 0, z); ci.setMatrixAt(k, m4); ci.setColorAt(k, col.set(c)); }); g.add(ci);
+      const ti = new THREE.InstancedMesh(tyreG, tyreM, tyres.length); tyres.forEach(([x, y, z], k) => { m4.makeTranslation(x, y, z); ti.setMatrixAt(k, m4); }); g.add(ti); }
     scene.add(g);
     // pit lane and pit wall
     const lane = ribbon((k) => RUN_R[k] + 0.6, (k) => RUN_R[k] + 14.8, 0.02, roadMat, 1, 1 / 32, (k) => { let d = k * DS - s0; d -= Math.round(d / TL) * TL; return Math.abs(d) < L / 2 && Math.abs(KW[k]) < 0.002; }); lane.receiveShadow = true;
@@ -767,6 +790,27 @@ else { const dm = new THREE.MeshLambertMaterial({ color: 0xcfae84 });
     const RS = PIT_RS, uIn = (k) => sm01((pitRel(k * DS) - PIT.entry) / (PIT.boxA + 12 - PIT.entry)), uOut = (k) => sm01((pitRel(k * DS) - PIT.boxB + 12) / (PIT.exit - PIT.boxB + 12));
     ribbon((k) => RUN_R[k] - 0.8, (k) => lerp(RUN_R[k] + 2, RS + 14.8, uIn(k)), 0.03, roadMat, 1, 1 / 32, (k) => { const q = pitRel(k * DS); return q > PIT.entry - 6 && q < PIT.boxA + 14; }).receiveShadow = true;
     ribbon((k) => lerp(RS + 0.6, HW + 0.4, uOut(k)), (k) => lerp(RS + 14.8, HW + 7, uOut(k)), 0.03, roadMat, 1, 1 / 32, (k) => { const q = pitRel(k * DS); return q > PIT.boxB - 14 && q < PIT.exit + 6; }).receiveShadow = true;
+    // each car's box, painted in front of its garage: a white frame, the team colour where the nose stops, the number
+    { const v2 = new THREE.Vector3(); let n2 = 0;
+      for (const t of TEAMS) for (const d of t.drivers) { const sB = s0 + L / 2 - gw * (n2 + 0.5), ki = Math.round(((sB + TL) % TL) / DS) % N; n2++;
+        const tex = canvasTex(128, 224, (c, w, h) => { c.clearRect(0, 0, w, h); c.strokeStyle = "#f2f2f2"; c.lineWidth = 6; c.strokeRect(5, 5, w - 10, h - 10); c.fillStyle = t.c1; c.fillRect(8, h - 30, w - 16, 22); c.fillStyle = "rgba(242,242,242,0.85)"; c.font = "44px Michroma, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.save(); c.translate(w / 2, h / 2); c.rotate(Math.PI); c.fillText(String(d[1]), 0, 0); c.restore(); });
+        const pg = new THREE.PlaneGeometry(4, 7); pg.rotateX(-Math.PI / 2); const m = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({ map: tex, transparent: true, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -8 }));
+        pointAt(sB - 0.4, PIT_RS + 11, v2); m.position.set(v2.x, 0.055, v2.z); m.rotation.y = Math.atan2(T[ki].x, T[ki].z); scene.add(m); } }
+    // the pit wall: a covered stand for each team on the lane side of the wall, with a desk of screens and its engineers (seated later, once the crew is built)
+    { const v2 = new THREE.Vector3(), dark = new THREE.MeshStandardMaterial({ color: 0x1e232b, roughness: 0.6 }), scr = new THREE.MeshBasicMaterial({ color: 0x7fb6ff });
+      TEAMS.forEach((t, ti) => { const sC = s0 + L / 2 - gw * (2 * ti + 1), ki = Math.round(((sC + TL) % TL) / DS) % N; pointAt(sC, PIT_RS + 1.5, v2);
+        const gs = new THREE.Group(); gs.position.copy(v2); gs.rotation.y = Math.atan2(T[ki].x, T[ki].z);   // local +x faces the track
+        const tc = new THREE.MeshStandardMaterial({ color: t.c1, roughness: 0.5 });
+        const plat = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.45, 7.2), dark); plat.position.y = 0.225; gs.add(plat);
+        const desk = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.08, 6.6), dark); desk.position.set(0.55, 1.2, 0); gs.add(desk);
+        const front = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.75, 6.6), tc); front.position.set(0.9, 0.82, 0); gs.add(front);
+        for (const z of [-2.4, -0.8, 0.8, 2.4]) { const mon = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.42, 0.62), dark); mon.position.set(0.7, 1.5, z); gs.add(mon); const sc2 = new THREE.Mesh(new THREE.PlaneGeometry(0.56, 0.36), scr); sc2.rotation.y = -Math.PI / 2; sc2.position.set(0.665, 1.5, z); gs.add(sc2);
+          const stool = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.5, 10), dark); stool.position.set(-0.25, 0.7, z); gs.add(stool); }
+        for (const [x, z] of [[-0.9, -3.4], [-0.9, 3.4], [0.9, -3.4], [0.9, 3.4]]) { const po = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.1, 6), steelM); po.position.set(x, 1.95, z); gs.add(po); }
+        const roof = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.14, 7.6), tc); roof.position.set(0, 3.5, 0); roof.rotation.z = 0.06; roof.castShadow = true; gs.add(roof);
+        const fas = canvasTex(512, 48, (c, w, h) => { c.fillStyle = t.c1; c.fillRect(0, 0, w, h); c.fillStyle = "#fff"; c.font = "26px Michroma, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(t.name.toUpperCase(), w / 2, h / 2 + 1, w - 20); });
+        for (const sx of [1, -1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(7.4, 0.5), new THREE.MeshBasicMaterial({ map: fas })); f.rotation.y = sx > 0 ? Math.PI / 2 : -Math.PI / 2; f.position.set(sx * 1.32, 3.3 + sx * 0.08, 0); gs.add(f); }
+        scene.add(gs); PITWALL.push({ g: gs, team: t }); }); }
     // white lines across the lane where the speed limit starts and ends
     for (const q of [PIT.boxA, PIT.boxB]) { const a = pointAt(q, RS + 7.7, new THREE.Vector3()), ki = Math.round(((q + TL) % TL) / DS) % N; const ln = new THREE.Mesh(new THREE.PlaneGeometry(14, 0.5), new THREE.MeshBasicMaterial({ color: 0xf2f2f2 })); ln.rotation.set(-Math.PI / 2, 0, Math.atan2(T[ki].x, T[ki].z)); ln.position.set(a.x, 0.06, a.z); scene.add(ln); }
   }
@@ -836,6 +880,40 @@ const CARGEO = (() => {
 })();
 const MASK = new Image(); MASK.src = window.APEX_CAR.mask;
 const LIVERY = new Map();
+// ---- sponsors: made-up brands, each a small emblem and a wordmark, painted onto the livery ----
+// the body's texture is laid out as plain projections: the sides from the side (u = 0.1257 z + 0.369, v = 0.1255 y + 0.0095 right / 0.1541 left),
+// the nose from above and the rear wing from behind; so a logo is placed by its spot on the car, in metres
+const SPONSORS = ["KORVEX", "ZYNTRA", "QUELLIX", "VORAXA", "BRIXTEL", "LUMORA", "TERAVON", "OKTALIS", "NEXARO", "SOLVARI", "PYRAXA", "DRAVELL", "ZEPHRIX", "ORBIXA", "HALVEX", "KYNETRA", "MERIDO", "VANTRIS", "AXIOLA", "FENRAX", "CALDERA", "STRIVO", "OPTERRA", "JUNOVA", "RAVELLO", "TIKARO", "ISOMEX", "VELQOR", "ARKADA", "NUVELLE"];
+function seeded(n) { let x = (n * 2654435761) % 4294967296; return () => { x = (x * 1664525 + 1013904223) % 4294967296; return x / 4294967296; }; }
+function paintSponsors(g, S, team) {
+  const ti = Math.max(0, TEAMS.indexOf(team)), r = seeded(ti + 7);
+  const names = [SPONSORS[ti * 3 % 30], SPONSORS[(ti * 3 + 1) % 30], SPONSORS[(ti * 3 + 2) % 30], SPONSORS[(ti * 7 + 5) % 30]], lum = (c) => { const k = new THREE.Color(c); return 0.3 * k.r + 0.59 * k.g + 0.11 * k.b; };
+  const ink = lum(team.c1) > 0.55 ? "#111318" : "#ffffff", acc = team.c2 && Math.abs(lum(team.c2) - lum(team.c1)) > 0.25 ? team.c2 : ink;
+  const styles = names.map(() => ({ shape: Math.floor(r() * 5), font: r() < 0.5 ? "Michroma, sans-serif" : "Inter, sans-serif", weight: r() < 0.5 ? "800" : "700", italic: r() < 0.4 }));
+  // one logo in a box w x h (cm), drawn in the box's own frame
+  const logo = (k, w, h, col, ac) => { if (k < 0) { g.fillStyle = col; g.textBaseline = "middle"; g.font = `${h * 0.8}px Michroma, sans-serif`; g.fillText(team.name.toUpperCase(), 0, h * 0.55, w); return; }
+    const st = styles[k], e = h * 0.9; g.save(); g.fillStyle = ac; g.strokeStyle = ac; g.lineWidth = h * 0.12; g.translate(e / 2, h / 2);
+    if (st.shape === 0) { g.beginPath(); g.arc(0, 0, e * 0.42, 0, 7); g.fill(); g.fillStyle = col; g.beginPath(); g.arc(e * 0.1, 0, e * 0.25, 0, 7); g.fill(); }
+    else if (st.shape === 1) { g.beginPath(); g.moveTo(-e * 0.45, e * 0.38); g.lineTo(0, -e * 0.45); g.lineTo(e * 0.45, e * 0.38); g.closePath(); g.fill(); }
+    else if (st.shape === 2) { g.beginPath(); for (let q = 0; q < 6; q++) { const a = q / 6 * Math.PI * 2; g.lineTo(Math.cos(a) * e * 0.44, Math.sin(a) * e * 0.44); } g.closePath(); g.stroke(); }
+    else if (st.shape === 3) { for (const dx of [-0.22, 0.12]) { g.beginPath(); g.moveTo(e * (dx - 0.15), -e * 0.4); g.lineTo(e * (dx + 0.15), 0); g.lineTo(e * (dx - 0.15), e * 0.4); g.stroke(); } }
+    else { g.fillRect(-e * 0.4, -e * 0.4, e * 0.8, e * 0.8); g.fillStyle = col; g.fillRect(-e * 0.15, -e * 0.15, e * 0.3, e * 0.3); }
+    g.restore(); g.fillStyle = col; g.textBaseline = "middle"; g.font = `${st.italic ? "italic " : ""}${st.weight} ${h * 0.72}px ${st.font}`; g.fillText(names[k], e * 1.15, h * 0.55, w - e * 1.2); };
+  // place a box on a side of the car: z0, y0 = the box's front-top corner on the body, w x h in cm; the logo reads from the viewer's side
+  const side = (k, sign, z0, y0, w, h, col, ac) => { const s1 = 0.01 * S, vOff = sign > 0 ? 0.0095 : 0.1541;
+    g.save(); if (sign > 0) g.setTransform(0.1257 * s1, 0, 0, -0.1255 * s1, S * (0.1257 * z0 + 0.3692), S * (0.1255 * y0 + vOff));
+    else g.setTransform(-0.1257 * s1, 0, 0, -0.1255 * s1, S * (0.1257 * (z0 + w / 100) + 0.3692), S * (0.1255 * y0 + vOff));
+    logo(k, w, h, col, ac); g.restore(); };
+  for (const sg of [-1, 1]) {
+    side(0, sg, -0.45, 0.62, 128, 22, ink, acc);    // the title sponsor along the sidepod
+    side(1, sg, 0.75, 1.02, 95, 15, ink, acc);      // the engine cover fin
+    side(3, sg, -1.3, 0.66, 52, 9, ink, acc);       // a small one by the cockpit
+  }
+  // the team's own name under the title sponsor, and a third sponsor low on the engine cover
+  for (const sg of [-1, 1]) { side(-1, sg, -0.2, 0.37, 90, 8, acc, acc); side(2, sg, 1.0, 0.72, 60, 9, ink, acc); }
+  // the rear wing, seen from behind
+  { const s1 = 0.01 * S, x0 = -0.5, y0 = 0.885; g.save(); g.setTransform(0.2493 * s1, 0, -0.0073 * s1, -0.414 * s1, S * (0.2493 * x0 + 0.0073 * y0 + 0.8099), S * (0.414 * y0 - 0.1755)); logo(0, 100, 11, ink, acc); g.restore(); }
+}
 function liveryTex(team, size) {   // paint the mask: red = team colour, green = stripes, blue = carbon; the team name where the old badge was
   const key = team.name + size; if (LIVERY.has(key)) return LIVERY.get(key);
   const c = document.createElement("canvas"); c.width = c.height = size; const g = c.getContext("2d"), tex = new THREE.CanvasTexture(c);
@@ -847,7 +925,7 @@ function liveryTex(team, size) {   // paint the mask: red = team colour, green =
     for (let k = 0; k < d.length; k += 4) { const r = d[k], gg = d[k + 1], b = d[k + 2], s = r + gg + b || 1;
       for (let a = 0; a < 3; a++) d[k + a] = (c1[a] * r + c2[a] * gg + cb[a] * b) / s; }
     g.putImageData(im, 0, 0);
-    const f = size / 1024; g.save(); g.font = `${Math.round(30 * f)}px Michroma, sans-serif`; g.fillStyle = team.c2; g.textBaseline = "middle"; g.fillText(team.name.toUpperCase(), 700 * f, 215 * f, 280 * f); g.restore();
+    paintSponsors(g, size, team);
     tex.needsUpdate = true; };
   if (MASK.complete) paint(); else MASK.addEventListener("load", paint);
   LIVERY.set(key, tex); return tex;
@@ -989,7 +1067,7 @@ function surfaceAt(car) {
   return "grass";
 }
 const GRIP = { road: 1, kerb: 0.9, paint: 0.82, grass: 0.5, gravel: 0.42 }, ROLL = { road: 0.15, kerb: 0.4, paint: 0.4, grass: 1.4, gravel: 3.2 };
-const steerMax = (v) => lerp(0.3, 0.042, clamp(v / 70, 0, 1));   // less lock the faster you go
+const steerMax = (v) => lerp(0.33, 0.05, clamp(v / 70, 0, 1));   // less lock the faster you go
 function stepPlayer(car, dt, inp) { stepCar(car, dt, inp, SET.assist === "on"); }
 function stepCar(car, dt, inp, assist) {
   const v = car.v;
@@ -1014,7 +1092,7 @@ function stepCar(car, dt, inp, assist) {
   // the direction of travel follows only as fast as the tyres' grip lets it: the difference is the slide
   const pull = (D.fr - D.fl) * 0.07 + (D.sr - D.sl) * 0.09, delta = (car.steer + pull) * sMax, wantYaw = v * Math.tan(delta) / PH.L, latLeft = gripA * Math.sqrt(Math.max(0.3, 1 - (ax / (gripA * 1.05)) ** 2));
   const limit = (v > 2 ? latLeft / v : 9) * (1 - 0.22 * wingF), yawRate = clamp(wantYaw, -limit * 1.06, limit * 1.06);
-  car.yawRate = lerp(car.yawRate, yawRate, Math.min(1, dt * 9));
+  car.yawRate = lerp(car.yawRate, yawRate, Math.min(1, dt * (car.isPlayer ? 12 : 9)));
   car.yaw -= car.yawRate * dt;   // a right turn (positive steer) turns clockwise seen from above
   let slip = wrapA(car.yaw - car.psi);
   const follow = v > 2 ? latLeft / Math.max(v, 4) * dt : 1;
@@ -1184,48 +1262,77 @@ function releasePit(car) {
 const CREW_G = (() => {
   const B = (w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y, z); return g; };
   const merge = (a) => THREE.BufferGeometryUtils.mergeBufferGeometries(a);
-  const head = new THREE.SphereGeometry(0.15, 12, 10); head.scale(1, 1.08, 1.1);
-  const visor = new THREE.SphereGeometry(0.152, 12, 6, Math.PI / 2 - 0.9, 1.8, 1.1, 0.75); visor.scale(1, 1.08, 1.1);
-  return {
-    legs: merge([B(0.15, 0.82, 0.18, -0.1, 0.41, 0), B(0.15, 0.82, 0.18, 0.1, 0.41, 0)]),
-    kneel: merge([B(0.15, 0.45, 0.18, -0.12, 0.22, -0.05), B(0.15, 0.16, 0.5, 0.12, 0.08, 0.12), B(0.15, 0.42, 0.16, 0.12, 0.3, -0.13)]),
-    torso: (() => { const g = new THREE.CylinderGeometry(0.21, 0.17, 0.62, 10); g.scale(1, 1, 0.7); return g; })(),
-    arm: B(0.09, 0.09, 0.5, 0, 0, 0.25),
-    head, visor,
-    gun: merge([B(0.09, 0.14, 0.26, 0, 0, 0.13), B(0.05, 0.16, 0.05, 0, -0.12, 0.05)]),
-    jack: merge([B(0.06, 0.06, 1.5, 0, 0.62, 0.75), B(0.5, 0.06, 0.08, 0, 0.62, 1.45), B(0.07, 0.2, 0.07, 0, 0.1, 0.2)]),
+  const limb = (r0, r1, len) => { const g = new THREE.CylinderGeometry(r0, r1, len, 9); g.translate(0, -len / 2, 0); return merge([g, (() => { const s = new THREE.SphereGeometry(r0 * 1.05, 9, 6); return s; })()]); };
+  const helmet = new THREE.SphereGeometry(0.14, 14, 10); helmet.scale(1, 1.05, 1.12);
+  const visor = new THREE.SphereGeometry(0.143, 14, 6, Math.PI / 2 - 0.85, 1.7, 1.15, 0.7); visor.scale(1, 1.05, 1.12);
+  const torso = new THREE.CylinderGeometry(0.2, 0.15, 0.56, 12); torso.scale(1, 1, 0.66); torso.translate(0, 0.3, 0);
+  const band = new THREE.CylinderGeometry(0.205, 0.19, 0.07, 12); band.scale(1, 1, 0.68); band.translate(0, 0.42, 0);
+  const sleeve = new THREE.CylinderGeometry(0.058, 0.058, 0.05, 9); sleeve.translate(0, -0.27, 0);
+  return { thigh: limb(0.078, 0.066, 0.46), shin: limb(0.064, 0.05, 0.44), foot: B(0.11, 0.08, 0.27, 0, -0.47, 0.06), pelvis: B(0.34, 0.17, 0.21, 0, 0, 0),
+    torso, band, sleeve, upper: limb(0.058, 0.05, 0.3), fore: limb(0.05, 0.044, 0.27), glove: new THREE.SphereGeometry(0.058, 9, 7), neck: B(0.08, 0.08, 0.08, 0, 0.6, 0), helmet, visor,
+    gun: merge([B(0.08, 0.13, 0.24, 0, 0, 0.12), B(0.05, 0.15, 0.05, 0, -0.11, 0.04), (() => { const c = new THREE.CylinderGeometry(0.035, 0.035, 0.1, 8); c.rotateX(Math.PI / 2); c.translate(0, 0, 0.28); return c; })()]),
+    jack: merge([B(0.06, 0.06, 1.5, 0, 0, 0.75), B(0.5, 0.06, 0.08, 0, 0, 1.45), B(0.07, 0.3, 0.07, 0, -0.12, 1.45)]),
     pole: B(0.04, 1.5, 0.04, 0, 0.75, 0), disc: (() => { const g = new THREE.CylinderGeometry(0.24, 0.24, 0.03, 20); g.rotateX(Math.PI / 2); g.translate(0, 1.55, 0); return g; })(),
-  };
+    blanket: (() => { const g = new THREE.CylinderGeometry(0.37, 0.37, 0.4, 20, 1, true); g.rotateZ(Math.PI / 2); return g; })() };
 })();
 const CREW_M = new Map();
 function crewMats(team) { if (CREW_M.has(team.name)) return CREW_M.get(team.name);
-  const m = { suit: new THREE.MeshStandardMaterial({ color: team.c1, roughness: 0.75 }), trim: new THREE.MeshStandardMaterial({ color: team.c2, roughness: 0.6 }), dark: new THREE.MeshStandardMaterial({ color: 0x15171b, roughness: 0.7 }), visor: new THREE.MeshStandardMaterial({ color: 0x0b0d10, roughness: 0.15, metalness: 0.6 }), metal: new THREE.MeshStandardMaterial({ color: 0x9aa3ad, roughness: 0.35, metalness: 0.8 }), red: new THREE.MeshBasicMaterial({ color: 0xe3261b }), green: new THREE.MeshBasicMaterial({ color: 0x24d16b }) };
+  const m = { suit: new THREE.MeshStandardMaterial({ color: team.c1, roughness: 0.75 }), trim: new THREE.MeshStandardMaterial({ color: team.c2, roughness: 0.55 }), dark: new THREE.MeshStandardMaterial({ color: 0x15171b, roughness: 0.7 }), visor: new THREE.MeshStandardMaterial({ color: 0x0b0d10, roughness: 0.12, metalness: 0.7 }), metal: new THREE.MeshStandardMaterial({ color: 0x9aa3ad, roughness: 0.35, metalness: 0.8 }), red: new THREE.MeshBasicMaterial({ color: 0xe3261b }), green: new THREE.MeshBasicMaterial({ color: 0x24d16b }), blanket: new THREE.MeshStandardMaterial({ color: team.c1, roughness: 0.9, side: THREE.DoubleSide }) };
   CREW_M.set(team.name, m); return m; }
-function person(M, kneel) {   // faces +z; the arms point forward to whatever they hold
-  const g = new THREE.Group(), y0 = kneel ? 0.46 : 0.82, add = (geo, mat, x = 0, y = 0, z = 0) => { const o = new THREE.Mesh(geo, mat); o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
-  add(kneel ? CREW_G.kneel : CREW_G.legs, M.dark);
-  const tor = add(CREW_G.torso, M.suit, 0, y0 + 0.31, kneel ? 0.06 : 0); if (kneel) tor.rotation.x = 0.35;
-  const hy = y0 + 0.78, hz = kneel ? 0.2 : 0.02; add(CREW_G.head, M.trim, 0, hy, hz); const v = add(CREW_G.visor, M.visor, 0, hy, hz); v.rotation.y = 0;
-  const arms = []; for (const sx of [-1, 1]) { const a = add(CREW_G.arm, M.suit, sx * 0.2, y0 + 0.5, kneel ? 0.12 : 0.02); a.rotation.x = 0.55; arms.push(a); }
-  g.userData.arms = arms; g.userData.hand = new THREE.Vector3(0, y0 + 0.25, kneel ? 0.52 : 0.45); return g;
+// a crew member: jointed hips, knees, shoulders and elbows so they can walk, kneel, crouch, sit and hold things; faces +z
+const POSES = {
+  stand: { hip: 0.93, lean: 0.02, tL: 0, kL: 0.05, tR: 0, kR: 0.05, aL: -0.15, eL: -0.25, aR: -0.15, eR: -0.25, sL: 0.08, sR: -0.08 },
+  ready: { hip: 0.9, lean: 0.12, tL: -0.15, kL: 0.3, tR: -0.15, kR: 0.3, aL: -0.7, eL: -0.6, aR: -0.7, eR: -0.6, sL: 0.1, sR: -0.1 },
+  hold: { hip: 0.86, lean: 0.25, tL: -0.35, kL: 0.6, tR: -0.1, kR: 0.4, aL: -1.0, eL: -0.45, aR: -1.0, eR: -0.45, sL: 0.28, sR: -0.28 },
+  crouch: { hip: 0.62, lean: 0.55, tL: -1.0, kL: 1.7, tR: -0.6, kR: 1.5, aL: -1.15, eL: -0.25, aR: -1.15, eR: -0.25, sL: 0.3, sR: -0.3 },
+  kneel: { hip: 0.55, lean: 0.38, tL: -1.45, kL: 1.45, tR: 0.05, kR: 1.55, aL: -1.25, eL: -0.35, aR: -1.25, eR: -0.35, sL: 0.18, sR: -0.18 },
+  sit: { hip: 0.5, lean: 0.12, tL: -1.5, kL: 1.45, tR: -1.5, kR: 1.5, aL: -1.0, eL: -0.75, aR: -1.0, eR: -0.75, sL: 0.15, sR: -0.15 },
+  jack: { hip: 0.82, lean: 0.4, tL: -0.5, kL: 0.5, tR: 0.3, kR: 0.2, aL: -1.1, eL: -0.2, aR: -1.1, eR: -0.2, sL: 0.15, sR: -0.15 },
+  lolli: { hip: 0.93, lean: 0.05, tL: 0, kL: 0.05, tR: 0, kR: 0.05, aL: -0.15, eL: -0.25, aR: -0.9, eR: -1.2, sL: 0.08, sR: -0.05 },
+};
+function person(M, kneel) {
+  const g = new THREE.Group(), mesh = (geo, mat, parent, x = 0, y = 0, z = 0) => { const o = new THREE.Mesh(geo, mat); o.position.set(x, y, z); o.castShadow = true; parent.add(o); return o; };
+  const grp = (parent, x, y, z) => { const o = new THREE.Group(); o.position.set(x, y, z); parent.add(o); return o; };
+  const hips = grp(g, 0, 0.93, 0); mesh(CREW_G.pelvis, M.dark, hips);
+  const legs = []; for (const sx of [-1, 1]) { const th = grp(hips, sx * 0.1, -0.04, 0); mesh(CREW_G.thigh, M.suit, th); const kn = grp(th, 0, -0.46, 0); mesh(CREW_G.shin, M.suit, kn); mesh(CREW_G.foot, M.dark, kn); legs.push([th, kn]); }
+  const spine = grp(hips, 0, 0.06, 0); mesh(CREW_G.torso, M.suit, spine); mesh(CREW_G.band, M.trim, spine); mesh(CREW_G.neck, M.dark, spine);
+  const head = grp(spine, 0, 0.74, 0.01); mesh(CREW_G.helmet, M.trim, head); mesh(CREW_G.visor, M.visor, head);
+  const arms = []; for (const sx of [-1, 1]) { const sh = grp(spine, sx * 0.23, 0.52, 0); mesh(CREW_G.upper, M.suit, sh); const el = grp(sh, 0, -0.3, 0); mesh(CREW_G.fore, M.suit, el); mesh(CREW_G.sleeve, M.trim, el); const hand = grp(el, 0, -0.29, 0); mesh(CREW_G.glove, M.dark, hand); arms.push([sh, el, hand]); }
+  g.userData.rig = { hips, legs, spine, head, arms, cur: { ...POSES[kneel ? "kneel" : "stand"] }, walk: 0, last: null };
+  g.userData.hand = new THREE.Vector3(0, kneel ? 0.5 : 0.62, kneel ? 0.52 : 0.45);
+  applyPose(g, kneel ? "kneel" : "stand", 1, 0); return g;
 }
+// move a crew member's joints toward a pose; walking swings the legs and arms (speed in m/s)
+function applyPose(g, name, k, speed, dt = 0) {
+  const R = g.userData.rig, P = POSES[name], C = R.cur; for (const key in P) C[key] = lerp(C[key], P[key], k);
+  const w = Math.min(1, speed / 1.5); R.walk += speed * dt * 4.2; const sw = Math.sin(R.walk) * 0.55 * w, kb = Math.max(0, Math.sin(R.walk)) * 0.7 * w, kb2 = Math.max(0, -Math.sin(R.walk)) * 0.7 * w;
+  R.hips.position.y = C.hip; R.spine.rotation.x = C.lean;
+  R.legs[0][0].rotation.x = C.tL + sw; R.legs[0][1].rotation.x = C.kL + kb2; R.legs[1][0].rotation.x = C.tR - sw; R.legs[1][1].rotation.x = C.kR + kb;
+  R.arms[0][0].rotation.x = C.aL - sw * 0.6; R.arms[0][1].rotation.x = C.eL; R.arms[0][0].rotation.z = C.sL; R.arms[1][0].rotation.x = C.aR + sw * 0.6; R.arms[1][1].rotation.x = C.eR; R.arms[1][0].rotation.z = C.sR;
+  R.head.rotation.x = -C.lean * 0.6;
+}
+// pneumatic wheel guns: a short hiss and rattle
+function gunSound() { if (!AC) return; const n = AC.createBufferSource(), b = AC.createBuffer(1, AC.sampleRate * 0.35, AC.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (0.5 + 0.5 * Math.sign(Math.sin(i / AC.sampleRate * 2 * Math.PI * 38))) * (1 - i / d.length);
+  n.buffer = b; const f = AC.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 2400; f.Q.value = 0.9; const g = AC.createGain(); g.gain.value = 0.12; n.connect(f).connect(g).connect(AC.destination); n.start(); }
 function buildCrew(car, P) {
   const M = crewMats(car.team), root = new THREE.Group(), crew = { root, men: [], wheels: [], leaveT: -1, car };
   pitPose(P, P.boxS, PO); root.position.set(PO.x, 0, PO.z); root.rotation.y = PO.yaw; scene.add(root);
-  const man = (kneel, work, wait, extra) => { const g = person(M, kneel); root.add(g); const o = { g, work, wait, ...extra }; g.position.set(wait[0], 0, wait[1]); g.rotation.y = wait[2]; crew.men.push(o); return o; };
+  const man = (kneel, work, wait, extra) => { const g = person(M, kneel); root.add(g); const o = { g, work, wait, pose: kneel ? "kneel" : "ready", ...extra }; g.position.set(wait[0], 0, wait[1]); g.rotation.y = wait[2]; crew.men.push(o); return o; };
   for (const w of car.mesh.userData.wheels) {   // three per wheel: the gun, the one who pulls the old wheel off, the one with the new wheel
     const sd = w.side, wx = w.base.x, wz = w.base.z, face = -sd * Math.PI / 2;
-    const gun = man(true, [sd * 1.5, wz, face], [sd * 2.7, wz, face]); const gm = new THREE.Mesh(CREW_G.gun, M.dark); gm.position.copy(gun.g.userData.hand); gun.g.add(gm);
+    const gun = man(true, [sd * 1.5, wz, face], [sd * 2.7, wz, face]); const gm = new THREE.Mesh(CREW_G.gun, M.dark); gm.rotation.x = Math.PI / 2; gun.g.userData.rig.arms[1][2].add(gm);
     const off = man(false, [sd * 1.85, wz + 0.8, face], [sd * 3.1, wz + 1.1, face], { w, kind: "off" });
     const on = man(false, [sd * 1.85, wz - 0.8, face], [sd * 3.1, wz - 1.1, face], { w, kind: "on" });
     const nw = w.t.clone(); nw.traverse((o) => { if (o.userData.tyre) o.material = TYRE_MAT[P.tyre]; }); root.add(nw);
-    crew.wheels.push({ w, wx, wz, sd, nw, old: null, off, on });
+    const blk = new THREE.Mesh(CREW_G.blanket, M.blanket); nw.add(blk);   // the tyre warmer stays on until the wheel goes on
+    crew.wheels.push({ w, wx, wz, sd, nw, blk, old: null, off, on, gun });
   }
   const fz = Math.min(...car.mesh.userData.wheels.map((w) => w.base.z)) - 2.15, rz = Math.max(...car.mesh.userData.wheels.map((w) => w.base.z)) + 1.75;
-  const fj = man(false, [0, fz, 0], [0, fz - 0.7, 0], { kind: "jack" }); const jm = new THREE.Mesh(CREW_G.jack, M.metal); jm.rotation.y = 0; fj.g.add(jm); fj.jack = jm;
-  const rj = man(false, [0, rz, Math.PI], [2.6, rz + 0.6, Math.PI], { kind: "jack" }); const jm2 = new THREE.Mesh(CREW_G.jack, M.metal); rj.g.add(jm2); rj.jack = jm2;
-  const lp = man(false, [1.6, fz - 1.4, -0.4], [1.9, fz - 1.8, -0.4], { kind: "lolli" }); { const pole = new THREE.Mesh(CREW_G.pole, M.dark); pole.position.set(0.22, 0.35, 0.32); lp.g.add(pole); lp.disc = new THREE.Mesh(CREW_G.disc, M.red); lp.disc.position.set(0.22, 0.35, 0.32); lp.g.add(lp.disc); }
-  for (const sd of [-1, 1]) man(false, [sd * 1.45, -0.2, -sd * Math.PI / 2], [sd * 2.8, -0.2, -sd * Math.PI / 2]);
+  const fj = man(false, [0, fz, 0], [0, fz - 0.7, 0], { kind: "jack", pose: "jack" }); const jm = new THREE.Mesh(CREW_G.jack, M.metal); jm.position.set(0, 0.62, 0.2); fj.g.add(jm); fj.jack = jm;
+  const rj = man(false, [0, rz, Math.PI], [2.6, rz + 0.6, Math.PI], { kind: "jack", pose: "jack" }); const jm2 = new THREE.Mesh(CREW_G.jack, M.metal); jm2.position.set(0, 0.62, 0.2); rj.g.add(jm2); rj.jack = jm2;
+  const lp = man(false, [1.6, fz - 1.4, -0.4], [1.9, fz - 1.8, -0.4], { kind: "lolli", pose: "lolli" }); { const hand = lp.g.userData.rig.arms[1][2], pole = new THREE.Mesh(CREW_G.pole, M.dark); pole.position.y = -0.6; hand.add(pole); lp.disc = new THREE.Mesh(CREW_G.disc, M.red); lp.disc.position.y = -0.6; hand.add(lp.disc); }
+  for (const sd of [-1, 1]) man(false, [sd * 1.45, -0.2, -sd * Math.PI / 2], [sd * 2.8, -0.2, -sd * Math.PI / 2], { pose: "hold" });   // they steady the car
   crew.fj = fj; crew.rj = rj; crew.lp = lp; P.crew = crew; CREWS.add(crew); return crew;
 }
 const CREWS = new Set();
@@ -1238,7 +1345,8 @@ function animCrew(car, P, dt) {
   // the car goes up on the jacks, and down again at the end
   car.lift = T0 < 0 ? 0 : 0.085 * sm01((T0 - 0.1) / 0.18) * (1 - sm01((T0 - (D - 0.42)) / 0.18));
   if (C.fj.jack) C.fj.jack.rotation.x = -0.12 * (car.lift / 0.085); if (C.rj.jack) C.rj.jack.rotation.x = -0.12 * (car.lift / 0.085);
-  C.lp.disc.material = T0 >= D - 0.2 ? crewMats(car.team).green : crewMats(car.team).red; C.lp.g.rotation.x = T0 >= D - 0.2 ? -0.25 : 0;
+  C.lp.disc.material = T0 >= D - 0.2 ? crewMats(car.team).green : crewMats(car.team).red;
+  if (car.isPlayer && T0 >= 0.3 && !C.snd1) { C.snd1 = true; gunSound(); } if (car.isPlayer && T0 >= 1.05 && !C.snd2) { C.snd2 = true; gunSound(); }
   // the wheels: old one off (0.30-0.70), new one on (0.62-1.10), then the gun tightens it
   for (const W of C.wheels) {
     const y = W.w.base.y + car.lift, hubX = W.wx;
@@ -1246,20 +1354,35 @@ function animCrew(car, P, dt) {
     const swapped = T0 >= 1.1;
     W.w.piv.visible = T0 < 0.3 || swapped || P.st === "out";
     if (swapped && !W.done) { W.done = true; W.w.t.traverse((o) => { if (o.userData.tyre) o.material = TYRE_MAT[P.tyre]; }); }
-    // the old wheel: out along the axle, then carried off by its man
     if (T0 >= 0.3 && !W.old) { W.old = W.w.t.clone(); C.root.add(W.old); }
-    if (W.old) { const a = sm01(tOff / 0.6), b = sm01((tOff - 0.6) / 0.4), hx = W.off.g.position.x - W.sd * 0.45, hz = W.off.g.position.z;
-      W.old.position.set(lerp(lerp(hubX, W.sd * 1.45, a), hx, b), lerp(y, 0.5, b), lerp(W.wz, hz, b)); }
-    // the new wheel: from the man's hands onto the hub
-    { W.nw.visible = T0 < 1.1; const a = sm01(tOn / 0.45), b = sm01((tOn - 0.45) / 0.55), hx = W.on.g.position.x - W.sd * 0.45, hz = W.on.g.position.z;
-      W.nw.position.set(lerp(lerp(hx, W.sd * 1.45, a), hubX, b), lerp(0.5, y, a), lerp(hz, W.wz, a)); }
-    // the two wheel men follow their wheel; once it's done they step back
+    if (W.old) { const a = sm01(tOff / 0.6), b = sm01((tOff - 0.6) / 0.4), hx = W.off.g.position.x - W.sd * 0.5, hz = W.off.g.position.z;
+      W.old.position.set(lerp(lerp(hubX, W.sd * 1.45, a), hx, b), lerp(y, 0.55, b), lerp(W.wz, hz, b)); }
+    { W.nw.visible = T0 < 1.1; W.blk.visible = T0 < 0.55; const a = sm01(tOn / 0.45), b = sm01((tOn - 0.45) / 0.55), hx = W.on.g.position.x - W.sd * 0.5, hz = W.on.g.position.z;
+      W.nw.position.set(lerp(lerp(hx, W.sd * 1.45, a), hubX, b), lerp(0.55, y, a), lerp(hz, W.wz, a)); }
     const back = T0 >= 1.2 ? sm01((T0 - 1.2) / 0.5) : 0;
     W.off.g.position.set(lerp(W.off.wait[0], W.off.work[0], at * (1 - back)), 0, lerp(W.off.wait[1], W.off.work[1], at * (1 - back)));
     W.on.g.position.set(lerp(W.on.wait[0], W.on.work[0], at * (1 - back)), 0, lerp(W.on.wait[1], W.on.work[1], at * (1 - back)));
     W.off.g.rotation.y = W.on.g.rotation.y = W.off.work[2];
+    // what each of them is doing: the wheel men hold their wheel, crouch at the hub, then stand back; the gunner pushes in while the nut runs
+    W.off.pose = T0 < 0 ? "ready" : T0 < 0.55 ? "crouch" : T0 < 1.2 ? "hold" : "stand";
+    W.on.pose = T0 < 0.62 ? "hold" : T0 < 1.15 ? "crouch" : "stand";
+    W.gun.pose = "kneel"; W.gun.push = (T0 > 0.25 && T0 < 0.45) || (T0 > 1.0 && T0 < 1.25) ? 1 : 0;
   }
+  if (C.lp) C.lp.pose = T0 >= D - 0.2 ? "lolli" : "stand";
+  // joints: ease toward each pose, legs swing while someone walks
+  for (const m of C.men) { const p = m.g.position, last = m.last || p.clone(), sp = dt > 0 ? last.distanceTo(p) / dt : 0; m.last = p.clone();
+    applyPose(m.g, m.pose || "stand", Math.min(1, dt * 14), sp > 0.2 ? sp : 0, dt);
+    if (m.push !== undefined) { const R = m.g.userData.rig; R.arms[1][0].rotation.x -= m.push * 0.25; R.spine.rotation.x += m.push * 0.08; } }
 }
+// the engineers on the pit wall: four per team at their screens; seated once, then baked into one mesh per material so they cost almost nothing
+function seatPitWall() {
+  for (const pw of PITWALL) { const M = crewMats(pw.team), byMat = new Map(), tmp = new THREE.Group(); pw.g.add(tmp);
+    for (const z of [-2.4, -0.8, 0.8, 2.4]) { const p = person(M, false); p.position.set(-0.3, 0.45, z); p.rotation.y = Math.PI / 2; applyPose(p, "sit", 1, 0); p.userData.rig.head.rotation.y = (Math.random() - 0.5) * 0.5; tmp.add(p); }
+    tmp.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(pw.g.matrixWorld).invert();
+    tmp.traverse((o) => { if (!o.isMesh) return; const geo = o.geometry.clone().toNonIndexed(); geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld)); for (const k of Object.keys(geo.attributes)) if (k !== "position" && k !== "normal") geo.deleteAttribute(k); (byMat.get(o.material) || byMat.set(o.material, []).get(o.material)).push(geo); });
+    pw.g.remove(tmp); for (const [mat, list] of byMat) { const m = new THREE.Mesh(THREE.BufferGeometryUtils.mergeBufferGeometries(list), mat); m.castShadow = true; pw.g.add(m); } }
+}
+seatPitWall();
 function stepCrews(dt) { for (const C of CREWS) { if (C.leaveT < 0) continue; C.leaveT -= dt; if (C.leaveT <= 0) { scene.remove(C.root); CREWS.delete(C); } } }
 function clearCrews() { for (const C of CREWS) scene.remove(C.root); CREWS.clear(); }
 
@@ -1443,7 +1566,7 @@ function cycleCam() { camMode = (camMode + 1) % CAMS.length; camSnap = true; msg
 function toggleLine() { showLine = !showLine; msg(showLine ? "RACING LINE ON" : "RACING LINE OFF", "", 1); }
 const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
 function updateCamera(dt) {
-  const c = player; if (!c) return;
+  const c = player; if (!c) return; if (window.__camHook) { window.__camHook(camera); return; }   // test views
   const f = new THREE.Vector3(-Math.sin(c.yaw), 0, -Math.cos(c.yaw));
   let want, look, fov = 62 + clamp(c.v * 0.12, 0, 12);
   const P = c.pit, crewCam = P && (P.st === "stop" || (P.st === "in" && P.boxS - P.ps < 22) || (P.st === "out" && P.ps - P.boxS < 12));
@@ -1659,7 +1782,7 @@ const GAR = (() => {
   const refresh = (i) => { const m = cars.get(i); if (m) { table.remove(m); cars.delete(i); } };
   return { sc, cam, show, refresh, get idx() { return idx; }, set idx(v) { idx = v; }, step(dt) { idle += dt; if (drag === null) ang += dt * (idle > 2 ? 0.35 : 0.12); table.rotation.y = ang; } };
 })();
-window.__APEX = { simulate, lineAt, vAt, pointAt, DRS, get raceT() { return raceT; }, CARS, get player() { return player; }, get phase() { return phase; }, set phase(v) { phase = v; }, TL, VP, setupRace, SET, order, stepPlayer, locate, PIT, KW, RUN_R, N, DS, toggleBox, RADIO, TYRES, setTyre, get camMode() { return camMode; }, set camMode(v) { camMode = v; }, get paused() { return paused; }, set paused(v) { paused = v; }, place, simStep };
+window.__APEX = { simulate, lineAt, vAt, pointAt, DRS, get raceT() { return raceT; }, CARS, get player() { return player; }, get phase() { return phase; }, set phase(v) { phase = v; }, TL, VP, setupRace, SET, order, stepPlayer, locate, PIT, KW, RUN_R, N, DS, toggleBox, RADIO, TYRES, setTyre, get camMode() { return camMode; }, set camMode(v) { camMode = v; }, get paused() { return paused; }, set paused(v) { paused = v; }, place, simStep, GAR, buildCar, TEAMS };
 // the circuit: the whole world is built for one layout, so switching reloads the page and comes back to this screen
 $("tEyebrow").textContent = `${TRACK.name.toUpperCase()} · ${TRACK.km} KM · 20 CARS`; $("tSub").textContent = TRACK.sub;
 $("sTrack").querySelectorAll("button").forEach((b) => { b.setAttribute("aria-pressed", String(b.dataset.v === TRACK.id));
