@@ -990,6 +990,8 @@ function stepCar(car, dt, inp, assist) {
   // braking help: lifts and brakes for you when you arrive far too fast at a corner
   let thr = inp.thr, brk = inp.brk;
   if (assist) { const want = vAt(car.s + Math.max(20, v * 0.9)) * 1.03; if (v > want + 2) { thr = Math.min(thr, 0.15); brk = Math.max(brk, clamp((v - want) / 12, 0.35, 1)); } }
+  // trail braking: buttons and keys are all-or-nothing, so while you turn the brake eases off by itself and leaves the tyres grip to steer with
+  if (car.isPlayer && brk > 0) brk = Math.min(brk, 1 - 0.5 * Math.min(1, Math.abs(car.steer)));
   car.thr = lerp(car.thr, thr, Math.min(1, dt * 10)); car.brk = lerp(car.brk, brk, Math.min(1, dt * 14));
   const sens = car.isPlayer ? +SET.sens || 1 : 1, sMax = steerMax(v) * (0.55 + 0.45 * sens);
   // keys and buttons are all-or-nothing: the wheel winds on gently (and comes back a little quicker)
@@ -1004,7 +1006,7 @@ function stepCar(car, dt, inp, assist) {
   let ax = car.thr * Math.min(PH.P * (1 - 0.22 * side) / (PH.m * Math.max(v, 4)), gripA * 0.62) - car.brk * gripA * 0.95 - DRc * (drs ? 0.78 : 1) * v * v - ROLL[surf] * (v > 1 ? 1 : v);
   // lateral: the nose turns at the rate the front wheels ask for (a little more than grip allows when you overdo it);
   // the direction of travel follows only as fast as the tyres' grip lets it: the difference is the slide
-  const pull = (D.fr - D.fl) * 0.07 + (D.sr - D.sl) * 0.09, delta = (car.steer + pull) * sMax, wantYaw = v * Math.tan(delta) / PH.L, latLeft = gripA * Math.sqrt(Math.max(0.08, 1 - (ax / (gripA * 1.05)) ** 2));
+  const pull = (D.fr - D.fl) * 0.07 + (D.sr - D.sl) * 0.09, delta = (car.steer + pull) * sMax, wantYaw = v * Math.tan(delta) / PH.L, latLeft = gripA * Math.sqrt(Math.max(0.3, 1 - (ax / (gripA * 1.05)) ** 2));
   const limit = (v > 2 ? latLeft / v : 9) * (1 - 0.22 * wingF), yawRate = clamp(wantYaw, -limit * 1.06, limit * 1.06);
   car.yawRate = lerp(car.yawRate, yawRate, Math.min(1, dt * 9));
   car.yaw -= car.yawRate * dt;   // a right turn (positive steer) turns clockwise seen from above
