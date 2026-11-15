@@ -85,6 +85,8 @@ button:focus-visible { outline: 1px solid var(--ice); outline-offset: 3px; }
 .topbtns #bBox.on { color: #0a0e13; background: var(--amber); }
 .gren { margin-left: 16px; border: 0; background: transparent; color: var(--fg2); font-size: 9px; letter-spacing: 0.24em; font-family: var(--display); padding: 4px 8px; cursor: pointer; box-shadow: inset 0 0 0 1px var(--line2); clip-path: var(--cut-s); vertical-align: 1px; }
 .gren:hover { color: var(--ice); }
+.gdrv { border: 0; background: transparent; color: inherit; font: inherit; padding: 0; cursor: text; text-align: left; border-bottom: 1px dashed transparent; } .gdrv:hover { color: var(--fg); border-bottom-color: var(--line2); }
+.gdrvin { font: inherit; color: var(--fg); background: transparent; border: 0; border-bottom: 1px solid var(--ice); outline: 0; width: 220px; }
 .gname input { font: inherit; letter-spacing: inherit; color: var(--fg); background: transparent; border: 0; border-bottom: 1px solid var(--ice); outline: 0; width: min(560px, 70vw); text-transform: uppercase; }
 .leds { display: grid; grid-template-columns: repeat(15, 1fr); gap: 2px; margin-bottom: 10px; }
 .leds i { height: 3px; background: rgba(255,255,255,0.08); }
@@ -333,7 +335,9 @@ const TRACK = TRACKS[SET.track] || TRACKS.yas; SET.track = TRACK.id;
 const PARK = TRACK.env === "park";
 const TRK_KEY = (k) => (TRACK.id === "yas" ? k : k + "-" + TRACK.id);   // personal bests and ghosts are kept per circuit
 // your own names for the teams (kept on this device only); an empty name brings the original back
-const TEAM_DEF = TEAMS.map((t) => t.name);
+const TEAM_DEF = TEAMS.map((t) => t.name), DRV_DEF = TEAMS.map((t) => t.drivers.map((d) => [d[0], d[2]]));
+const drvCode = (name) => { const w = name.trim().split(/\s+/).pop() || name; return w.normalize("NFD").replace(/[^A-Za-z]/g, "").slice(0, 3).toUpperCase().padEnd(3, "X"); };
+{ const dn = store.get("drivers", {}); for (const key in dn) { const [ti, k] = key.split("-").map(Number); const d = TEAMS[ti] && TEAMS[ti].drivers[k]; if (d && dn[key]) { d[2] = String(dn[key]).slice(0, 28); d[0] = drvCode(d[2]); } } }
 { const nm = store.get("names", {}); for (const k in nm) if (TEAMS[k] && nm[k]) TEAMS[k].name = String(nm[k]).slice(0, 24); }
 
 // ================= RENDERER, SCENE =================
@@ -1356,6 +1360,14 @@ function updateCockpit(dt, show) {
   COCKPIT.tex.needsUpdate = true;
 }
 // ================= GARAGE: RENAME =================
+function renameDriver(ti, k, el) {   // your own name for a driver, kept on this device; empty brings the original back
+  const d = TEAMS[ti].drivers[k], inp = document.createElement("input"); inp.type = "text"; inp.maxLength = 28; inp.value = d[2]; inp.className = "gdrvin"; inp.setAttribute("aria-label", "Driver name");
+  el.replaceWith(inp); inp.focus(); inp.select();
+  const done = (save) => { if (!inp.isConnected) return; if (save) { const v = inp.value.trim().slice(0, 28), dn = store.get("drivers", {}), key = ti + "-" + k, [c0, n0] = DRV_DEF[ti][k];
+      if (v && v !== n0) { d[2] = v; d[0] = drvCode(v); dn[key] = v; } else { d[2] = n0; d[0] = c0; delete dn[key]; } store.set("drivers", dn); } GAR.show(ti); };
+  inp.addEventListener("keydown", (e) => { e.stopPropagation(); if (e.key === "Enter") done(true); if (e.key === "Escape") done(false); });
+  inp.addEventListener("blur", () => done(true));
+}
 $("gRename").onclick = () => {
   const i = GAR.idx, h = $("gName"), inp = document.createElement("input"); inp.type = "text"; inp.maxLength = 24; inp.value = TEAMS[i].name; inp.setAttribute("aria-label", "Team name");
   h.replaceChildren(inp); inp.focus(); inp.select();
@@ -1542,7 +1554,11 @@ function simStep(dt, inp) {
     collide(h);
   }
   // DRS: open in the zones while held; it shuts as soon as you brake
-  player.drsOpen = !!(DRS[player.idx] && inp.drs && inp.brk < 0.1 && phase === "race" && !player.pit);
+  // DRS: one press in a zone opens the flap; it stays open by itself and shuts when you brake or the zone ends
+  const drsPress = inp.drs && !player.drsHeld; player.drsHeld = !!inp.drs;
+  if (drsPress && DRS[player.idx] && phase === "race" && !player.pit) player.drsLatch = true;
+  if (!DRS[player.idx] || inp.brk >= 0.1 || player.pit || phase !== "race") player.drsLatch = false;
+  player.drsOpen = !!player.drsLatch;
   for (const c of CARS) { if (!c.isPlayer) c.drsOpen = !!(DRS[c.idx] && phase === "race" && c.v > 60 && !c.pit); gearOf(c); }
   if (SET.mode === "tt") ttGhost(dt);
 }
@@ -1624,7 +1640,8 @@ const GAR = (() => {
     if (!cars.has(idx)) { const m = buildCar(t, t.drivers[0][1], true); m.traverse((o) => { if (o.isMesh) o.castShadow = true; }); cars.set(idx, m); table.add(m); }
     for (const [k, m] of cars) m.visible = k === idx;
     $("gName").textContent = t.name.toUpperCase(); $("gName").style.borderLeft = `4px solid ${t.c1}`; $("gName").style.paddingLeft = "14px";
-    $("gDrivers").innerHTML = t.drivers.map((d) => `<div><b>${d[1]}</b>${d[2]}<span>${d[0]}</span></div>`).join("");
+    $("gDrivers").replaceChildren(...t.drivers.map((d, k) => { const row = document.createElement("div"), nm = document.createElement("button"); nm.type = "button"; nm.className = "gdrv"; nm.textContent = d[2]; nm.title = "Rename driver";
+      nm.onclick = () => renameDriver(idx, k, nm); const b = document.createElement("b"); b.textContent = d[1]; const sp = document.createElement("span"); sp.textContent = d[0]; row.append(b, nm, sp); return row; }));
     $("gIdx").textContent = `${idx + 1} / ${TEAMS.length}`; $("gDots").innerHTML = TEAMS.map((_, k) => `<i class="${k === idx ? "on" : ""}"></i>`).join("");
     ring.material.color.set(t.c1); idle = 0;
   }
