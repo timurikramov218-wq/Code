@@ -963,7 +963,7 @@ function paintSponsors(g, S, team) {
     g.fillRect(-160, -40.5, 300, 2); g.fillRect(-160, -37, 300, 0.8); g.restore(); }   // at 0.385 m and 0.37 m up the sidepod
   { const s1 = 0.01 * S; g.save(); g.setTransform(-0.0093 * s1, 0.1151 * s1, 0.113 * s1, -0.0002 * s1, S * 1.1324, S * 0.7674); g.fillStyle = acc;   // x across, z along the nose (cm)
     for (const x of [-6.5, 4.5]) g.fillRect(x, -265, 2, 140); g.restore(); }
-  for (const sg of [-1, 1]) { side(-1, sg, -0.55, 0.64, 150, 20, ink, ink); if (NUMBER !== null) num(sg, 0.85, 1.05, 50, 16, NUMBER); }
+  for (const sg of [-1, 1]) { side(-1, sg, -0.42, 0.535, 125, 11.5, ink, ink);   /* on the flat of the sidepod, below the crease where the bodywork above shares the texture */ if (NUMBER !== null) num(sg, 0.85, 1.05, 50, 16, NUMBER); }
 
 }
 function liveryTex(team, size, number) {   // paint the mask: red = team colour, green = stripes, blue = carbon; the team name along the sides, the number on the fin
