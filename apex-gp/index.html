@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Formula Racing Web</title>
 <meta name="theme-color" content="#0a0e13">
-<meta name="description" content="Formula Racing Web: a free open-wheel racing game in your browser. Twenty cars, start lights, DRS, a 5.3 km marina circuit at sunset, time trial with a ghost.">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Formula Racing">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Formula Racing Web"><meta property="og:title" content="Formula Racing Web">
+<meta property="og:description" content="A free open-wheel racing game in your browser: three circuits, twenty cars, pit stops, tyres, DRS and team radio.">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-180.png">
+<meta name="description" content="Formula Racing Web: a free open-wheel racing game in your browser. Three circuits, twenty cars, pit stops, tyres, DRS, qualifying and team radio.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -483,7 +487,7 @@ ribbon(HW + 1.6 + PAINT, (k) => RUN_R[k] - 1, 0.025, gravelMat, 4, 1 / 8, (k) =>
 ribbon((k) => -RUN_L[k] + 1, -HW - 1.6 - PAINT, 0.025, gravelMat, 4, 1 / 8, (k) => GRAV_L[k]);
 // barriers: armco on posts, tyre walls in front where the runoff is gravel
 const wallTex = canvasTex(128, 32, (g, w, h) => { g.fillStyle = "#d9dbdd"; g.fillRect(0, 0, w, h); for (let k = 0; k < 600; k++) { g.fillStyle = "rgba(120,120,125,0.12)"; g.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5); } g.fillStyle = "rgba(0,0,0,0.25)"; g.fillRect(w - 2, 0, 2, h); g.fillStyle = "#1c3fae"; g.fillRect(0, h - 6, w / 2, 6); g.fillStyle = "#c8202a"; g.fillRect(w / 2, h - 6, w / 2, 6); }, true);   // concrete blocks with a blue and red foot
-const PITWALL = [];   // the teams' stands on the pit wall (their engineers are seated once the crew can be built)
+const PITWALL = [], GARAGES = [];   // (the garages are furnished once the cars and the crew can be built)   // the teams' stands on the pit wall (their engineers are seated once the crew can be built)
 // the pit lane runs beside the start-finish straight on the right: an entry ramp, the garages, an exit ramp
 const PIT = { s0: -10, L: 330 }; PIT.boxA = PIT.s0 - PIT.L / 2; PIT.boxB = PIT.s0 + PIT.L / 2; PIT.entry = PIT.boxA - 80; PIT.exit = PIT.boxB + 75;
 let PIT_RS = 22;   // the barrier's offset beside the garages (set once the run-off is known)
@@ -797,7 +801,7 @@ else { const dm = new THREE.MeshLambertMaterial({ color: 0xcfae84 });
     const lightM = new THREE.MeshBasicMaterial({ color: 0xf4f8ff }), tyreM = new THREE.MeshStandardMaterial({ color: 0x141416, roughness: 0.9 });
     for (let k = 0; k <= 20; k++) walls.push(bx(GD, GH, 0.3, GD / 2, GH / 2, -L / 2 + gw * k));
     let n = 0;
-    for (const t of TEAMS) for (const d of t.drivers) { const zc = -L / 2 + gw * (n + 0.5);
+    for (const t of TEAMS) for (const d of t.drivers) { const zc = -L / 2 + gw * (n + 0.5); GARAGES.push({ g, zc, t, d, n, gw, GD, GH });
       const sign = canvasTex(512, 64, (c, w, h) => { c.fillStyle = t.c1; c.fillRect(0, 0, w, h); c.fillStyle = t.c2; c.fillRect(0, h - 6, w, 6); c.fillStyle = "#fff"; c.font = "30px Michroma, sans-serif"; c.textBaseline = "middle"; c.fillText(t.name.toUpperCase(), 16, 30, w - 110); c.textAlign = "right"; c.fillText(String(d[1]), w - 16, 30); });
       const sp = new THREE.Mesh(new THREE.PlaneGeometry(gw - 0.4, 0.9), new THREE.MeshBasicMaterial({ map: sign })); sp.rotation.y = -Math.PI / 2; sp.position.set(-0.06, GH - 0.5, zc); g.add(sp);
       const wallTex2 = canvasTex(512, 256, (c, w, h) => { const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, t.c1); gr.addColorStop(1, "#14171d"); c.fillStyle = gr; c.fillRect(0, 0, w, h);
@@ -807,7 +811,7 @@ else { const dm = new THREE.MeshLambertMaterial({ color: 0xcfae84 });
       const sideTex = canvasTex(256, 128, (c, w, h) => { const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, t.c1); gr.addColorStop(1, "#1a1e25"); c.fillStyle = gr; c.fillRect(0, 0, w, h); c.fillStyle = t.c2; c.fillRect(0, h * 0.62, w, 3); c.fillStyle = "rgba(255,255,255,0.07)"; for (let x = 0; x < w; x += 24) c.fillRect(x, 0, 1, h); });
       const sm = new THREE.MeshLambertMaterial({ map: sideTex });
       for (const sz of [-1, 1]) { const sw = new THREE.Mesh(new THREE.PlaneGeometry(GD - 0.2, GH - 0.1), sm); sw.rotation.y = sz > 0 ? Math.PI : 0; sw.position.set(GD / 2, GH / 2, zc + sz * (gw / 2 - 0.17)); g.add(sw); }
-      const fl = new THREE.Mesh(new THREE.PlaneGeometry(GD, gw - 0.3), new THREE.MeshStandardMaterial({ color: 0x3a3f48, roughness: 0.35, metalness: 0.1 })); fl.rotation.x = -Math.PI / 2; fl.position.set(GD / 2, 0.025, zc); fl.receiveShadow = true; g.add(fl);
+      const fl = new THREE.Mesh(new THREE.PlaneGeometry(GD, gw - 0.3), new THREE.MeshStandardMaterial({ color: new THREE.Color(0x2a2e35).lerp(new THREE.Color(t.c1), 0.18), roughness: 0.22, metalness: 0.15 })); fl.rotation.x = -Math.PI / 2; fl.position.set(GD / 2, 0.025, zc); fl.receiveShadow = true; g.add(fl);
       for (const lx of [2, 4.5, 7]) lights.push(bx(0.6, 0.06, gw - 2.5, lx, GH - 0.08, zc));
       for (const side of [-1, 1]) { const cz = zc + side * (gw / 2 - 1.1);
         chests.push([GD - 1.3, cz, t.c1]); chests.push([GD - 3.1, cz, t.c2]);
@@ -1479,6 +1483,36 @@ function seatPitWall() {
     pw.g.remove(tmp); for (const [mat, list] of byMat) { const m = new THREE.Mesh(THREE.BufferGeometryUtils.mergeBufferGeometries(list), mat); m.castShadow = true; pw.g.add(m); } }
 }
 seatPitWall();
+// the garages: the spare car on its stands in each team's first garage, mechanics at work, tyre sets in blankets on trolleys,
+// a timing screen on the back wall and the traffic light over the door. Everything static is baked into a few meshes.
+function furnishGarages() {
+  const byMat = new Map(), add = (geo, mat, m4) => { const g2 = geo.index ? geo.toNonIndexed() : geo.clone(); g2.applyMatrix4(m4); for (const k of Object.keys(g2.attributes)) if (k !== "position" && k !== "normal" && !(k === "uv" && mat.map)) g2.deleteAttribute(k); (byMat.get(mat) || byMat.set(mat, []).get(mat)).push(g2); };
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(1, 1, 1), ps = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0);
+  const blanketG = new THREE.CylinderGeometry(0.36, 0.36, 0.38, 16); blanketG.rotateZ(Math.PI / 2); const trolleyG = new THREE.BoxGeometry(0.9, 0.08, 1.9), standG = new THREE.BoxGeometry(0.5, 0.35, 0.5);
+  const screenM = new THREE.MeshBasicMaterial({ color: 0x1d3c6e }), frameM = new THREE.MeshStandardMaterial({ color: 0x15171b, roughness: 0.5 }), metalM = new THREE.MeshStandardMaterial({ color: 0x9aa3ad, roughness: 0.35, metalness: 0.8 });
+  const lampR = new THREE.MeshBasicMaterial({ color: 0xff2a1a }), lampG = new THREE.MeshBasicMaterial({ color: 0x24d16b });
+  let root = null;
+  for (const G of GARAGES) { root = G.g; const { zc, t, d, n, gw, GD, GH } = G, M = crewMats(t), blanketM = M.blanket;
+    // tyre sets on trolleys by the side walls, in the team's blankets
+    for (const side of [-1, 1]) { const tz = zc + side * (gw / 2 - 1.3); m4.makeTranslation(3.2, 0.45, tz); add(trolleyG, metalM, m4);
+      for (const [dx, dy] of [[-0.45, 0.75], [0.45, 0.75], [-0.45, 1.15], [0.45, 1.15]]) { m4.makeTranslation(3.2 + dx * 0.6, dy, tz + (dy > 1 ? 0.3 : -0.3)); add(blanketG, blanketM, m4); } }
+    // the timing screen on the back wall, and a light over the door (red, or green for the player's)
+    m4.makeTranslation(GD - 0.12, 3.6, zc); add(new THREE.BoxGeometry(0.1, 1.2, 2.1), frameM, m4); m4.makeTranslation(GD - 0.18, 3.6, zc); add(new THREE.BoxGeometry(0.02, 1.05, 1.95), screenM, m4);
+    m4.makeTranslation(0.3, GH - 1.2, zc); add(new THREE.BoxGeometry(0.25, 0.35, 0.35), frameM, m4); m4.makeTranslation(0.16, GH - 1.2, zc); add(new THREE.SphereGeometry(0.11, 10, 8), n % 2 ? lampR : lampG, m4);
+    // mechanics: two by the back, one leaning on the tyre trolley
+    for (const [x, z, r, pose] of [[GD - 2.2, zc - 1.2, Math.PI / 2 + 0.4, "stand"], [GD - 2.4, zc + 1.0, -Math.PI / 2 - 0.3, "hold"], [3.9, zc - gw / 2 + 2.3, Math.PI, "ready"]]) {
+      const p = person(M, false); p.position.set(x, 0, z); p.rotation.y = r; applyPose(p, pose, 1, 0); p.updateMatrixWorld(true);
+      p.traverse((o) => { if (o.isMesh) add(o.geometry, o.material, o.matrixWorld); }); }
+    // the spare car on stands in the team's first garage (the lighter copy of the model)
+    if (n % 2 === 0) { const car = buildCar(t, d[1], false), lvl = car.userData.lod.levels[2].object; car.position.set(4.6, 0.36, zc); car.rotation.y = Math.PI / 2; car.updateMatrixWorld(true);
+      lvl.traverse((o) => { if (o.isMesh) add(o.geometry, o.material, o.matrixWorld); });
+      for (const w of car.userData.wheels) w.t.traverse((o) => { if (o.isMesh) add(o.geometry, o.material, o.matrixWorld); });
+      for (const [dz] of [[-1.9], [1.9]]) { m4.makeTranslation(4.6, 0.18, zc + dz * 0); m4.compose(ps.set(4.6 + dz, 0.18, zc), q.setFromAxisAngle(Y, 0), sc); add(standG, metalM, m4); } }
+  }
+  if (!root) return;
+  for (const [mat, list] of byMat) { const keepUv = false; const m = new THREE.Mesh(THREE.BufferGeometryUtils.mergeBufferGeometries(list), mat); m.castShadow = false; m.receiveShadow = true; root.add(m); }
+}
+furnishGarages();
 function stepCrews(dt) { for (const C of CREWS) { if (C.leaveT < 0) continue; C.leaveT -= dt; if (C.leaveT <= 0) { scene.remove(C.root); CREWS.delete(C); } } }
 function clearCrews() { for (const C of CREWS) scene.remove(C.root); CREWS.clear(); }
 
@@ -1536,7 +1570,7 @@ const COCKPIT = { g: null, scr: null, ctx: null, leds: [], t: 0 };
 function attachCockpit(car) {
   if (COCKPIT.g && COCKPIT.g.parent) COCKPIT.g.parent.remove(COCKPIT.g); if (!car) return;
   if (!COCKPIT.g) COCKPIT.g = buildWheel();
-  const M = COCKPIT.mats; M.glove.color.set(0x0a0b0d); M.cuff.color.set(car.team.c1); M.sleeve.color.set(car.team.c1); M.team.color.set(car.team.c1);
+  const M = COCKPIT.mats; for (const [k, c] of [["cuff", car.team.c2], ["sleeve", car.team.c1], ["team", car.team.c1], ["knuckle", car.team.c1]]) M[k].color.set(c).convertSRGBToLinear();
   car.mesh.add(COCKPIT.g); COCKPIT.g.visible = false;
 }
 // your steering wheel model, split into its parts (carbon body, grips, side panels in the team colour, buttons, rotaries, screen bezel, rev and flag lights)
@@ -1558,13 +1592,27 @@ function buildWheel() {
   // the screen, in the recess of the bezel
   const cv = document.createElement("canvas"); cv.width = 512; cv.height = 256; COCKPIT.ctx = cv.getContext("2d"); COCKPIT.tex = new THREE.CanvasTexture(cv); COCKPIT.tex.encoding = THREE.sRGBEncoding; COCKPIT.tex.anisotropy = 4;
   const S = WHEEL_PACK.screen, scr = new THREE.Mesh(new THREE.PlaneGeometry(S.w, S.h), new THREE.MeshBasicMaterial({ map: COCKPIT.tex })); scr.position.set(S.c[0], S.c[1], S.c[2] + 0.0006); spin.add(scr);
-  for (const sx of [-1, 1]) {   // gloves on the grips, cuffs and sleeves, the shift paddles behind
-    const glove = new THREE.Mesh(new THREE.SphereGeometry(0.034, 14, 10), M.glove); glove.scale.set(1.05, 1.5, 1.05); glove.position.set(sx * 0.122, -0.012, 0.02); spin.add(glove);
-    const thumb = new THREE.Mesh(new THREE.SphereGeometry(0.013, 10, 8), M.palm); thumb.scale.set(1.9, 1, 1); thumb.position.set(sx * 0.096, 0.016, 0.026); spin.add(thumb);
-    const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.031, 0.034, 0.04, 14), M.cuff); cuff.position.set(sx * 0.135, -0.058, 0.055); cuff.rotation.set(0.9, 0, sx * 0.35); spin.add(cuff);
-    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.036, 0.14, 14), M.sleeve); arm.position.set(sx * 0.15, -0.1, 0.11); arm.rotation.set(0.9, 0, sx * 0.4); spin.add(arm);
-    const pad = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.07, 0.006), M.alu); pad.position.set(sx * 0.06, 0.0, -0.03); pad.rotation.z = sx * 0.2; spin.add(pad);
+  // the driver's hands: racing gloves wrapped round the grips. Each finger is an arc round the grip (as a fist closes on a bar), the back of the hand
+  // a padded shell outside, the thumb along the front towards the buttons; then a wrist strap, the cuff of the suit and the sleeve back towards the driver
+  M.gloveB = new THREE.MeshStandardMaterial({ color: 0x0d0e10, roughness: 0.7 }); M.glovePalm = new THREE.MeshStandardMaterial({ color: 0x1c1d21, roughness: 0.95 }); M.knuckle = new THREE.MeshStandardMaterial({ color: 0x8fd3ff, roughness: 0.55 });
+  const capsule = (r, len) => { const g = new THREE.CylinderGeometry(r, r * 0.92, Math.max(0.001, len - 2 * r), 12, 1, true); const a = new THREE.SphereGeometry(r, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2); a.translate(0, (len - 2 * r) / 2, 0);
+    const b = new THREE.SphereGeometry(r * 0.92, 12, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2); b.translate(0, -(len - 2 * r) / 2, 0); return THREE.BufferGeometryUtils.mergeBufferGeometries([g.toNonIndexed(), a.toNonIndexed(), b.toNonIndexed()]); };
+  const GRIP_R = 0.017;
+  for (const sx of [-1, 1]) {
+    const hand = new THREE.Group(); hand.position.set(sx * 0.121, -0.014, 0.0); spin.add(hand);   // the centre of the grip; y runs along it
+    for (let f = 0; f < 4; f++) { const r = GRIP_R + 0.0085, tube = 0.0078 - f * 0.0004, arc = 3.6 - f * 0.12, fy = 0.024 - f * 0.0158;
+      const fg = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 8, 18, arc), f % 2 ? M.glovePalm : M.gloveB); fg.rotation.x = Math.PI / 2;
+      fg.rotation.z = sx > 0 ? -0.35 : Math.PI + 0.35 - arc; fg.position.y = fy; hand.add(fg);
+      const tip = new THREE.Mesh(new THREE.SphereGeometry(tube * 1.02, 10, 8), M.glovePalm); const ea = fg.rotation.z + arc; tip.position.set(Math.cos(ea) * r, fy, -Math.sin(ea) * r); hand.add(tip); }
+    const back = new THREE.Mesh(new THREE.SphereGeometry(0.032, 18, 14), M.gloveB); back.scale.set(0.55, 1.2, 0.85); back.position.set(sx * 0.03, 0.002, 0.006); hand.add(back);
+    const kn = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.044, 0.024), M.knuckle); kn.position.set(sx * 0.047, 0.004, 0.006); hand.add(kn);
+    const th = new THREE.Mesh(capsule(0.0085, 0.046), M.gloveB); th.position.set(-sx * 0.012, 0.03, 0.022); th.rotation.set(0, 0, sx * 1.2); hand.add(th);
+    const wrist = new THREE.Mesh(new THREE.CylinderGeometry(0.023, 0.025, 0.018, 16), M.knuckle); wrist.position.set(sx * 0.034, -0.046, 0.022); wrist.rotation.set(0.7, 0, sx * 0.55); hand.add(wrist);
+    const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.028, 0.03, 16), M.cuff); cuff.position.set(sx * 0.046, -0.062, 0.04); cuff.rotation.set(0.7, 0, sx * 0.55); hand.add(cuff);
+    const fore = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.24, 16), M.sleeve); fore.position.set(sx * 0.08, -0.11, 0.115); fore.rotation.set(0.75, 0, sx * 0.55); hand.add(fore);
+    const pad = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.07, 0.006), M.alu); pad.position.set(sx * 0.06, 0.0, -0.03); pad.rotation.z = sx * 0.2; spin.add(pad);   // shift paddles
   }
+  for (const m of Object.values(M)) if (m.color) m.color.convertSRGBToLinear();   // colours as they read on screen
   const col = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.022, 0.26, 12), M.carbon); col.rotation.x = Math.PI / 2; col.position.set(0, 0, -0.14); mount.add(col);
   COCKPIT.spin = spin; mount.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.renderOrder = 2; } }); return mount;
 }
