@@ -958,6 +958,11 @@ function paintSponsors(g, S, team) {
   const num = (sg, z0, y0, w, h, n) => { const s1 = 0.01 * S, vOff = sg > 0 ? 0.0095 : 0.1541; g.save();
     if (sg > 0) g.setTransform(0.1257 * s1, 0, 0, -0.1255 * s1, S * (0.1257 * z0 + 0.3692), S * (0.1255 * y0 + vOff)); else g.setTransform(-0.1257 * s1, 0, 0, -0.1255 * s1, S * (0.1257 * (z0 + w / 100) + 0.3692), S * (0.1255 * y0 + vOff));
     g.fillStyle = acc; g.textBaseline = "middle"; g.textAlign = "center"; g.font = `800 ${h * 0.9}px Inter, sans-serif`; g.fillText(String(n), w / 2, h * 0.55, w); g.restore(); };
+  // clean pinstripes in the second colour: straight lines along the sides and twin stripes down the nose (the texture is a straight projection there, so straight lines stay straight)
+  for (const sg of [-1, 1]) { const s1 = 0.01 * S, vOff = sg > 0 ? 0.0095 : 0.1541; g.save(); g.setTransform(0.1257 * s1, 0, 0, -0.1255 * s1, S * 0.3692, S * vOff); g.fillStyle = acc;
+    g.fillRect(-160, -40.5, 300, 2); g.fillRect(-160, -37, 300, 0.8); g.restore(); }   // at 0.385 m and 0.37 m up the sidepod
+  { const s1 = 0.01 * S; g.save(); g.setTransform(-0.0093 * s1, 0.1151 * s1, 0.113 * s1, -0.0002 * s1, S * 1.1324, S * 0.7674); g.fillStyle = acc;   // x across, z along the nose (cm)
+    for (const x of [-6.5, 4.5]) g.fillRect(x, -265, 2, 140); g.restore(); }
   for (const sg of [-1, 1]) { side(-1, sg, -0.55, 0.64, 150, 20, ink, ink); if (NUMBER !== null) num(sg, 0.85, 1.05, 50, 16, NUMBER); }
 
 }
@@ -966,7 +971,11 @@ function liveryTex(team, size, number) {   // paint the mask: red = team colour,
   const c = document.createElement("canvas"); c.width = c.height = size; const g = c.getContext("2d"), tex = new THREE.CanvasTexture(c);
   tex.flipY = false; tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 4;
   const paint = () => {
-    g.drawImage(MASK, 0, 0, size, size); const im = g.getImageData(0, 0, size, size), d = im.data;
+    // the mask is coarse: blur it slightly, then sharpen each colour's share again, so the stripes get smooth curved edges with soft anti-aliasing
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high"; g.filter = `blur(${(size / 1024 * 2.2).toFixed(2)}px)`; g.drawImage(MASK, 0, 0, size, size); g.filter = "none";
+    const im = g.getImageData(0, 0, size, size), d = im.data;
+    // the mask's own stripes are hand-drawn and wobbly: paint them over in the main colour (clean stripes are drawn below as vectors)
+    for (let k = 0; k < d.length; k += 4) { let r = d[k] / 255, gg = d[k + 1] / 255, b = d[k + 2] / 255; r = (r + gg) ** 7; b = b ** 7; const t = r + b || 1; d[k] = r / t * 255; d[k + 1] = 0; d[k + 2] = b / t * 255; }
     const A = new THREE.Color(team.c1), Bc = new THREE.Color(team.c2), toB = (x) => Math.round(x * 255);
     const c1 = [toB(A.r), toB(A.g), toB(A.b)], c2 = [toB(Bc.r), toB(Bc.g), toB(Bc.b)], cb = [22, 23, 26];
     for (let k = 0; k < d.length; k += 4) { const r = d[k], gg = d[k + 1], b = d[k + 2], s = r + gg + b || 1;
@@ -990,7 +999,7 @@ const grainTex = (() => { const t = canvasTex(256, 256, (g, w, h) => { g.fillSty
 function setTyre(car, c) { car.tyre = c; if (car.tyreMat) car.tyreMat.dispose(); const m = car.tyreMat = TYRE_MAT[c].clone(); m.bumpMap = grainTex; m.bumpScale = 0.002; car.wearShown = undefined;
   for (const w of car.mesh.userData.wheels) w.t.traverse((o) => { if (o.userData.tyre) o.material = m; }); }
 function buildCar(team, num, isPlayer) {
-  const body = new THREE.MeshPhysicalMaterial({ map: liveryTex(team, isPlayer ? 1024 : 512, num || null), roughness: 0.36, metalness: 0.2, clearcoat: 0.6, clearcoatRoughness: 0.08, envMap: ENV.tex, envMapIntensity: 0.25, side: THREE.DoubleSide });   // glossy lacquer over the paint
+  const body = new THREE.MeshPhysicalMaterial({ map: liveryTex(team, isPlayer ? 2048 : 1024, num || null), roughness: 0.36, metalness: 0.2, clearcoat: 0.6, clearcoatRoughness: 0.08, envMap: ENV.tex, envMapIntensity: 0.25, side: THREE.DoubleSide });   // glossy lacquer over the paint
   const matOf = (m) => (m === 0 ? body : m === 1 ? MAT_SHARED.light : m === 2 ? MAT_SHARED.tyre : MAT_SHARED.cover);
   const root = new THREE.Group(), lod = new THREE.LOD(), flaps = [];
   for (const [lvl, dist] of isPlayer ? [["lod0", 0], ["lod0m", 60], ["lod1", 140]] : [["lod0", 0], ["lod0m", 12], ["lod1", 30]]) { const g = new THREE.Group(); for (const p of CARGEO[lvl]) { const m = new THREE.Mesh(p.g, matOf(p.mat)); m.castShadow = true;
